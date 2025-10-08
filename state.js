@@ -2,7 +2,6 @@
  * Game State Management
  * Handles all game state, including grid, pieces, score, level, etc.
  */
-
 class GameState {
   constructor() {
     this.reset();
@@ -25,6 +24,10 @@ class GameState {
     this.gameOver = false;
     this.paused = false;
     this.gameStarted = false;
+    
+    // Character selection
+    this.selectedCharacter = localStorage.getItem('selectedCharacter') || 'steve';
+    this.characterAttributes = this.getCharacterAttributes(this.selectedCharacter);
     
     // Timing
     this.fallTime = 0;
@@ -52,122 +55,88 @@ class GameState {
       piecesPerSecond: 0
     };
     
-    // Easter egg state
-    this.easterEggState = {
-      konamiProgress: 0,
-      tetrisProgress: 0,
-      rainbowProgress: 0,
-      matrixProgress: 0,
-      godmodeProgress: 0,
-      activeEggs: new Set(),
-      keySequence: []
+    // Settings
+    this.settings = {
+      ghostPieceEnabled: true,
+      particlesEnabled: true,
+      screenShakeEnabled: true,
+      soundEnabled: true,
+      musicEnabled: true,
+      volume: 0.7,
+      difficulty: 'normal'
     };
     
-    // Theme and settings
-    this.currentTheme = GameConfig.getCurrentTheme();
-    this.settings = {
-      music: true,
-      sfx: true,
-      showGhost: true,
-      showGrid: true,
-      particles: true,
-      screenShake: true
+    // Easter egg tracking
+    this.easterEggState = {
+      konamiProgress: 0,
+      secretKeysPressed: [],
+      activeEggs: new Set()
     };
+  }
+
+  // Character management
+  setCharacter(characterName) {
+    this.selectedCharacter = characterName;
+    this.characterAttributes = this.getCharacterAttributes(characterName);
+    localStorage.setItem('selectedCharacter', characterName);
+  }
+
+  getCharacterAttributes(characterName) {
+    const characters = {
+      steve: {
+        name: 'Steve',
+        speed: 1.0,
+        scoreMultiplier: 1.0,
+        specialAbility: 'balanced',
+        color: '#4A90E2'
+      },
+      alex: {
+        name: 'Alex',
+        speed: 1.15,
+        scoreMultiplier: 0.95,
+        specialAbility: 'fast_movement',
+        color: '#E94F37'
+      },
+      miner: {
+        name: 'Miner',
+        speed: 0.9,
+        scoreMultiplier: 1.2,
+        specialAbility: 'bonus_points',
+        color: '#F6C667'
+      },
+      builder: {
+        name: 'Builder',
+        speed: 0.85,
+        scoreMultiplier: 1.0,
+        specialAbility: 'clear_bonus',
+        color: '#52B788'
+      }
+    };
+    return characters[characterName] || characters.steve;
   }
 
   createEmptyGrid() {
-    return Array(GameConfig.GRID.ROWS).fill().map(() => 
-      Array(GameConfig.GRID.COLS).fill(0)
+    return Array(GameConfig.GRID_HEIGHT).fill(null).map(() => 
+      Array(GameConfig.GRID_WIDTH).fill(0)
     );
   }
 
-  // Piece management
-  setPiece(piece) {
-    this.currentPiece = piece;
-    this.updateGhostPiece();
-    this.canHold = true;
-  }
-
-  getNextPiece() {
-    if (this.nextPieces.length === 0) {
-      this.generateNextPieces();
-    }
-    return this.nextPieces.shift();
-  }
-
-  generateNextPieces() {
-    const pieces = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
-    // Shuffle using 7-bag system for fair distribution
-    for (let i = pieces.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
-    }
-    this.nextPieces.push(...pieces);
-  }
-
-  holdPiece() {
-    if (!this.canHold) return false;
+  // Grid operations
+  isValidPosition(piece, offsetX = 0, offsetY = 0) {
+    if (!piece) return false;
     
-    const temp = this.currentPiece?.type || null;
-    if (this.heldPiece) {
-      this.setPiece(this.createPieceFromType(this.heldPiece));
-    } else {
-      this.setPiece(this.createPieceFromType(this.getNextPiece()));
-    }
-    this.heldPiece = temp;
-    this.canHold = false;
-    return true;
-  }
-
-  createPieceFromType(type) {
-    // This would integrate with the Piece class from the original game
-    // For now, return a basic structure
-    return {
-      type,
-      x: Math.floor(GameConfig.GRID.COLS / 2) - 1,
-      y: 0,
-      rotation: 0,
-      shape: this.getPieceShape(type)
-    };
-  }
-
-  getPieceShape(type) {
-    const shapes = {
-      I: [[1,1,1,1]],
-      O: [[1,1],[1,1]],
-      T: [[0,1,0],[1,1,1]],
-      S: [[0,1,1],[1,1,0]],
-      Z: [[1,1,0],[0,1,1]],
-      J: [[1,0,0],[1,1,1]],
-      L: [[0,0,1],[1,1,1]]
-    };
-    return shapes[type] || shapes.T;
-  }
-
-  // Ghost piece calculation
-  updateGhostPiece() {
-    if (!this.currentPiece) {
-      this.ghostPiece = null;
-      return;
-    }
-    
-    this.ghostPiece = { ...this.currentPiece };
-    while (this.isValidPosition(this.ghostPiece.x, this.ghostPiece.y + 1, this.ghostPiece.shape)) {
-      this.ghostPiece.y++;
-    }
-  }
-
-  // Position validation
-  isValidPosition(x, y, shape) {
-    for (let row = 0; row < shape.length; row++) {
-      for (let col = 0; col < shape[row].length; col++) {
-        if (shape[row][col]) {
-          const newX = x + col;
-          const newY = y + row;
+    for (let y = 0; y < piece.shape.length; y++) {
+      for (let x = 0; x < piece.shape[y].length; x++) {
+        if (piece.shape[y][x]) {
+          const newX = piece.x + x + offsetX;
+          const newY = piece.y + y + offsetY;
           
-          if (newX < 0 || newX >= GameConfig.GRID.COLS || 
-              newY >= GameConfig.GRID.ROWS || 
-              (newY >= 0 && this.grid[newY][newX])) {
+          if (newX < 0 || newX >= GameConfig.GRID_WIDTH ||
+              newY >= GameConfig.GRID_HEIGHT) {
+            return false;
+          }
+          
+          if (newY >= 0 && this.grid[newY][newX]) {
             return false;
           }
         }
@@ -176,166 +145,173 @@ class GameState {
     return true;
   }
 
-  // Line clearing
-  checkAndClearLines() {
-    const fullLines = [];
+  lockPiece(piece) {
+    if (!piece) return;
     
-    for (let y = GameConfig.GRID.ROWS - 1; y >= 0; y--) {
-      if (this.grid[y].every(cell => cell !== 0)) {
-        fullLines.push(y);
+    for (let y = 0; y < piece.shape.length; y++) {
+      for (let x = 0; x < piece.shape[y].length; x++) {
+        if (piece.shape[y][x]) {
+          const gridY = piece.y + y;
+          const gridX = piece.x + x;
+          if (gridY >= 0) {
+            this.grid[gridY][gridX] = piece.type;
+          }
+        }
       }
     }
     
-    if (fullLines.length > 0) {
-      this.clearLines(fullLines);
-      this.updateScore(fullLines.length);
-      this.updateCombo();
-      return fullLines.length;
+    this.stats.totalPieces++;
+  }
+
+  clearLines() {
+    let linesCleared = 0;
+    const clearedRows = [];
+    
+    for (let y = this.grid.length - 1; y >= 0; y--) {
+      if (this.grid[y].every(cell => cell !== 0)) {
+        clearedRows.push(y);
+        this.grid.splice(y, 1);
+        this.grid.unshift(Array(GameConfig.GRID_WIDTH).fill(0));
+        linesCleared++;
+        y++;
+      }
+    }
+    
+    if (linesCleared > 0) {
+      this.updateScore(linesCleared);
+      this.updateStats(linesCleared);
+      this.createClearEffect(clearedRows);
     } else {
       this.combo = 0;
     }
     
-    return 0;
+    return linesCleared;
   }
 
-  clearLines(lineNumbers) {
-    // Remove cleared lines
-    lineNumbers.sort((a, b) => a - b);
-    lineNumbers.forEach(lineNum => {
-      this.grid.splice(lineNum, 1);
-      this.grid.unshift(Array(GameConfig.GRID.COLS).fill(0));
-    });
+  updateScore(linesCleared) {
+    const basePoints = [0, 100, 300, 500, 800];
+    let points = basePoints[linesCleared] * this.level;
     
-    // Update statistics
-    const count = lineNumbers.length;
-    this.lines += count;
-    this.stats.linesCleared[
-      count === 1 ? 'single' :
-      count === 2 ? 'double' :
-      count === 3 ? 'triple' : 'tetris'
-    ]++;
+    // Apply character score multiplier
+    points *= this.characterAttributes.scoreMultiplier;
     
-    // Check for level up
-    const newLevel = Math.floor(this.lines / GameConfig.GAME.LINES_PER_LEVEL) + 1;
-    if (newLevel > this.level && newLevel <= GameConfig.GAME.MAX_LEVEL) {
+    if (this.combo > 0) {
+      points *= (1 + this.combo * 0.1);
+    }
+    
+    this.score += Math.floor(points);
+    this.lines += linesCleared;
+    this.combo++;
+    
+    if (this.combo > this.stats.maxCombo) {
+      this.stats.maxCombo = this.combo;
+    }
+    
+    const newLevel = Math.floor(this.lines / 10) + 1;
+    if (newLevel !== this.level) {
       this.level = newLevel;
       this.fallSpeed = GameConfig.getFallSpeed(this.level);
     }
   }
 
-  updateScore(linesCleared) {
-    const baseScore = {
-      1: GameConfig.SCORING.SINGLE,
-      2: GameConfig.SCORING.DOUBLE,
-      3: GameConfig.SCORING.TRIPLE,
-      4: GameConfig.SCORING.TETRIS
-    }[linesCleared] || 0;
-    
-    let score = baseScore * this.level;
-    
-    // Apply combo multiplier
-    if (this.combo > 0) {
-      score *= Math.pow(GameConfig.SCORING.COMBO_MULTIPLIER, this.combo);
+  updateStats(linesCleared) {
+    const types = ['', 'single', 'double', 'triple', 'tetris'];
+    if (linesCleared > 0 && linesCleared <= 4) {
+      this.stats.linesCleared[types[linesCleared]]++;
     }
-    
-    // Apply power-up multipliers
-    if (this.activePowerUps.has('MULTI')) {
-      score *= 2;
-    }
-    
-    this.score += Math.floor(score);
   }
 
-  updateCombo() {
-    this.combo++;
-    this.stats.maxCombo = Math.max(this.stats.maxCombo, this.combo);
+  createClearEffect(rows) {
+    rows.forEach(row => {
+      for (let x = 0; x < GameConfig.GRID_WIDTH; x++) {
+        this.particles.push({
+          x: x * GameConfig.BLOCK_SIZE,
+          y: row * GameConfig.BLOCK_SIZE,
+          vx: (Math.random() - 0.5) * 5,
+          vy: (Math.random() - 0.5) * 5,
+          life: 1.0,
+          color: this.characterAttributes.color
+        });
+      }
+    });
+    
+    this.screenShake = 10;
   }
 
-  // Power-up management
-  addPowerUp(type, duration = 0) {
-    if (duration > 0) {
-      this.activePowerUps.set(type, Date.now() + duration);
+  updateParticles(deltaTime) {
+    this.particles = this.particles.filter(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.2;
+      p.life -= deltaTime / 1000;
+      return p.life > 0;
+    });
+    
+    if (this.screenShake > 0) {
+      this.screenShake--;
     }
-    this.powerUpQueue.push({ type, timestamp: Date.now() });
+  }
+
+  calculateGhostPiece(piece) {
+    if (!piece || !this.settings.ghostPieceEnabled) {
+      return null;
+    }
+    
+    const ghost = { ...piece, y: piece.y };
+    while (this.isValidPosition(ghost, 0, 1)) {
+      ghost.y++;
+    }
+    return ghost;
+  }
+
+  // Power-up system
+  addPowerUp(type, duration) {
+    this.activePowerUps.set(type, {
+      timeLeft: duration,
+      active: true
+    });
   }
 
   updatePowerUps(deltaTime) {
-    const now = Date.now();
-    
-    // Remove expired power-ups
-    for (const [type, expiry] of this.activePowerUps) {
-      if (now > expiry) {
+    for (const [type, powerUp] of this.activePowerUps) {
+      powerUp.timeLeft -= deltaTime;
+      if (powerUp.timeLeft <= 0) {
         this.activePowerUps.delete(type);
       }
     }
   }
 
-  // Easter egg management
-  processKeyForEasterEggs(key) {
-    this.easterEggState.keySequence.push(key);
-    
-    // Keep only last 10 keys
-    if (this.easterEggState.keySequence.length > 10) {
-      this.easterEggState.keySequence.shift();
-    }
-    
-    // Check each easter egg
-    this.checkKonamiCode();
-    this.checkWordCode('tetris', 'TETRIS');
-    this.checkWordCode('rainbow', 'RAINBOW');
-    this.checkWordCode('matrix', 'MATRIX');
-    this.checkWordCode('godmode', 'GODMODE');
+  hasPowerUp(type) {
+    return this.activePowerUps.has(type);
   }
 
-  checkKonamiCode() {
-    const konami = GameConfig.EASTER_EGGS.KONAMI;
-    const sequence = this.easterEggState.keySequence;
+  // Easter egg handling
+  checkKonamiCode(key) {
+    const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 
+                        'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
     
-    if (sequence.length >= konami.length) {
-      const lastKeys = sequence.slice(-konami.length);
-      if (JSON.stringify(lastKeys) === JSON.stringify(konami)) {
+    if (key === konamiCode[this.easterEggState.konamiProgress]) {
+      this.easterEggState.konamiProgress++;
+      if (this.easterEggState.konamiProgress === konamiCode.length) {
         this.activateEasterEgg('KONAMI');
+        this.easterEggState.konamiProgress = 0;
       }
+    } else {
+      this.easterEggState.konamiProgress = 0;
     }
   }
 
-  checkWordCode(word, eggName) {
-    const wordKeys = word.split('');
-    const sequence = this.easterEggState.keySequence;
+  activateEasterEgg(eggType) {
+    this.easterEggState.activeEggs.add(eggType);
     
-    if (sequence.length >= wordKeys.length) {
-      const lastKeys = sequence.slice(-wordKeys.length);
-      if (JSON.stringify(lastKeys) === JSON.stringify(wordKeys)) {
-        this.activateEasterEgg(eggName);
-      }
-    }
-  }
-
-  activateEasterEgg(eggName) {
-    if (this.easterEggState.activeEggs.has(eggName)) return;
-    
-    this.easterEggState.activeEggs.add(eggName);
-    
-    // Apply easter egg effects
-    switch (eggName) {
+    switch(eggType) {
       case 'KONAMI':
-        this.score += 30000; // 30 lives worth of points
-        this.addPowerUp('MULTI', 30000);
+        this.addPowerUp('RAINBOW_MODE', 30000);
         break;
-      case 'TETRIS':
-        // Rain of I-pieces for 10 seconds
-        this.addPowerUp('TETRIS_RAIN', 10000);
+      case 'SPEED_DEMON':
+        this.addPowerUp('SUPER_SPEED', 15000);
         break;
-      case 'RAINBOW':
-        // Rainbow theme and sparkles
-        this.addPowerUp('RAINBOW', 20000);
-        break;
-      case 'MATRIX':
-        // Matrix digital rain effect
-        this.addPowerUp('MATRIX', 15000);
-        break;
-      case 'GODMODE':
-        // Temporary invincibility
+      case 'GOD_MODE':
         this.addPowerUp('GODMODE', 10000);
         break;
     }
@@ -355,7 +331,7 @@ class GameState {
   }
 
   // Statistics and progress
-  updateStats(deltaTime) {
+  updateGameTime(deltaTime) {
     this.gameTime += deltaTime;
     this.stats.timeAlive = this.gameTime;
     this.stats.piecesPerSecond = this.stats.totalPieces / (this.gameTime / 1000);
@@ -369,6 +345,7 @@ class GameState {
       level: this.level,
       stats: this.stats,
       settings: this.settings,
+      selectedCharacter: this.selectedCharacter,
       easterEggs: Array.from(this.easterEggState.activeEggs)
     };
   }
@@ -379,6 +356,9 @@ class GameState {
     this.level = data.level || 1;
     this.stats = { ...this.stats, ...data.stats };
     this.settings = { ...this.settings, ...data.settings };
+    if (data.selectedCharacter) {
+      this.setCharacter(data.selectedCharacter);
+    }
     if (data.easterEggs) {
       this.easterEggState.activeEggs = new Set(data.easterEggs);
     }

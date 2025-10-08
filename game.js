@@ -3,6 +3,7 @@ const BLOCK_SIZE = 20;
 const PLAYER_WIDTH = BLOCK_SIZE;
 const PLAYER_HEIGHT = BLOCK_SIZE * 2;
 const ANIMAL_SIZE = Math.round(BLOCK_SIZE * 1.2);
+
 // ===== Global Variables =====
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas ? canvas.getContext("2d") : null;
@@ -27,55 +28,167 @@ let wasOnGround = true;
 let minYInAir;
 let animals = [];
 let mobs = [];
+
 // ===== Load Images =====
 const animalImages = {
   cow: new Image(),
   pig: new Image(),
   chicken: new Image(),
-  polarbear: new Image(),
   noah: new Image(),
 };
-// Set image sources from repo root (no assets/ prefix)
+
+// Set image sources from repo root (removed polarbear.png - file doesn't exist)
 animalImages.cow.src = "cow.png";
 animalImages.pig.src = "pig.png";
 animalImages.chicken.src = "chicken.png";
-animalImages.polarbear.src = "polarbear.png";
 animalImages.noah.src = "noah.png";
 
-// ... rest of the original code remains unchanged below ...
+// ===== Navigation & Landing Page Logic =====
 
-// Ensure DOM elements exist before using
-function safeGet(id) {
-  return typeof document !== 'undefined' ? document.getElementById(id) : null;
+// Get landing page elements
+const landingPage = document.getElementById("landingPage");
+const characterSelection = document.getElementById("characterSelection");
+const achievementsScreen = document.getElementById("achievementsScreen");
+const gameContainer = document.getElementById("gameContainer");
+
+// Get menu buttons
+const startGameBtn = document.getElementById("startGameBtn");
+const selectCharacterBtn = document.getElementById("selectCharacterBtn");
+const achievementsBtn = document.getElementById("achievementsBtn");
+const backFromCharacterBtn = document.getElementById("backFromCharacter");
+const backFromAchievementsBtn = document.getElementById("backFromAchievements");
+const mainMenuBtn = document.getElementById("mainMenuBtn");
+
+// Character selection cards
+const characterCards = document.querySelectorAll(".character-card");
+
+// Show/Hide screens
+function showScreen(screen) {
+  // Hide all screens
+  if (landingPage) landingPage.classList.add("hidden");
+  if (characterSelection) characterSelection.classList.add("hidden");
+  if (achievementsScreen) achievementsScreen.classList.add("hidden");
+  if (gameContainer) gameContainer.classList.add("hidden");
+  
+  // Show requested screen
+  if (screen) screen.classList.remove("hidden");
 }
 
-// Example: where you previously did document.getElementById("gameOverScreen").style.display = "none";
-// Now guard it:
-const _gameOverScreen = safeGet("gameOverScreen");
-if (_gameOverScreen) _gameOverScreen.style.display = "none";
-
-// Event Listeners
-const _exitBtn = safeGet("exitButton");
-if (_exitBtn) _exitBtn.addEventListener("click", exitToMenu);
-
-// Global key listeners remain safe on document
-if (typeof document !== 'undefined') {
-  document.addEventListener("keydown", (e) => {
-    if (!paused) keys[e.key.toLowerCase()] = true;
-    if (e.key === "Escape" && !gameOverFlag) exitToMenu();
-    if (e.key.toLowerCase() === "s" && !paused && !gameOverFlag) saveGame();
-  });
-
-  document.addEventListener("keyup", (e) => {
-    keys[e.key.toLowerCase()] = false;
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key.toLowerCase() === "e" && !paused && inventory.meat > 0) {
-      inventory.meat--;
-      player.health = Math.min(player.health + 20, player.maxHealth);
-      showMessage("Ate meat, restored 20 health.");
-      updateInventoryUI();
+// Navigation button event listeners
+if (startGameBtn) {
+  startGameBtn.addEventListener("click", () => {
+    showScreen(gameContainer);
+    if (!gameStarted) {
+      initGame();
     }
   });
 }
+
+if (selectCharacterBtn) {
+  selectCharacterBtn.addEventListener("click", () => {
+    showScreen(characterSelection);
+  });
+}
+
+if (achievementsBtn) {
+  achievementsBtn.addEventListener("click", () => {
+    showScreen(achievementsScreen);
+  });
+}
+
+if (backFromCharacterBtn) {
+  backFromCharacterBtn.addEventListener("click", () => {
+    showScreen(landingPage);
+  });
+}
+
+if (backFromAchievementsBtn) {
+  backFromAchievementsBtn.addEventListener("click", () => {
+    showScreen(landingPage);
+  });
+}
+
+if (mainMenuBtn) {
+  mainMenuBtn.addEventListener("click", () => {
+    showScreen(landingPage);
+    gameStarted = false;
+    paused = true;
+  });
+}
+
+// Character selection logic
+characterCards.forEach(card => {
+  card.addEventListener("click", () => {
+    // Remove selected class from all cards
+    characterCards.forEach(c => c.classList.remove("selected"));
+    // Add selected class to clicked card
+    card.classList.add("selected");
+    // Store selected character
+    const character = card.getAttribute("data-character");
+    localStorage.setItem("selectedCharacter", character);
+  });
+});
+
+// ===== Game Initialization & Core Logic =====
+
+let gameStarted = false;
+
+function initGame() {
+  gameStarted = true;
+  paused = false;
+  // Initialize game state here
+  // This is a placeholder - full game logic would go here
+  console.log("Game initialized!");
+  
+  // Start game loop if canvas exists
+  if (canvas && ctx) {
+    requestAnimationFrame(gameLoop);
+  }
+}
+
+function gameLoop() {
+  if (!paused && gameStarted) {
+    // Game update logic would go here
+    // For now, just clear canvas
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#87CEEB";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#000";
+      ctx.font = "20px Arial";
+      ctx.fillText("Game Running! Press Main Menu to return.", 50, 300);
+    }
+    requestAnimationFrame(gameLoop);
+  }
+}
+
+// Global key listeners
+if (typeof document !== 'undefined') {
+  document.addEventListener("keydown", (e) => {
+    if (!paused) keys[e.key.toLowerCase()] = true;
+    if (e.key === "Escape" && gameStarted) {
+      showScreen(landingPage);
+      gameStarted = false;
+      paused = true;
+    }
+  });
+  
+  document.addEventListener("keyup", (e) => {
+    keys[e.key.toLowerCase()] = false;
+  });
+}
+
+// Placeholder functions for compatibility
+function saveGame() {
+  console.log("Save game");
+}
+
+function showMessage(msg) {
+  console.log(msg);
+}
+
+function updateInventoryUI() {
+  console.log("Update inventory UI");
+}
+
+console.log("BlocksCreate game.js loaded successfully!");

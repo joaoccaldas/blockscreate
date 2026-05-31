@@ -14,6 +14,15 @@
 import { getBlock, AIR } from '../core/blocks.js';
 import { getEra } from '../core/eras.js';
 
+const BLOCK_ATLAS = {
+  grass: [0, 0], dirt: [1, 0], stone: [2, 0], cobblestone: [2, 0], sand: [3, 0],
+  water: [0, 1], log: [1, 1], leaves: [2, 1], planks: [3, 1],
+  coal_ore: [0, 2], copper_ore: [1, 2], tin_ore: [2, 2], iron_ore: [3, 2],
+  clay: [0, 3], gravel: [1, 3], brick: [2, 3], campfire: [3, 3], torch: [3, 3],
+};
+
+const ATLAS_TILE = 32;
+
 export class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -152,6 +161,11 @@ export class Renderer {
     const dk = depth > 0 ? Math.max(0.55, 1 - depth * 0.012) : 1;
     const bevel = Math.max(2, T * 0.16);
 
+    if (this.drawBlockTexture(b, sx, sy, T, dk)) {
+      if (b.light) this.drawLightGlow(sx, sy, T);
+      return;
+    }
+
     if (b.liquid) {
       const wob = Math.sin(this.t * 2 + tx * 0.6) * T * 0.04;
       ctx.fillStyle = withAlpha(shade(b.colors.base, dk), 0.78);
@@ -180,15 +194,35 @@ export class Renderer {
       }
     }
 
-    if (b.light) {
-      ctx.save();
-      ctx.globalAlpha = 0.35 + 0.1 * Math.sin(this.t * 6 + tx);
-      ctx.fillStyle = '#ffdf91';
-      ctx.beginPath();
-      ctx.arc(sx + T / 2, sy + T / 2, T * 0.9, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+    if (b.light) this.drawLightGlow(sx, sy, T);
+  }
+
+  drawBlockTexture(block, sx, sy, T, darkness) {
+    const atlas = this.sprites.blockAtlas;
+    const pos = BLOCK_ATLAS[block.name];
+    if (!atlas || !atlas.complete || !atlas.naturalWidth || !pos) return false;
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(atlas, pos[0] * ATLAS_TILE, pos[1] * ATLAS_TILE, ATLAS_TILE, ATLAS_TILE, sx, sy, T + 1, T + 1);
+    if (darkness < 0.98) {
+      ctx.globalAlpha = Math.min(0.45, 1 - darkness);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(sx, sy, T + 1, T + 1);
     }
+    ctx.restore();
+    return true;
+  }
+
+  drawLightGlow(sx, sy, T) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.globalAlpha = 0.35 + 0.1 * Math.sin(this.t * 6 + sx * 0.05);
+    ctx.fillStyle = '#ffdf91';
+    ctx.beginPath();
+    ctx.arc(sx + T / 2, sy + T / 2, T * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 
   drawPlayer(camera, player, T) {
@@ -204,6 +238,24 @@ export class Renderer {
     ctx.beginPath();
     ctx.ellipse(sx, sy, w * 0.6, T * 0.18, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    const sheet = this.sprites.player;
+    if (sheet && sheet.complete && sheet.naturalWidth) {
+      const moving = Math.abs(player.vx) > 0.2 && player.onGround;
+      const frame = !player.onGround ? 3 : moving ? (Math.floor(this.t * 8) % 2 ? 1 : 2) : 0;
+      const drawW = T * 1.25;
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      if (player.facing < 0) {
+        ctx.translate(sx, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(sheet, frame * ATLAS_TILE, 0, ATLAS_TILE, ATLAS_TILE, -drawW / 2, py, drawW, h);
+      } else {
+        ctx.drawImage(sheet, frame * ATLAS_TILE, 0, ATLAS_TILE, ATLAS_TILE, sx - drawW / 2, py, drawW, h);
+      }
+      ctx.restore();
+      return;
+    }
 
     // Walk-cycle leg swing based on horizontal motion.
     const moving = Math.abs(player.vx) > 0.2 && player.onGround;

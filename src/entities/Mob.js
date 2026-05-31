@@ -12,6 +12,7 @@ export const MOB_TYPES = {
   cow: { sprite: 'cow', food: 3, w: 1.1, h: 1.0 },
   pig: { sprite: 'pig', food: 2, w: 1.0, h: 0.9 },
   chicken: { sprite: 'chicken', food: 1, w: 0.7, h: 0.7 },
+  goat: { sprite: 'goat', food: 2, w: 1.0, h: 0.95 },
 };
 
 export class Mob {

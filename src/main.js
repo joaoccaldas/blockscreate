@@ -22,9 +22,19 @@ const audio = new Audio({ sound: settings.get('sound'), music: settings.get('mus
 const sprites = {};
 
 function loadSprites() {
-  for (const n of ['cow', 'pig', 'chicken', 'noah']) {
+  const manifest = {
+    cow: 'assets/generated/sprites/cow.png',
+    pig: 'assets/generated/sprites/pig.png',
+    chicken: 'assets/generated/sprites/chicken.png',
+    goat: 'assets/generated/sprites/goat.png',
+    noah: 'assets/generated/sprites/player_idle.png',
+    player: 'assets/generated/sprites/player.png',
+    blockAtlas: 'assets/generated/textures/blocks.png',
+    effects: 'assets/generated/effects/effects.png',
+  };
+  for (const n in manifest) {
     const img = new Image();
-    img.src = `${n}.png`;
+    img.src = manifest[n];
     sprites[n] = img;
   }
 }

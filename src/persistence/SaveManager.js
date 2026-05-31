@@ -22,6 +22,10 @@ export const SaveManager = {
       mobs: game.mobs.map((m) => m.serialize()),
       crafted: [...(game.crafted || [])],
       objectives: game.objectives ? game.objectives.serialize() : [],
+      structures: game.structures ? game.structures.serialize() : [],
+      discoveries: game.discoveries ? game.discoveries.serialize() : [],
+      powerups: game.powerups ? game.powerups.serialize() : [],
+      animalPeaceTime: game.animalPeaceTime || 0,
     };
   },
 

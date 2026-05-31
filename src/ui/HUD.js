@@ -50,8 +50,14 @@ export class HUD {
         <div id="objList"></div>
       </div>
 
+      <div id="discoveryPanel" class="discovery-panel hidden">
+        <div class="obj-title">✨ Discoveries</div>
+        <div id="discoveryList"></div>
+      </div>
+
       <button id="pauseBtn" class="icon-btn" title="Menu (Esc)">☰</button>
       <div id="buildIndicator" class="build-indicator"></div>
+      <div id="powerupBar" class="powerup-bar hidden"></div>
       <div id="toast" class="toast hidden"></div>
       <div id="bigToast" class="big-toast hidden"></div>
 
@@ -210,6 +216,8 @@ export class HUD {
     this.el('buildIndicator').classList.toggle('build-on', game.buildMode);
 
     if (survival) this.renderObjectives(game);
+    this.renderDiscoveries(game);
+    this.renderPowerups(game);
     this.renderHotbar(game);
   }
 
@@ -225,6 +233,31 @@ export class HUD {
     if (!active.length) html = `<div class="obj-item done">✅ All objectives complete!</div>`;
     html += `<div class="obj-count">${done}/${total} done</div>`;
     list.innerHTML = html;
+  }
+
+  renderDiscoveries(game) {
+    const panel = this.el('discoveryPanel');
+    const list = this.el('discoveryList');
+    const structures = game.structures?.list?.() || [];
+    const discoveries = game.discoveries?.list?.() || [];
+    const visible = structures.length || discoveries.length;
+    panel.classList.toggle('hidden', !visible);
+    if (!visible) return;
+    const rows = [
+      ...structures.slice(-3).map((s) => `<div class="obj-item"><span class="obj-ic">${s.icon}</span>${s.label}</div>`),
+      ...discoveries.slice(-3).map((d) => `<div class="obj-item done"><span class="obj-ic">${d.icon}</span>${d.label}</div>`),
+    ].slice(-5);
+    list.innerHTML = rows.join('') + `<div class="obj-count">${structures.length} structures · ${discoveries.length} secrets</div>`;
+  }
+
+  renderPowerups(game) {
+    const bar = this.el('powerupBar');
+    const active = game.powerups?.list?.() || [];
+    bar.classList.toggle('hidden', !active.length);
+    if (!active.length) return;
+    bar.innerHTML = active.map((p) =>
+      `<span class="powerup" title="${p.label}">${p.icon} ${Math.ceil(p.remaining)}s</span>`
+    ).join('');
   }
 
   renderHotbar(game) {

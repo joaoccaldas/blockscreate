@@ -37,6 +37,8 @@ export class Civilization {
     this.housing = 0;
     this.light = 0;
     this.placed = {};
+    this.highestBuild = Number.MAX_SAFE_INTEGER;
+    this.deepestMine = 0;
   }
 
   addCP(amount) {
@@ -46,8 +48,9 @@ export class Civilization {
     if (target > this.population) this.population = target;
   }
 
-  onMine() {
+  onMine(_itemId = null, y = 0) {
     this.totalMined++;
+    this.deepestMine = Math.max(this.deepestMine, y);
     this.addCP(CP_GAINS.mine);
   }
 
@@ -56,8 +59,10 @@ export class Civilization {
     this.addCP(CP_GAINS.craft);
   }
 
-  onBuild(itemId) {
+  onBuild(itemId, x = 0, y = Infinity) {
+    void x;
     this.placed[itemId] = (this.placed[itemId] || 0) + 1;
+    this.highestBuild = Math.min(this.highestBuild, y);
     if (SETTLEMENT_BLOCKS.has(itemId)) {
       this.totalBuilt++;
       this.addCP(CP_GAINS.build);
@@ -100,6 +105,7 @@ export class Civilization {
       eraId: this.eraId, cp: this.cp, population: this.population,
       totalMined: this.totalMined, totalCrafted: this.totalCrafted, totalBuilt: this.totalBuilt,
       housing: this.housing, light: this.light, placed: this.placed,
+      highestBuild: this.highestBuild, deepestMine: this.deepestMine,
     };
   }
 
@@ -108,5 +114,7 @@ export class Civilization {
     this.housing ??= 0;
     this.light ??= 0;
     this.placed ??= {};
+    this.highestBuild ??= Number.MAX_SAFE_INTEGER;
+    this.deepestMine ??= 0;
   }
 }

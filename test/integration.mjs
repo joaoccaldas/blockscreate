@@ -96,11 +96,15 @@ g.mode = MODE.SURVIVAL;
 // Save now includes crafted + objectives, and round-trips.
 const json = SaveManager.toJSON(g);
 if (!('objectives' in json) || !('crafted' in json)) throw new Error('save missing new fields');
+for (const key of ['structures', 'discoveries', 'powerups']) {
+  if (!(key in json)) throw new Error(`save missing ${key}`);
+}
 const g2 = newGame();
 g2.loadSave(json);
 if (g2.world.grid.length !== g.world.grid.length) throw new Error('grid length mismatch after load');
 if (!g2.objectives.isDone('gather_wood')) throw new Error('objective state lost across save');
-ok(`save/load round-trip; era ${g2.eraId}, objectives restored`);
+if (!g2.structures || !g2.discoveries || !g2.powerups) throw new Error('fun systems missing after load');
+ok(`save/load round-trip; era ${g2.eraId}, objectives + fun systems restored`);
 
 // Era advancement builds a fresh world and installs the next era objective set.
 g2.civ.cp = 250;

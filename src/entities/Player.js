@@ -62,7 +62,7 @@ export class Player {
       this.vy = 0;
     }
 
-    if (mode === MODE.SURVIVAL) this.updateSurvival(dt);
+    if (mode === MODE.SURVIVAL) this.updateSurvival(dt, input.modifiers);
   }
 
   /** Move along one axis and resolve collisions. Returns true if blocked. */
@@ -106,9 +106,10 @@ export class Player {
     return blocked;
   }
 
-  updateSurvival(dt) {
+  updateSurvival(dt, modifiers = {}) {
     // Hunger slowly drains; energy regenerates when fed.
-    this.hunger = Math.max(0, this.hunger - dt * 0.6);
+    const hungerDrain = modifiers.hungerDrain ?? 1;
+    this.hunger = Math.max(0, this.hunger - dt * 0.6 * hungerDrain);
     if (this.hunger <= 0) {
       this.health = Math.max(0, this.health - dt * 2);
     } else if (this.health < 100 && this.hunger > 40) {

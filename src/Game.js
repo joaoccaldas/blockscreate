@@ -11,6 +11,9 @@ import { Inventory, HOTBAR_SIZE } from './systems/Inventory.js';
 import { Civilization } from './systems/Civilization.js';
 import { craft } from './systems/Crafting.js';
 import { ObjectiveTracker } from './systems/Objectives.js';
+import { DiscoveryLog } from './systems/Discoveries.js';
+import { StructureTracker } from './systems/Structures.js';
+import { PowerupManager } from './systems/Powerups.js';
 import { Camera } from './render/Camera.js';
 import { Renderer } from './render/Renderer.js';
 import { Particles } from './render/Particles.js';
@@ -44,6 +47,8 @@ export class Game {
     this.stepTimer = 0;
     this.autosaveTimer = 0;
     this.mobTimer = 0;
+    this.structureScanTimer = 0;
+    this.animalPeaceTime = 0;
   }
 
   // ---- lifecycle ----
@@ -58,6 +63,9 @@ export class Game {
     this.inventory = new Inventory();
     this.civ = new Civilization(eraId);
     this.objectives = new ObjectiveTracker(eraId);
+    this.structures = new StructureTracker();
+    this.discoveries = new DiscoveryLog();
+    this.powerups = new PowerupManager();
     this.mobs = [];
     this._grantStarter();
     this._setup();
@@ -76,7 +84,11 @@ export class Game {
     this.civ.load(save.civ);
     this.crafted = new Set(save.crafted || []);
     this.objectives = new ObjectiveTracker(this.eraId, save.objectives || []);
+    this.structures = new StructureTracker(save.structures || []);
+    this.discoveries = new DiscoveryLog(save.discoveries || []);
+    this.powerups = new PowerupManager(save.powerups || []);
     this.mobs = (save.mobs || []).map((m) => Mob.load(m));
+    this.animalPeaceTime = save.animalPeaceTime || 0;
     this._setup();
   }
 
@@ -84,8 +96,9 @@ export class Game {
     const era = getEra(this.eraId);
     for (const id of era.starter || []) this.inventory.add(id, 1);
     if (this.mode === MODE.CREATIVE) {
-      ['grass', 'dirt', 'stone', 'cobblestone', 'sand', 'log', 'planks', 'leaves',
-        'thatch', 'brick', 'torch', 'campfire']
+      ['grass', 'dirt', 'stone', 'cobblestone', 'sand', 'water', 'log', 'planks', 'leaves',
+        'thatch', 'brick', 'torch', 'campfire', 'clay', 'gravel',
+        'coal_ore', 'copper_ore', 'tin_ore', 'iron_ore', 'gold_ore']
         .forEach((id) => this.inventory.add(id, 99));
     } else {
       // Survival: a couple of torches to start; everything else is earned.
@@ -286,6 +299,7 @@ export class Game {
 
     if (!menus) {
       const wasGround = this.player.onGround;
+      this.input.state.modifiers = { hungerDrain: this.powerups.multiplier('hungerDrain') };
       this.player.update(dt, this.world, this.input.state, this.mode);
       this._footsteps(dt, wasGround);
       this._handleInteraction(dt);
@@ -293,6 +307,8 @@ export class Game {
 
     for (const m of this.mobs) m.update(dt, this.world);
     this._spawnMobs(dt);
+    this.powerups.update(dt);
+    this._trackAnimalFriendship(dt);
     this.particles.update(dt);
 
     this.clock = (this.clock + dt) % C.DAY_LENGTH;
@@ -310,6 +326,8 @@ export class Game {
         this.hud.toast(`${o.icon} Objective complete: ${o.label}${o.reward ? ` (+${o.reward} CP)` : ''}`, 2600);
       }
     }
+
+    this._evaluateFunSystems(dt);
 
     // Era advancement.
     if (this.mode === MODE.SURVIVAL && this.civ.canAdvance()) {
@@ -378,7 +396,8 @@ export class Game {
     const m = this.input.mouse;
     const { tileX, tileY, tx, ty } = this.camera.screenToWorld(m.x, m.y);
     const dist = Math.hypot(tx - this.player.x, ty - (this.player.y - this.player.h / 2));
-    const inReach = dist <= C.REACH;
+    const reach = C.REACH + this.powerups.value('reach', 0);
+    const inReach = dist <= reach;
     const placeIntent = m.button === 2 || this.buildMode;
 
     this.hover = { x: tileX, y: tileY, valid: inReach, mode: placeIntent ? 'place' : 'mine', progress: 0 };
@@ -440,9 +459,9 @@ export class Game {
     const sel = this.inventory.selectedItem();
     const item = sel ? getItem(sel.id) : null;
     if (item && item.kind === 'tool' && item.tool === block.tool) {
-      return 1 + item.tier * 1.4;
+      return (1 + item.tier * 1.4) * this.powerups.multiplier('miningSpeed');
     }
-    return 1;
+    return this.powerups.multiplier('miningSpeed');
   }
 
   _breakBlock(x, y, block) {
@@ -453,7 +472,7 @@ export class Game {
     if (this.mode === MODE.SURVIVAL) {
       for (const drop of drops) this.inventory.add(drop, 1);
     }
-    this.civ.onMine();
+    this.civ.onMine(block.name, y);
   }
 
   _tryPlace(x, y) {
@@ -479,9 +498,52 @@ export class Game {
     const b = getBlock(id);
     if (b.colors) this.particles.burst(x + 0.5, y + 0.5, b.colors.base, 5, { gravity: 8, life: 0.3 });
     this.audio?.play('place');
-    this.civ.onBuild(sel.id);
+    this.civ.onBuild(sel.id, x, y);
+    this._evaluateStructures({ x, y });
     if (this.mode === MODE.SURVIVAL) this.inventory.consumeSelected(1);
     return true;
+  }
+
+  _evaluateStructures(origin = null) {
+    if (!this.structures) return;
+    const found = this.structures.evaluate(this, origin);
+    for (const s of found) {
+      if (s.reward) this.civ.addCP(s.reward * this.powerups.multiplier('cpMultiplier'));
+      this.audio?.play('objective');
+      this.particles.fountain(this.player.x, this.player.y - 1, ['#f4d24a', '#6fc04e', '#4f86ee'], 18);
+      this.hud?.toast(`${s.icon} Structure discovered: ${s.label}${s.reward ? ` (+${s.reward} CP)` : ''}`, 2600);
+    }
+  }
+
+  _evaluateFunSystems(dt) {
+    this.structureScanTimer -= dt;
+    const fastScan = this.powerups.value('structureScan', 0) > 0;
+    if (this.structureScanTimer <= 0) {
+      this.structureScanTimer = fastScan ? 1.5 : 5;
+      this._evaluateStructures();
+    }
+
+    if (!this.discoveries) return;
+    const found = this.discoveries.evaluate(this);
+    for (const d of found) {
+      const reward = d.reward || {};
+      if (reward.cp) this.civ.addCP(reward.cp * this.powerups.multiplier('cpMultiplier'));
+      let suffix = reward.cp ? ` (+${reward.cp} CP)` : '';
+      if (reward.powerup) {
+        const p = this.powerups.grant(reward.powerup);
+        if (p) suffix += ` · ${p.icon} ${p.label}`;
+      }
+      this.audio?.play('unlock');
+      this.particles.fountain(this.player.x, this.player.y - 1,
+        ['#f4d24a', '#6fc04e', '#4f86ee', '#ff7b29', '#fff'], 28);
+      this.hud?.bigToast(`${d.icon} <b>Hidden discovery</b><br><small>${d.label}${suffix}</small>`, 3400);
+    }
+  }
+
+  _trackAnimalFriendship(dt) {
+    if (this.mode !== MODE.SURVIVAL || !this.mobs.length) return;
+    const near = this.mobs.some((m) => Math.hypot(m.x - this.player.x, m.y - this.player.y) < 3);
+    this.animalPeaceTime = near ? this.animalPeaceTime + dt : Math.max(0, this.animalPeaceTime - dt * 0.5);
   }
 
   _hitMob(mob) {
@@ -531,6 +593,7 @@ export class Game {
       player: this.player,
       mobs: this.mobs,
       particles: this.particles,
+      powerups: this.powerups,
       dayFactor: this.dayFactor(),
       hover: this.hover,
       ghost: this.ghost,

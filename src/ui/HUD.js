@@ -43,6 +43,11 @@ export class HUD {
         <div class="civ-row"><span>🏘️ Settlement</span><b id="settleVal">0</b></div>
         <div class="civ-row"><span>🔎 Clues</span><b id="clueVal">0</b></div>
         <div class="civ-row"><span>⭐ Mastery</span><b id="masteryVal">0/0</b></div>
+        <div id="cellPanel" class="cell-panel hidden">
+          <div class="civ-row"><span>🧬 Stability</span><b id="cellStabilityVal">0%</b></div>
+          <div class="civ-progress cell-progress"><div id="cellStabilityBar" class="cell-fill"></div></div>
+          <div id="cellGradient" class="cell-gradient"></div>
+        </div>
         <div class="civ-progress"><div id="advanceBar" class="advance-fill"></div></div>
         <div id="advanceLabel" class="advance-label"></div>
         <button id="advanceBtn" class="advance-btn hidden">Enter Portal</button>
@@ -257,6 +262,7 @@ export class HUD {
     this.el('cpVal').textContent = Math.floor(game.civ.cp);
     this.el('settleVal').textContent = game.civ.settlementScore();
     this.el('clueVal').textContent = game.clues?.count?.() || 0;
+    this.renderCellStatus(game);
     const status = game.advancementStatus?.() || {};
     this.el('masteryVal').textContent = `${status.masteryDone || 0}/${status.masteryTotal || 0}`;
     const prog = game.civ.advanceProgress();
@@ -278,6 +284,19 @@ export class HUD {
     this.renderPowerups(game);
     this.renderEvents(game);
     this.renderHotbar(game);
+  }
+
+  renderCellStatus(game) {
+    const panel = this.el('cellPanel');
+    const status = game.cellStatus;
+    panel.classList.toggle('hidden', game.eraId !== 'cell' || !status);
+    if (game.eraId !== 'cell' || !status) return;
+    this.el('cellStabilityVal').textContent = `${status.stability}%`;
+    this.el('cellStabilityBar').style.width = `${status.stability}%`;
+    const distance = status.distance == null ? '' : ` · ${Math.ceil(status.distance)} tiles`;
+    this.el('cellGradient').textContent = status.ready
+      ? 'ready to evolve'
+      : `sense: ${status.gradient}${distance}`;
   }
 
   renderObjectives(game) {

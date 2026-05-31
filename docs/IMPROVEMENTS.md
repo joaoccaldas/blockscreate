@@ -62,3 +62,9 @@ BlocksCreate already has the right spine for "Minecraft meets Civilization": blo
 - Added automatic absorption of nearby nutrient blobs and mineral vents.
 - Added a pulsing cell rendering path instead of using the humanoid sprite.
 - Shifted HUD labels in First Cell from normal survival toward life/stability.
+
+## Implemented In Cell Stability Pass
+
+- Added a First Cell stability meter to the HUD.
+- Added chemical-gradient guidance toward nearby nutrients or mineral vents.
+- Connected absorption, stored resources, membrane building and proto-cell crafting to a visible stability model.

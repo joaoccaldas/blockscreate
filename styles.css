@@ -244,6 +244,10 @@ html, body {
 .civ-row { display: flex; justify-content: space-between; margin-bottom: 3px; }
 .civ-progress { height: 8px; background: rgba(255, 255, 255, 0.12); border-radius: 4px; overflow: hidden; margin: 4px 0 3px; }
 .advance-fill { height: 100%; background: linear-gradient(90deg, var(--gold), #fff0a8); width: 0; transition: width 0.3s; }
+.cell-panel { margin: 6px 0; padding-top: 5px; border-top: 1px solid rgba(180, 255, 245, 0.18); }
+.cell-progress { background: rgba(118, 247, 221, 0.12); }
+.cell-fill { height: 100%; background: linear-gradient(90deg, #55f0d8, #ffd6ff); width: 0; transition: width 0.3s; }
+.cell-gradient { color: #b8fff2; font-size: 0.7rem; line-height: 1.2; }
 .advance-label { color: var(--muted); font-size: 0.74rem; }
 .advance-btn {
   width: 100%;

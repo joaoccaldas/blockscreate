@@ -98,6 +98,10 @@ walking, nearby nutrients and mineral vents are absorbed automatically, and the
 HUD swaps survival labels toward life/stability. This makes the origin era feel
 like a different biological scale instead of a normal character in a tiny cave.
 
+The HUD now also exposes cell stability and the nearest chemical gradient. This
+gives the player a learnable loop: drift toward gradients, absorb chemistry,
+raise stability, build a membrane and evolve.
+
 ## Save Format
 
 The save now includes:

@@ -434,6 +434,7 @@ export class Game {
       this.player.update(dt, this.world, this.input.state, this.mode);
       this._expandWorldIfNeeded();
       this._absorbCellResources(dt);
+      this._updateCellStatus(dt);
       this._footsteps(dt, wasGround);
       this._handleInteraction(dt);
     }
@@ -599,6 +600,7 @@ export class Game {
         this.inventory.add(def.item, 1);
         this.civ.addCP(def.cp * this.powerups.multiplier('cpMultiplier'));
         this.player.eat(def.item === 'nutrient_blob' ? 8 : 3);
+        this.cellStability = Math.min(100, (this.cellStability ?? this.player.hunger) + (def.item === 'nutrient_blob' ? 7 : 4));
         this.particles.fountain(x + 0.5, y + 0.5, [def.color, '#76f7dd', '#fff'], 12);
         this.audio?.play('mine');
         this.hud?.toast(def.item === 'nutrient_blob' ? 'Absorbed nutrients' : 'Absorbed vent minerals', 900);
@@ -606,6 +608,47 @@ export class Game {
         return;
       }
     }
+  }
+
+  _updateCellStatus(dt) {
+    if (this.eraId !== 'cell') {
+      this.cellStatus = null;
+      return;
+    }
+    const nearest = this._nearestCellResource(14);
+    const membrane = Math.min(1, this.inventory.count('lipid_membrane') / 4);
+    const proto = this.inventory.count('proto_cell') > 0 || this.crafted.has('proto_cell') ? 1 : 0;
+    const resourceBonus = Math.min(18, this.inventory.count('nutrient_blob') * 2 + this.inventory.count('mineral_vent') * 3);
+    const structureBonus = Math.min(16, (this.civ.placed.lipid_membrane || 0) * 4);
+    const target = Math.min(100, 28 + resourceBonus + membrane * 18 + structureBonus + proto * 20);
+    this.cellStability = this.cellStability == null ? target : this.cellStability + (target - this.cellStability) * Math.min(1, dt * 2);
+    this.cellStatus = {
+      stability: Math.round(this.cellStability),
+      gradient: nearest ? nearest.label : 'quiet chemistry',
+      distance: nearest ? nearest.distance : null,
+      ready: this.objectives?.mandatoryDone?.() && this.civ.canAdvance(),
+    };
+  }
+
+  _nearestCellResource(radius = 12) {
+    if (!this.world || this.eraId !== 'cell') return null;
+    const ids = new Map([
+      [blockId('nutrient_blob'), 'nutrient gradient'],
+      [blockId('mineral_vent'), 'warm vent minerals'],
+    ]);
+    const px = Math.round(this.player.x);
+    const py = Math.round(this.player.y - this.player.h / 2);
+    let best = null;
+    for (let y = py - radius; y <= py + radius; y++) {
+      for (let x = px - radius; x <= px + radius; x++) {
+        const label = ids.get(this.world.get(x, y));
+        if (!label) continue;
+        const distance = Math.hypot(x + 0.5 - this.player.x, y + 0.5 - this.player.y);
+        if (distance > radius || (best && distance >= best.distance)) continue;
+        best = { x, y, label, distance };
+      }
+    }
+    return best;
   }
 
   /** Era-flavored ambient weather particles drifting across the view. */

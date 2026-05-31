@@ -83,6 +83,8 @@ if (gCell.player.h >= 1.8) throw new Error('cell player form was not applied');
 gCell.world.set(Math.round(gCell.player.x) + 1, Math.round(gCell.player.y), blockId('nutrient_blob'));
 gCell.update(0.2);
 if (gCell.inventory.count('nutrient_blob') < 1) throw new Error('cell did not absorb nearby nutrients');
+if (!gCell.cellStatus || gCell.cellStatus.stability <= 0) throw new Error('cell stability status missing');
+if (!gCell.cellStatus.gradient) throw new Error('cell gradient guidance missing');
 gCell.inventory.add('nutrient_blob', 3);
 gCell.inventory.add('mineral_vent', 1);
 gCell.inventory.add('lipid_membrane', 4);

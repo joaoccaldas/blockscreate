@@ -54,6 +54,12 @@ The cell now drifts, pulses and absorbs nearby resources. The next risk is
 balance: automatic absorption should feel generous, but not so fast that the
 origin era ends before the player understands nutrients, vents and membranes.
 
+## v4.7 Cell Stability Readiness Note
+
+First Cell now has an explicit stability and gradient feedback loop. The next
+playtest should watch whether players understand that stability comes from
+chemistry, membranes and proto-cell formation before evolution.
+
 ## Known next steps
 
 - Complete true chunk streaming (current saves now include chunk metadata and modified chunk snapshots, but rendering still uses a dense loaded window).

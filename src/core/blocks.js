@@ -29,7 +29,7 @@ const defs = [
   // Natural terrain
   { id: 1,  name: 'grass',      label: 'Grass',        solid: true,  hardness: 0.6, tool: 'shovel',  colors: { base: '#5a9e3f', top: '#6fc04e', side: '#4a8233' }, era: 'stone' },
   { id: 2,  name: 'dirt',       label: 'Dirt',         solid: true,  hardness: 0.5, tool: 'shovel',  colors: { base: '#7a5230', top: '#8a5f38', side: '#653f23' }, era: 'stone' },
-  { id: 3,  name: 'stone',      label: 'Stone',        solid: true,  hardness: 1.6, tool: 'pickaxe', colors: { base: '#7d7d7d', top: '#8c8c8c', side: '#6a6a6a' }, era: 'stone' },
+  { id: 3,  name: 'stone',      label: 'Stone',        solid: true,  hardness: 1.6, tool: 'pickaxe', colors: { base: '#7d7d7d', top: '#8c8c8c', side: '#6a6a6a' }, era: 'stone', drops: 'cobblestone' },
   { id: 4,  name: 'sand',       label: 'Sand',         solid: true,  hardness: 0.5, tool: 'shovel',  colors: { base: '#dccb8a', top: '#e8d99c', side: '#c6b673' }, era: 'stone' },
   { id: 5,  name: 'water',      label: 'Water',        solid: false, hardness: 0,  tool: 'hand',    colors: { base: '#3b6fd4', top: '#4f86ee', side: '#2f5bb0' }, era: 'stone', liquid: true },
   { id: 6,  name: 'bedrock',    label: 'Bedrock',      solid: true,  hardness: Infinity, tool: 'pickaxe', colors: { base: '#3a3a3a', top: '#454545', side: '#2c2c2c' }, era: 'stone' },

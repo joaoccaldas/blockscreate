@@ -1,50 +1,62 @@
 /**
- * Camera: follows a target (the player) and clamps to world bounds.
- * Works in tile units; the renderer converts to pixels.
+ * Camera: follows a target (the player), clamps to world bounds, and supports
+ * zoom + a dynamically-sized canvas (for responsive / mobile layouts).
+ *
+ * Works in tile units; `tile` is the on-screen pixel size of one tile at the
+ * current zoom, and the viewport tile counts are derived from the live canvas
+ * size so the view stays correct after a resize.
  */
 import { C } from '../core/constants.js';
 
 export class Camera {
-  constructor(world) {
+  constructor(world, canvas, zoom = 1) {
     this.world = world;
+    this.canvas = canvas;
+    this.zoom = zoom;
     this.x = world.spawn.x;
     this.y = world.spawn.y;
-    this.tilesX = C.CANVAS_W / C.TILE;
-    this.tilesY = C.CANVAS_H / C.TILE;
   }
 
+  get tile() { return C.TILE * this.zoom; }
+  get tilesX() { return this.canvas.width / this.tile; }
+  get tilesY() { return this.canvas.height / this.tile; }
+
   follow(target, dt) {
-    // Smooth follow.
     const lerp = Math.min(1, dt * 8);
     this.x += (target.x - this.x) * lerp;
-    this.y += (target.y - this.y - this.tilesY * 0.1) * lerp;
+    this.y += (target.y - this.y - this.tilesY * 0.08) * lerp;
     this.clamp();
   }
 
   snap(target) {
     this.x = target.x;
-    this.y = target.y - this.tilesY * 0.1;
+    this.y = target.y - this.tilesY * 0.08;
     this.clamp();
   }
 
   clamp() {
     const halfX = this.tilesX / 2;
     const halfY = this.tilesY / 2;
-    this.x = Math.max(halfX, Math.min(this.world.width - halfX, this.x));
-    this.y = Math.max(halfY, Math.min(this.world.height - halfY, this.y));
+    // If the world is narrower than the view, just centre it.
+    this.x = this.world.width <= this.tilesX
+      ? this.world.width / 2
+      : Math.max(halfX, Math.min(this.world.width - halfX, this.x));
+    this.y = this.world.height <= this.tilesY
+      ? this.world.height / 2
+      : Math.max(halfY, Math.min(this.world.height - halfY, this.y));
   }
 
   /** World tile coords -> screen pixel coords (top-left of the tile). */
   worldToScreen(tx, ty) {
-    const sx = (tx - this.x) * C.TILE + C.CANVAS_W / 2;
-    const sy = (ty - this.y) * C.TILE + C.CANVAS_H / 2;
+    const sx = (tx - this.x) * this.tile + this.canvas.width / 2;
+    const sy = (ty - this.y) * this.tile + this.canvas.height / 2;
     return { sx, sy };
   }
 
   /** Screen pixel coords -> world tile coords (floored). */
   screenToWorld(px, py) {
-    const tx = (px - C.CANVAS_W / 2) / C.TILE + this.x;
-    const ty = (py - C.CANVAS_H / 2) / C.TILE + this.y;
+    const tx = (px - this.canvas.width / 2) / this.tile + this.x;
+    const ty = (py - this.canvas.height / 2) / this.tile + this.y;
     return { tx, ty, tileX: Math.floor(tx), tileY: Math.floor(ty) };
   }
 }

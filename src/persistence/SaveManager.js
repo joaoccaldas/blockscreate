@@ -20,6 +20,8 @@ export const SaveManager = {
       inventory: game.inventory.serialize(),
       civ: game.civ.serialize(),
       mobs: game.mobs.map((m) => m.serialize()),
+      crafted: [...(game.crafted || [])],
+      objectives: game.objectives ? game.objectives.serialize() : [],
     };
   },
 

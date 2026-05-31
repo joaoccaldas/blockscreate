@@ -3,14 +3,14 @@
  *
  * Depth tricks that sell the 2.5D feel without a real 3D pipeline:
  *   - each block draws a lit top bevel + a shaded right/bottom edge
- *   - blocks darken with depth underground (ambient occlusion-ish)
- *   - a parallax sky gradient + far hills shift slowly behind the world
+ *   - blocks darken with depth underground (ambient-occlusion-ish)
+ *   - parallax sky gradient, drifting clouds, and a starfield at night
  *   - a day/night tint multiplies the whole scene
+ *   - particles, a ghost placement preview, and a small walk animation
  *
- * Only the tiles inside the camera viewport are drawn, so large worlds stay
- * cheap. The renderer is stateless beyond its canvas refs — all data comes in.
+ * Everything is zoom- and resize-aware (reads camera.tile + live canvas size),
+ * and only tiles inside the viewport are drawn so big worlds stay cheap.
  */
-import { C } from '../core/constants.js';
 import { getBlock, AIR } from '../core/blocks.js';
 import { getEra } from '../core/eras.js';
 
@@ -18,22 +18,26 @@ export class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
-    canvas.width = C.CANVAS_W;
-    canvas.height = C.CANVAS_H;
     this.sprites = {};
+    this.t = 0;
   }
 
-  setSprites(sprites) {
-    this.sprites = sprites;
-  }
+  setSprites(sprites) { this.sprites = sprites; }
 
-  /** dayFactor: 1 = noon, 0 = midnight. */
-  render(world, camera, player, mobs, dayFactor, hover) {
+  /**
+   * scene = { world, camera, player, mobs, particles, dayFactor, hover, ghost, dt }
+   */
+  render(scene) {
+    const { world, camera, player, mobs, particles, dayFactor, hover, ghost, dt = 0 } = scene;
     const ctx = this.ctx;
+    const W = this.canvas.width;
+    const H = this.canvas.height;
+    const T = camera.tile;
+    this.t += dt;
     const era = getEra(world.eraId);
-    ctx.clearRect(0, 0, C.CANVAS_W, C.CANVAS_H);
 
-    this.drawSky(era, dayFactor, camera);
+    ctx.clearRect(0, 0, W, H);
+    this.drawSky(era, dayFactor, camera, W, H);
 
     // Visible tile range.
     const x0 = Math.floor(camera.x - camera.tilesX / 2) - 1;
@@ -45,100 +49,150 @@ export class Renderer {
       for (let tx = x0; tx <= x1; tx++) {
         const id = world.get(tx, ty);
         if (id === AIR) continue;
-        this.drawBlock(camera, world, tx, ty, id);
+        this.drawBlock(camera, world, tx, ty, id, T);
       }
     }
 
-    this.drawMobs(camera, mobs);
-    this.drawPlayer(camera, player);
+    this.drawMobs(camera, mobs, T);
+    this.drawPlayer(camera, player, T);
+    if (particles) this.drawParticles(camera, particles, T);
 
-    if (hover && hover.valid) this.drawHover(camera, hover);
+    if (ghost && ghost.valid) this.drawGhost(camera, ghost, T);
+    if (hover && hover.valid) this.drawHover(camera, hover, T);
 
-    this.applyDayNight(dayFactor);
+    this.applyDayNight(dayFactor, W, H);
   }
 
-  drawSky(era, dayFactor, camera) {
+  drawSky(era, dayFactor, camera, W, H) {
     const ctx = this.ctx;
     const [d0, d1] = era.sky.day;
     const [n0, n1] = era.sky.night;
     const top = mix(n0, d0, dayFactor);
     const bottom = mix(n1, d1, dayFactor);
-    const g = ctx.createLinearGradient(0, 0, 0, C.CANVAS_H);
+    const g = ctx.createLinearGradient(0, 0, 0, H);
     g.addColorStop(0, top);
     g.addColorStop(1, bottom);
     ctx.fillStyle = g;
-    ctx.fillRect(0, 0, C.CANVAS_W, C.CANVAS_H);
+    ctx.fillRect(0, 0, W, H);
+
+    // Stars (fade in at night).
+    const nightAlpha = Math.max(0, 1 - dayFactor * 1.6);
+    if (nightAlpha > 0.02) {
+      ctx.fillStyle = `rgba(255,255,255,${nightAlpha * 0.9})`;
+      for (let i = 0; i < 60; i++) {
+        const sx = (hash(i, 1) * W);
+        const sy = (hash(i, 2) * H * 0.6);
+        const tw = 0.5 + 0.5 * Math.sin(this.t * 2 + i);
+        ctx.globalAlpha = nightAlpha * (0.4 + tw * 0.6);
+        ctx.fillRect(sx, sy, 2, 2);
+      }
+      ctx.globalAlpha = 1;
+    }
 
     // Sun / moon arc.
-    const t = (camera.world.clock !== undefined) ? 0 : 0;
-    void t;
-    const angle = (dayFactor) * Math.PI;
-    const cx = C.CANVAS_W * 0.5 + Math.cos(Math.PI - angle) * C.CANVAS_W * 0.4;
-    const cy = C.CANVAS_H * 0.7 - Math.sin(angle) * C.CANVAS_H * 0.55;
-    ctx.globalAlpha = 0.9;
-    ctx.fillStyle = dayFactor > 0.4 ? '#fff4c2' : '#dfe7ff';
+    const angle = dayFactor * Math.PI;
+    const cx = W * 0.5 + Math.cos(Math.PI - angle) * W * 0.42;
+    const cy = H * 0.72 - Math.sin(angle) * H * 0.55;
+    ctx.globalAlpha = 0.92;
+    if (dayFactor > 0.4) {
+      ctx.fillStyle = '#fff4c2';
+      ctx.shadowColor = '#ffe9a0';
+      ctx.shadowBlur = 30;
+    } else {
+      ctx.fillStyle = '#dfe7ff';
+      ctx.shadowColor = '#bcd0ff';
+      ctx.shadowBlur = 18;
+    }
     ctx.beginPath();
     ctx.arc(cx, cy, dayFactor > 0.4 ? 26 : 18, 0, Math.PI * 2);
     ctx.fill();
+    ctx.shadowBlur = 0;
     ctx.globalAlpha = 1;
 
+    // Drifting clouds (parallax).
+    const cloudAlpha = 0.5 + dayFactor * 0.4;
+    ctx.fillStyle = `rgba(255,255,255,${cloudAlpha * 0.7})`;
+    for (let i = 0; i < 5; i++) {
+      const base = (i * 257.3) % 1;
+      const speed = 8 + i * 3;
+      let cxp = ((base * W + this.t * speed - camera.x * 6) % (W + 200)) - 100;
+      if (cxp < -100) cxp += W + 200;
+      const cyp = H * (0.1 + base * 0.25);
+      this.cloud(cxp, cyp, 60 + i * 14);
+    }
+
     // Far parallax hills.
-    const off = -(camera.x * C.TILE * 0.25) % 240;
+    const off = -(camera.x * camera.tile * 0.25) % 240;
     ctx.fillStyle = shade(era.ground, dayFactor * 0.5 + 0.2);
-    for (let i = -1; i < C.CANVAS_W / 240 + 2; i++) {
+    for (let i = -1; i < W / 240 + 2; i++) {
       const bx = i * 240 + off;
       ctx.beginPath();
-      ctx.moveTo(bx, C.CANVAS_H);
-      ctx.quadraticCurveTo(bx + 120, C.CANVAS_H * 0.55, bx + 240, C.CANVAS_H);
+      ctx.moveTo(bx, H);
+      ctx.quadraticCurveTo(bx + 120, H * 0.6, bx + 240, H);
       ctx.fill();
     }
   }
 
-  drawBlock(camera, world, tx, ty, id) {
+  cloud(x, y, r) {
+    const ctx = this.ctx;
+    ctx.beginPath();
+    ctx.arc(x, y, r * 0.5, 0, Math.PI * 2);
+    ctx.arc(x + r * 0.4, y + 4, r * 0.38, 0, Math.PI * 2);
+    ctx.arc(x - r * 0.4, y + 4, r * 0.34, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  drawBlock(camera, world, tx, ty, id, T) {
     const ctx = this.ctx;
     const b = getBlock(id);
     if (!b.colors) return;
     const { sx, sy } = camera.worldToScreen(tx, ty);
-    const T = C.TILE;
 
-    // Depth darkening.
     const depth = ty - world.heightMap[clamp(tx, 0, world.width - 1)];
     const dk = depth > 0 ? Math.max(0.55, 1 - depth * 0.012) : 1;
+    const bevel = Math.max(2, T * 0.16);
 
     if (b.liquid) {
+      const wob = Math.sin(this.t * 2 + tx * 0.6) * T * 0.04;
       ctx.fillStyle = withAlpha(shade(b.colors.base, dk), 0.78);
-      ctx.fillRect(sx, sy + T * 0.15, T, T * 0.85);
+      ctx.fillRect(sx, sy + T * 0.15 + wob, T + 1, T * 0.85);
       return;
     }
 
-    // Body
     ctx.fillStyle = shade(b.colors.base, dk);
-    ctx.fillRect(sx, sy, T, T);
+    ctx.fillRect(sx, sy, T + 1, T + 1);
 
-    // Lit top bevel
     ctx.fillStyle = shade(b.colors.top, dk);
-    ctx.fillRect(sx, sy, T, Math.max(2, T * 0.18));
+    ctx.fillRect(sx, sy, T + 1, Math.max(2, T * 0.18));
 
-    // Shaded right + bottom edge (the pseudo-3D depth cue)
     ctx.fillStyle = shade(b.colors.side, dk * 0.82);
-    ctx.fillRect(sx + T - Math.max(2, T * 0.16), sy, Math.max(2, T * 0.16), T);
-    ctx.fillRect(sx, sy + T - Math.max(2, T * 0.16), T, Math.max(2, T * 0.16));
+    ctx.fillRect(sx + T - bevel, sy, bevel, T + 1);
+    ctx.fillRect(sx, sy + T - bevel, T + 1, bevel);
 
-    // Ore flecks
     if (b.fleck) {
       ctx.fillStyle = b.fleck;
-      const r = pseudoRand(tx, ty);
+      const r = hash2(tx, ty);
+      const fsz = Math.max(2, T * 0.1);
       for (let k = 0; k < 4; k++) {
-        const fx = sx + ((r * (k + 3)) % 1) * (T - 5) + 2;
-        const fy = sy + ((r * (k + 7)) % 1) * (T - 5) + 2;
-        ctx.fillRect(fx, fy, 3, 3);
+        const fx = sx + ((r * (k + 3)) % 1) * (T - fsz) ;
+        const fy = sy + ((r * (k + 7)) % 1) * (T - fsz);
+        ctx.fillRect(fx, fy, fsz, fsz);
       }
+    }
+
+    if (b.light) {
+      ctx.save();
+      ctx.globalAlpha = 0.35 + 0.1 * Math.sin(this.t * 6 + tx);
+      ctx.fillStyle = '#ffdf91';
+      ctx.beginPath();
+      ctx.arc(sx + T / 2, sy + T / 2, T * 0.9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
   }
 
-  drawPlayer(camera, player) {
+  drawPlayer(camera, player, T) {
     const ctx = this.ctx;
-    const T = C.TILE;
     const { sx, sy } = camera.worldToScreen(player.x, player.y);
     const w = player.w * T;
     const h = player.h * T;
@@ -148,28 +202,44 @@ export class Renderer {
     // Shadow
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.beginPath();
-    ctx.ellipse(sx, sy, w * 0.6, T * 0.2, 0, 0, Math.PI * 2);
+    ctx.ellipse(sx, sy, w * 0.6, T * 0.18, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Simple blocky avatar.
+    // Walk-cycle leg swing based on horizontal motion.
+    const moving = Math.abs(player.vx) > 0.2 && player.onGround;
+    const swing = moving ? Math.sin(this.t * 12) * h * 0.12 : 0;
+
+    // Legs
+    ctx.fillStyle = '#2f4f7a';
+    ctx.fillRect(px + w * 0.08, py + h * 0.55, w * 0.36, h * 0.45 + swing);
+    ctx.fillRect(px + w * 0.56, py + h * 0.55, w * 0.36, h * 0.45 - swing);
+    // Body
     ctx.fillStyle = '#3a6ea5';
-    ctx.fillRect(px, py + h * 0.45, w, h * 0.55); // body/legs
+    ctx.fillRect(px, py + h * 0.42, w, h * 0.2);
+    // Head
     ctx.fillStyle = '#e9c39b';
-    ctx.fillRect(px, py, w, h * 0.45); // head
+    ctx.fillRect(px + w * 0.1, py, w * 0.8, h * 0.42);
+    // Hair
+    ctx.fillStyle = '#5a3a23';
+    ctx.fillRect(px + w * 0.1, py, w * 0.8, h * 0.1);
     // Eyes (facing)
     ctx.fillStyle = '#1b1b1b';
-    const eo = player.facing > 0 ? w * 0.55 : w * 0.2;
-    ctx.fillRect(px + eo, py + h * 0.16, w * 0.18, h * 0.1);
+    const eo = player.facing > 0 ? w * 0.55 : w * 0.22;
+    ctx.fillRect(px + eo, py + h * 0.16, w * 0.16, h * 0.08);
   }
 
-  drawMobs(camera, mobs) {
+  drawMobs(camera, mobs, T) {
     const ctx = this.ctx;
-    const T = C.TILE;
     for (const m of mobs) {
       const { sx, sy } = camera.worldToScreen(m.x, m.y);
       const w = m.w * T;
       const h = m.h * T;
       const sprite = this.sprites[m.def.sprite];
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, w * 0.5, T * 0.14, 0, 0, Math.PI * 2);
+      ctx.fill();
       ctx.save();
       if (m.facing < 0) {
         ctx.translate(sx, 0);
@@ -177,6 +247,7 @@ export class Renderer {
         ctx.translate(-sx, 0);
       }
       if (sprite && sprite.complete && sprite.naturalWidth) {
+        ctx.imageSmoothingEnabled = false;
         ctx.drawImage(sprite, sx - w / 2, sy - h, w, h);
       } else {
         ctx.fillStyle = '#cf9d6a';
@@ -186,25 +257,48 @@ export class Renderer {
     }
   }
 
-  drawHover(camera, hover) {
+  drawParticles(camera, particles, T) {
     const ctx = this.ctx;
-    const T = C.TILE;
+    for (const p of particles.list) {
+      const { sx, sy } = camera.worldToScreen(p.x, p.y);
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.life / p.maxLife));
+      ctx.fillStyle = p.color;
+      const s = p.size * T;
+      ctx.fillRect(sx - s / 2, sy - s / 2, s, s);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  drawGhost(camera, ghost, T) {
+    const ctx = this.ctx;
+    const { sx, sy } = camera.worldToScreen(ghost.x, ghost.y);
+    ctx.globalAlpha = 0.4;
+    ctx.fillStyle = ghost.color || '#fff';
+    ctx.fillRect(sx, sy, T, T);
+    ctx.globalAlpha = 1;
+  }
+
+  drawHover(camera, hover, T) {
+    const ctx = this.ctx;
     const { sx, sy } = camera.worldToScreen(hover.x, hover.y);
-    ctx.strokeStyle = hover.mode === 'mine' ? 'rgba(255,80,80,0.9)' : 'rgba(255,255,255,0.9)';
+    ctx.strokeStyle = hover.mode === 'mine' ? 'rgba(255,90,90,0.95)' : 'rgba(255,255,255,0.95)';
     ctx.lineWidth = 2;
     ctx.strokeRect(sx + 1, sy + 1, T - 2, T - 2);
-    if (hover.progress > 0) {
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
-      ctx.fillRect(sx, sy, T * hover.progress, 4);
+    if (hover.progress > 0 && hover.progress < 1) {
+      // Mining crack overlay.
+      ctx.fillStyle = 'rgba(0,0,0,0.18)';
+      ctx.fillRect(sx, sy, T, T);
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillRect(sx, sy + T - 4, T * hover.progress, 4);
     }
   }
 
-  applyDayNight(dayFactor) {
+  applyDayNight(dayFactor, W, H) {
     const ctx = this.ctx;
     const darkness = (1 - dayFactor) * 0.55;
     if (darkness <= 0.01) return;
     ctx.fillStyle = `rgba(6,10,30,${darkness})`;
-    ctx.fillRect(0, 0, C.CANVAS_W, C.CANVAS_H);
+    ctx.fillRect(0, 0, W, H);
   }
 }
 
@@ -234,7 +328,12 @@ function mix(hexA, hexB, t) {
   return `rgb(${r},${g},${bl})`;
 }
 
-function pseudoRand(x, y) {
+function hash2(x, y) {
   const s = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+  return s - Math.floor(s);
+}
+
+function hash(i, salt) {
+  const s = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453;
   return s - Math.floor(s);
 }

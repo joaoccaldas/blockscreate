@@ -6,9 +6,12 @@
  */
 export const C = {
   // Rendering / tiles
-  TILE: 28, // pixel size of one block on screen at zoom 1
-  CANVAS_W: 960,
+  TILE: 28, // base pixel size of one block at zoom 1
+  CANVAS_W: 960, // default internal resolution (overridden by responsive resize)
   CANVAS_H: 600,
+  ZOOM_MIN: 0.7,
+  ZOOM_MAX: 1.8,
+  TARGET_TILES_X: 22, // desired number of tiles visible across, for auto-fit zoom
 
   // World dimensions (in tiles)
   WORLD_W: 320,
@@ -32,6 +35,7 @@ export const C = {
 
   // Persistence
   SAVE_KEY: 'blockscreate.save.v1',
+  SETTINGS_KEY: 'blockscreate.settings.v1',
   SAVE_VERSION: 1,
   AUTOSAVE_INTERVAL: 20, // seconds
 };

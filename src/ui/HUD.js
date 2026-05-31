@@ -1,7 +1,11 @@
 /**
- * HUD: bridges game state to the DOM overlay (hotbar, stat bars, civ panel,
- * inventory grid and crafting list). Pure view layer — it reads game state and
- * wires button clicks back through callbacks.
+ * HUD: the DOM overlay over the canvas. Pure view layer — it reads game state
+ * and routes user actions back through handler callbacks so the Game keeps the
+ * logic.
+ *
+ * Includes: stat bars + era badge, a civilization panel, a guided objectives
+ * list, the hotbar, inventory/crafting modals, a pause/settings menu, and (on
+ * touch devices) on-screen movement / action controls.
  */
 import { getItem } from '../core/items.js';
 import { HOTBAR_SIZE } from '../systems/Inventory.js';
@@ -10,16 +14,21 @@ import { getEra, nextEra } from '../core/eras.js';
 import { MODE } from '../core/constants.js';
 
 export class HUD {
-  constructor(root, handlers = {}) {
+  constructor(root, { handlers = {}, settings, isTouch = false, mode = MODE.SURVIVAL } = {}) {
     this.root = root;
     this.h = handlers;
+    this.settings = settings;
+    this.isTouch = isTouch;
+    this.mode = mode;
     this.cache = {};
     this._build();
+    if (isTouch) this._buildTouchControls();
   }
 
   el(id) { return this.cache[id] || (this.cache[id] = this.root.querySelector('#' + id)); }
 
   _build() {
+    const s = this.settings;
     this.root.innerHTML = `
       <div id="topbar">
         <div class="stat"><span class="stat-label">❤️</span><div class="bar"><div id="healthBar" class="bar-fill health"></div></div></div>
@@ -34,26 +43,123 @@ export class HUD {
         <div id="advanceLabel" class="advance-label"></div>
       </div>
 
+      <div id="objPanel" class="obj-panel">
+        <div class="obj-title">🎯 Objectives</div>
+        <div id="objList"></div>
+      </div>
+
+      <button id="pauseBtn" class="icon-btn" title="Menu (Esc)">☰</button>
+      <div id="buildIndicator" class="build-indicator"></div>
       <div id="toast" class="toast hidden"></div>
+      <div id="bigToast" class="big-toast hidden"></div>
 
       <div id="hotbar" class="hotbar"></div>
 
       <div id="inventoryPanel" class="panel hidden">
-        <h2>Inventory</h2>
+        <h2>🎒 Inventory</h2>
+        <p class="muted small">Tap an item to move it to your selected hotbar slot.</p>
         <div id="invGrid" class="grid"></div>
         <button class="close-btn" id="invClose">Close (E)</button>
       </div>
 
       <div id="craftPanel" class="panel hidden">
-        <h2>Crafting</h2>
+        <h2>🔨 Crafting</h2>
         <div id="craftList" class="craft-list"></div>
         <button class="close-btn" id="craftClose">Close (C)</button>
+      </div>
+
+      <div id="pauseMenu" class="overlay hidden">
+        <div class="overlay-card">
+          <h2>⏸ Paused</h2>
+          <div class="pause-actions">
+            <button id="resumeBtn" class="btn primary">▶ Resume</button>
+            <button id="pInv" class="btn">🎒 Inventory</button>
+            <button id="pCraft" class="btn">🔨 Crafting</button>
+          </div>
+          <div class="settings-block">
+            <label class="toggle"><span>🔊 Sound effects</span>
+              <input type="checkbox" id="setSound" ${s?.get('sound') ? 'checked' : ''}></label>
+            <label class="toggle"><span>🎵 Ambient music</span>
+              <input type="checkbox" id="setMusic" ${s?.get('music') ? 'checked' : ''}></label>
+            <label class="slider"><span>🔍 Zoom</span>
+              <input type="range" id="setZoom" min="0.7" max="1.6" step="0.05" value="${s?.get('zoomPref') ?? 1}"></label>
+          </div>
+          <div class="pause-actions">
+            <button id="pSave" class="btn">💾 Save</button>
+            <button id="pExport" class="btn">⬇ Export</button>
+            <button id="pImport" class="btn">⬆ Import</button>
+          </div>
+          <button id="pMenu" class="btn danger">🏠 Main Menu</button>
+          <input id="importInput" type="file" accept="application/json" hidden />
+        </div>
       </div>
     `;
 
     this.el('invClose').onclick = () => this.h.onToggleInventory?.();
     this.el('craftClose').onclick = () => this.h.onToggleCrafting?.();
+    this.el('pauseBtn').onclick = () => this.h.onPause?.();
+    this.el('resumeBtn').onclick = () => this.h.onResume?.();
+    this.el('pInv').onclick = () => this.h.onToggleInventory?.();
+    this.el('pCraft').onclick = () => this.h.onToggleCrafting?.();
+
+    this.el('setSound').onchange = (e) => this.h.onSetSound?.(e.target.checked);
+    this.el('setMusic').onchange = (e) => this.h.onSetMusic?.(e.target.checked);
+    this.el('setZoom').oninput = (e) => this.h.onSetZoom?.(parseFloat(e.target.value));
+
+    this.el('pSave').onclick = () => { this.h.onSave?.(); this.toast('Game saved'); };
+    this.el('pExport').onclick = () => this.h.onExport?.();
+    this.el('pImport').onclick = () => this.el('importInput').click();
+    this.el('importInput').onchange = (e) => {
+      const f = e.target.files[0];
+      if (f) this.h.onImport?.(f);
+      e.target.value = '';
+    };
+    this.el('pMenu').onclick = () => this.h.onMainMenu?.();
   }
+
+  _buildTouchControls() {
+    const wrap = document.createElement('div');
+    wrap.id = 'touchControls';
+    wrap.innerHTML = `
+      <div class="touch-left">
+        <button class="tbtn" data-act="left">◀</button>
+        <button class="tbtn" data-act="right">▶</button>
+      </div>
+      <div class="touch-right">
+        <button class="tbtn build" data-act="build">⛏</button>
+        <button class="tbtn fly" data-act="fly">🪂</button>
+        <button class="tbtn jump" data-act="jump">⤴</button>
+      </div>
+    `;
+    this.root.appendChild(wrap);
+
+    const hold = (btn, onDown, onUp) => {
+      const down = (e) => { e.preventDefault(); btn.classList.add('pressed'); onDown(); };
+      const up = (e) => { e.preventDefault(); btn.classList.remove('pressed'); onUp?.(); };
+      btn.addEventListener('pointerdown', down);
+      btn.addEventListener('pointerup', up);
+      btn.addEventListener('pointerleave', up);
+      btn.addEventListener('pointercancel', up);
+    };
+
+    wrap.querySelectorAll('.tbtn').forEach((btn) => {
+      const act = btn.dataset.act;
+      if (act === 'left' || act === 'right') {
+        hold(btn, () => this.h.onMove?.(act, true), () => this.h.onMove?.(act, false));
+      } else if (act === 'jump') {
+        hold(btn, () => this.h.onJump?.(true), () => this.h.onJump?.(false));
+      } else if (act === 'build') {
+        btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleBuild?.(); });
+      } else if (act === 'fly') {
+        btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onFly?.(); });
+      }
+    });
+
+    // Hide fly button outside creative mode.
+    if (this.mode !== MODE.CREATIVE) wrap.querySelector('.fly').style.display = 'none';
+  }
+
+  // ---- transient messages ----
 
   toast(msg, ms = 1800) {
     const t = this.el('toast');
@@ -63,7 +169,17 @@ export class HUD {
     this._toastT = setTimeout(() => t.classList.add('hidden'), ms);
   }
 
-  /** Per-frame light update (bars, counters). */
+  bigToast(msg, ms = 3000) {
+    const t = this.el('bigToast');
+    t.innerHTML = msg;
+    t.classList.remove('hidden');
+    t.classList.add('pop');
+    clearTimeout(this._bigT);
+    this._bigT = setTimeout(() => { t.classList.add('hidden'); t.classList.remove('pop'); }, ms);
+  }
+
+  // ---- per-frame update ----
+
   update(game) {
     const p = game.player;
     this.el('healthBar').style.width = `${p.health}%`;
@@ -71,6 +187,7 @@ export class HUD {
 
     const survival = game.mode === MODE.SURVIVAL;
     this.el('topbar').classList.toggle('creative', !survival);
+    this.el('objPanel').classList.toggle('hidden', !survival);
 
     const era = getEra(game.eraId);
     this.el('eraBadge').textContent = `${era.icon} ${era.name}${survival ? '' : ' · Creative'}`;
@@ -81,10 +198,28 @@ export class HUD {
     this.el('advanceBar').style.width = `${prog * 100}%`;
     const nxt = nextEra(game.eraId);
     this.el('advanceLabel').textContent = nxt
-      ? (game.civ.canAdvance() ? `Portal to ${nxt.name} is open!` : `Advancing to ${nxt.name}…`)
+      ? (game.civ.canAdvance() ? `🌀 Portal to ${nxt.name} is open!` : `Next: ${nxt.name}`)
       : 'Final era reached';
 
+    this.el('buildIndicator').textContent = game.buildMode ? '🧱 Build' : '⛏ Mine';
+    this.el('buildIndicator').classList.toggle('build-on', game.buildMode);
+
+    if (survival) this.renderObjectives(game);
     this.renderHotbar(game);
+  }
+
+  renderObjectives(game) {
+    const list = this.el('objList');
+    const active = game.objectives.active(3);
+    const done = game.objectives.completed.size;
+    const total = game.objectives.all.length;
+    let html = '';
+    for (const o of active) {
+      html += `<div class="obj-item"><span class="obj-ic">${o.icon}</span>${o.label}</div>`;
+    }
+    if (!active.length) html = `<div class="obj-item done">✅ All objectives complete!</div>`;
+    html += `<div class="obj-count">${done}/${total} done</div>`;
+    list.innerHTML = html;
   }
 
   renderHotbar(game) {
@@ -101,19 +236,22 @@ export class HUD {
     }
     for (let i = 0; i < HOTBAR_SIZE; i++) {
       const slot = bar.children[i];
-      const s = inv.slots[i];
+      const sItem = inv.slots[i];
       slot.classList.toggle('selected', i === inv.selected);
-      slot.innerHTML = this.slotInner(s);
+      slot.innerHTML = this.slotInner(sItem, i + 1);
     }
   }
 
-  slotInner(s) {
-    if (!s) return '';
+  slotInner(s, num) {
+    const key = num ? `<span class="key">${num}</span>` : '';
+    if (!s) return key;
     const item = getItem(s.id);
     const color = item?.colors?.base || '#888';
     const label = item?.label || s.id;
-    return `<span class="swatch" style="background:${color}" title="${label}"></span>` +
-           (s.n > 1 ? `<span class="count">${s.n}</span>` : '');
+    const tool = item?.kind === 'tool' ? ' tool' : '';
+    return key +
+      `<span class="swatch${tool}" style="background:${color}" title="${label}"></span>` +
+      (s.n > 1 ? `<span class="count">${s.n}</span>` : '');
   }
 
   renderInventory(game) {
@@ -159,4 +297,10 @@ export class HUD {
 
   showInventory(show) { this.el('inventoryPanel').classList.toggle('hidden', !show); }
   showCrafting(show) { this.el('craftPanel').classList.toggle('hidden', !show); }
+  showPause(show) { this.el('pauseMenu').classList.toggle('hidden', !show); }
+
+  destroy() {
+    const tc = this.root.querySelector('#touchControls');
+    if (tc) tc.remove();
+  }
 }

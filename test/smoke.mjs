@@ -45,6 +45,22 @@ const w2 = World.deserialize(ser);
 assert.deepStrictEqual([...w2.grid], [...world.grid], 'world serialize round-trip');
 ok('world serialize/deserialize');
 
+// --- Expandable world persistence ---
+const expandable = new World({ seed: 777, eraId: 'stone', width: 40, height: 40 });
+expandable.generate();
+const marker = blockId('brick');
+expandable.set(5, 10, marker);
+const oldWidth = expandable.width;
+const expanded = expandable.expand({ left: 8, right: 12 });
+assert.deepStrictEqual(expanded, { left: 8, right: 12 }, 'expansion report');
+assert.strictEqual(expandable.width, oldWidth + 20, 'world width grows');
+assert.strictEqual(expandable.get(13, 10), marker, 'left expansion preserves edited tiles');
+assert.ok(expandable.originX < 0, 'origin shifts when prepending');
+const expandedRoundTrip = World.deserialize(expandable.serialize());
+assert.strictEqual(expandedRoundTrip.get(13, 10), marker, 'expanded world save preserves edits');
+assert.strictEqual(expandedRoundTrip.originX, expandable.originX, 'origin persists');
+ok('world expands horizontally and persists edits');
+
 // --- Inventory ---
 const inv = new Inventory();
 assert.strictEqual(inv.add('log', 5), 0, 'add returns 0 leftover');

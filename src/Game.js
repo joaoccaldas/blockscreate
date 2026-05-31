@@ -318,6 +318,7 @@ export class Game {
       const wasGround = this.player.onGround;
       this.input.state.modifiers = { hungerDrain: this.powerups.multiplier('hungerDrain') };
       this.player.update(dt, this.world, this.input.state, this.mode);
+      this._expandWorldIfNeeded();
       this._footsteps(dt, wasGround);
       this._handleInteraction(dt);
     }
@@ -390,6 +391,22 @@ export class Game {
     this.hud.bigToast(`🌀 <b>${nxt.name}</b><br><small>A new world opens.</small>`);
     SaveManager.save(this);
     return true;
+  }
+
+  _expandWorldIfNeeded() {
+    const expanded = this.world.expandAround(this.player.x);
+    if (!expanded.left && !expanded.right) return;
+    if (expanded.left) {
+      this.player.x += expanded.left;
+      this.camera.x += expanded.left;
+      for (const mob of this.mobs) mob.x += expanded.left;
+      for (const p of this.particles.list) p.x += expanded.left;
+      if (this.mineTarget) this.mineTarget.x += expanded.left;
+      if (this.hover) this.hover.x += expanded.left;
+      if (this.ghost) this.ghost.x += expanded.left;
+    }
+    this.camera.clamp();
+    this.hud?.toast(`World expanded: ${this.world.width} tiles wide`, 1600);
   }
 
   _footsteps(dt, wasGround) {

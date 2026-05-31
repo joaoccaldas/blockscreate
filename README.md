@@ -27,7 +27,7 @@ node test/integration.mjs
 
 ## Current Engine Note
 
-Worlds are persistent but finite today. The documented next engine milestone is chunked infinite world generation with modified-chunk saves.
+Worlds are persistent and now expand horizontally near the edges. The next engine milestone is true chunked infinite world generation with modified-chunk saves.
 
 ## Author
 

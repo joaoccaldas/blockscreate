@@ -17,6 +17,8 @@ A browser-based block-building civilization history sandbox. Mine, build, surviv
 - Physical historical clue blocks such as fossils, meteor shards, handprints and standing stones
 - Structure recognition for huts, camps, workshops, watchtowers and portal rings
 - Hidden discoveries and timed powerups
+- First-run onboarding coach-marks, a death screen with run stats + respawn,
+  and confirm dialogs guarding destructive actions
 - Themed menus, a labeled inventory, and crafting that shows per-ingredient
   have/need counts and missing stations
 - Generated pixel-art sprites and terrain textures

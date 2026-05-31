@@ -602,3 +602,39 @@ button:focus-visible, input:focus-visible, .era-card:focus-visible {
   outline: 3px solid var(--gold);
   outline-offset: 2px;
 }
+
+/* ============================================================
+   v4.1 — onboarding, death screen, confirm dialogs
+   ============================================================ */
+.death-card, .confirm-card, .onboard-card { width: min(420px, 92vw); text-align: center; }
+
+.death-emoji { font-size: 3rem; line-height: 1; margin-bottom: 0.3rem; animation: pop 0.5s ease; }
+#deathTitle { margin: 0.2rem 0; color: var(--danger); letter-spacing: 1px; }
+.death-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 14px;
+  text-align: left;
+  margin: 1rem 0;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+}
+.death-stat { display: flex; justify-content: space-between; gap: 8px; font-size: 0.9rem; }
+.death-stat b { color: var(--gold); }
+
+/* Confirm dialog sits above the pause menu. */
+#confirmDialog, #deathScreen, #onboarding { z-index: 20; }
+.confirm-card h2 { margin-top: 0; }
+
+/* Onboarding coach-marks. */
+.onboard-icon { font-size: 3rem; line-height: 1; margin-bottom: 0.4rem; animation: pop 0.4s ease; }
+.onboard-card h2 { margin: 0.2rem 0 0.6rem; }
+.onboard-card p { color: var(--muted); line-height: 1.5; min-height: 3.2em; }
+.onboard-dots { display: flex; gap: 7px; justify-content: center; margin: 0.8rem 0; }
+.onboard-dots .dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: background 0.2s, transform 0.2s;
+}
+.onboard-dots .dot.on { background: var(--accent); transform: scale(1.25); }

@@ -106,6 +106,44 @@ export class HUD {
           <input id="importInput" type="file" accept="application/json" hidden />
         </div>
       </div>
+
+      <div id="deathScreen" class="overlay hidden">
+        <div class="overlay-card death-card">
+          <div class="death-emoji">💀</div>
+          <h2 id="deathTitle">You Died</h2>
+          <p id="deathCause" class="muted"></p>
+          <div id="deathStats" class="death-stats"></div>
+          <div class="pause-actions">
+            <button id="deathRespawn" class="btn primary">⟳ Respawn</button>
+            <button id="deathLoad" class="btn">📂 Load Save</button>
+          </div>
+          <button id="deathMenu" class="btn danger">🏠 Main Menu</button>
+        </div>
+      </div>
+
+      <div id="confirmDialog" class="overlay hidden">
+        <div class="overlay-card confirm-card">
+          <h2 id="confirmTitle"></h2>
+          <p id="confirmBody" class="muted"></p>
+          <div class="pause-actions">
+            <button id="confirmYes" class="btn primary">Confirm</button>
+            <button id="confirmNo" class="btn">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="onboarding" class="overlay hidden">
+        <div class="overlay-card onboard-card">
+          <div id="onboardIcon" class="onboard-icon">👋</div>
+          <h2 id="onboardTitle"></h2>
+          <p id="onboardBody"></p>
+          <div class="onboard-dots" id="onboardDots"></div>
+          <div class="pause-actions">
+            <button id="onboardSkip" class="btn">Skip</button>
+            <button id="onboardNext" class="btn primary">Next →</button>
+          </div>
+        </div>
+      </div>
     `;
 
     this.el('invClose').onclick = () => this.h.onToggleInventory?.();
@@ -130,6 +168,10 @@ export class HUD {
     };
     this.el('pMenu').onclick = () => this.h.onMainMenu?.();
     this.el('advanceBtn').onclick = () => this.h.onAdvanceEra?.();
+
+    this.el('deathRespawn').onclick = () => this.h.onRespawn?.();
+    this.el('deathLoad').onclick = () => this.h.onDeathLoad?.();
+    this.el('deathMenu').onclick = () => this.h.onDeathMenu?.();
   }
 
   _buildTouchControls() {
@@ -367,6 +409,62 @@ export class HUD {
   showInventory(show) { this.el('inventoryPanel').classList.toggle('hidden', !show); }
   showCrafting(show) { this.el('craftPanel').classList.toggle('hidden', !show); }
   showPause(show) { this.el('pauseMenu').classList.toggle('hidden', !show); }
+
+  /** Reusable confirm dialog for destructive actions. onYes runs on Confirm. */
+  confirm(title, body, onYes) {
+    this.el('confirmTitle').textContent = title;
+    this.el('confirmBody').textContent = body || '';
+    const dlg = this.el('confirmDialog');
+    dlg.classList.remove('hidden');
+    const close = () => dlg.classList.add('hidden');
+    this.el('confirmYes').onclick = () => { close(); onYes?.(); };
+    this.el('confirmNo').onclick = () => close();
+  }
+
+  /** Death screen. Pass false to hide, or { cause, stats } to show. */
+  showDeath(info) {
+    const screen = this.el('deathScreen');
+    if (!info) { screen.classList.add('hidden'); return; }
+    this.el('deathCause').textContent = `Felled by ${info.cause}.`;
+    const s = info.stats || {};
+    this.el('deathStats').innerHTML = [
+      ['🌍 Era', s.era], ['✨ Civ Points', s.cp], ['🏛️ Population', s.population],
+      ['⛏️ Blocks mined', s.mined], ['🧱 Blocks built', s.built],
+      ['🕳️ Deepest dig', s.deepest], ['🔎 Clues found', s.clues],
+    ].map(([k, v]) => `<div class="death-stat"><span>${k}</span><b>${v ?? 0}</b></div>`).join('');
+    screen.classList.remove('hidden');
+  }
+
+  /**
+   * First-run coach-marks. `done` is called once when the player finishes or
+   * skips. `touch` swaps in touch-specific wording.
+   */
+  showOnboarding(done, touch = false) {
+    const steps = [
+      { icon: '🦖', title: 'Welcome to BlocksCreate', body: 'You\'ve arrived in the Age of Dinosaurs. Survive, build, and lead your people through time.' },
+      { icon: '⛏️', title: 'Mine the world', body: touch ? 'Tap a nearby block to mine it. Hold to keep mining.' : 'Hold left-click on a nearby block to mine it.' },
+      { icon: '🧱', title: 'Build & place', body: touch ? 'Tap the ⛏/🧱 button to switch to Build, then tap to place the selected block.' : 'Right-click to place the selected block (or press Q to toggle Build/Mine).' },
+      { icon: '🎒', title: 'Inventory & crafting', body: touch ? 'Use the ☰ menu for Inventory and Crafting.' : 'Press E for Inventory and C for Crafting. Numbers 1–9 pick a hotbar slot.' },
+      { icon: '🎯', title: 'Complete objectives', body: 'Finish the objectives (top-right) to earn ✨ Civ Points and open the portal to the next era. Watch for ☄️ meteors — take cover!' },
+    ];
+    let i = 0;
+    const screen = this.el('onboarding');
+    const dots = this.el('onboardDots');
+    dots.innerHTML = steps.map((_, k) => `<span class="dot${k === 0 ? ' on' : ''}"></span>`).join('');
+    const render = () => {
+      const st = steps[i];
+      this.el('onboardIcon').textContent = st.icon;
+      this.el('onboardTitle').textContent = st.title;
+      this.el('onboardBody').textContent = st.body;
+      [...dots.children].forEach((d, k) => d.classList.toggle('on', k === i));
+      this.el('onboardNext').textContent = i === steps.length - 1 ? 'Got it!' : 'Next →';
+    };
+    const finish = () => { screen.classList.add('hidden'); done?.(); };
+    this.el('onboardNext').onclick = () => { if (i >= steps.length - 1) finish(); else { i++; render(); } };
+    this.el('onboardSkip').onclick = finish;
+    render();
+    screen.classList.remove('hidden');
+  }
 
   /** Brief red damage flash + shake when the player is hurt. */
   shake() {

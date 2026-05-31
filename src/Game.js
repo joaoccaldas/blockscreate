@@ -56,6 +56,7 @@ export class Game {
   // ---- lifecycle ----
 
   newWorld(eraId, mode) {
+    this.dead = false;
     this.mode = mode;
     this.eraId = eraId;
     this.clock = C.DAY_LENGTH * 0.3;
@@ -75,6 +76,7 @@ export class Game {
   }
 
   loadSave(save) {
+    this.dead = false;
     this.mode = save.mode;
     this.eraId = save.eraId;
     this.clock = save.clock ?? 0;
@@ -177,6 +179,7 @@ export class Game {
     this.camera.snap(this.player);
     this.last = performance.now();
     requestAnimationFrame(this._frame);
+    this._maybeOnboard();
   }
 
   stop() {
@@ -222,8 +225,12 @@ export class Game {
       onSave: () => SaveManager.save(this),
       onExport: () => SaveManager.exportFile(this),
       onImport: (f) => this._import(f),
-      onMainMenu: () => this.exit(),
+      onMainMenu: () => this.hud.confirm('Return to the main menu?', 'Your game is saved automatically.', () => this.exit()),
       onAdvanceEra: () => this._advanceEra(),
+      // Death screen
+      onRespawn: () => this._respawn(),
+      onDeathLoad: () => this.hud.confirm('Load your last save?', 'This reloads the world from the autosave.', () => { const s = SaveManager.load(); if (s) { this.stop(); this.loadSave(s); this.start(); } }),
+      onDeathMenu: () => this.exit(),
       // touch controls
       onMove: (dir, pressed) => { this.input.state[dir] = pressed; },
       onJump: (pressed) => { this.input.state.up = pressed; if (pressed) this.audio?.play('jump'); },
@@ -235,16 +242,20 @@ export class Game {
   async _import(file) {
     try {
       const save = await SaveManager.importFile(file);
-      this.stop();
-      this.loadSave(save);
-      this.start();
-      this.hud.toast('World imported');
+      // Importing replaces the current world, so confirm before discarding it.
+      this.hud.confirm('Import this world?', 'Your current world will be replaced (the autosave is kept until you save again).', () => {
+        this.stop();
+        this.loadSave(save);
+        this.start();
+        this.hud.toast('World imported');
+      });
     } catch (e) {
       this.hud.toast('Import failed');
     }
   }
 
   _onPause() {
+    if (this.dead) return; // death screen owns the input until the player acts
     if (this.invOpen || this.craftOpen) { this._closeMenus(); return; }
     this.paused ? this._resume() : this._pause();
   }
@@ -320,6 +331,53 @@ export class Game {
     this.onExit?.();
   }
 
+  /** Player died: freeze the sim and show the death screen with run stats. */
+  _onDeath() {
+    this.dead = true;
+    this.paused = true;
+    this.audio?.play('hurt');
+    // A hunger death has no explicit cause recorded; infer it.
+    const cause = this.player.hunger <= 0 ? 'starvation' : (this.lastDamageCause || 'the wilds');
+    SaveManager.save(this); // preserve world progress; only the player respawns
+    this.hud.showDeath({
+      cause,
+      stats: {
+        era: getEra(this.eraId).name,
+        cp: Math.floor(this.civ.cp),
+        population: this.civ.population,
+        mined: this.civ.totalMined,
+        built: this.civ.totalBuilt,
+        deepest: this.civ.deepestMine,
+        clues: this.clues?.count?.() || 0,
+      },
+    });
+  }
+
+  /** Revive the player at spawn, keeping the world and civilization intact. */
+  _respawn() {
+    this.dead = false;
+    this.paused = false;
+    this.hud.showDeath(false);
+    this.player.x = this.world.spawn.x + 0.5;
+    this.player.y = this.world.spawn.y;
+    this.player.health = 100;
+    this.player.hunger = 60;
+    this.player.alive = true;
+    this.lastDamageCause = null;
+    this.hud.toast('Revived at your spawn point', 2000);
+  }
+
+  /** Show first-run coach-marks once, then remember it in settings. */
+  _maybeOnboard() {
+    if (this.mode !== MODE.SURVIVAL) return;
+    if (this.settings?.get('seenTutorial')) return;
+    this.paused = true; // freeze the world behind the coach-marks
+    this.hud.showOnboarding(() => {
+      this.settings?.set('seenTutorial', true);
+      this.paused = false;
+    }, isTouch);
+  }
+
   // ---- main loop ----
 
   _frame = (now) => {
@@ -364,7 +422,7 @@ export class Game {
     const target = this.mode === MODE.SURVIVAL ? this.player : null;
     for (const m of this.mobs) {
       const hit = m.update(dt, this.world, target);
-      if (hit && this.player.alive) this._damagePlayer(hit.damage);
+      if (hit && this.player.alive) this._damagePlayer(hit.damage, `a ${m.type}`);
     }
     this._spawnMobs(dt);
     this.powerups.update(dt);
@@ -402,15 +460,9 @@ export class Game {
       }
     }
 
-    // Survival death -> respawn.
-    if (this.mode === MODE.SURVIVAL && !this.player.alive) {
-      this.audio?.play('hurt');
-      this.hud.toast('You collapsed. Respawning…', 2500);
-      this.player.x = this.world.spawn.x + 0.5;
-      this.player.y = this.world.spawn.y;
-      this.player.health = 100;
-      this.player.hunger = 60;
-      this.player.alive = true;
+    // Survival death -> death screen (player chooses to respawn / load / menu).
+    if (this.mode === MODE.SURVIVAL && !this.player.alive && !this.dead) {
+      this._onDeath();
     }
 
     // Autosave.
@@ -581,7 +633,7 @@ export class Game {
 
     // Damage the player + mobs caught in the blast.
     if (Math.hypot(this.player.x - (cx + 0.5), this.player.y - (cy + 0.5)) < 4) {
-      this._damagePlayer(35);
+      this._damagePlayer(35, 'a meteor impact');
     }
     for (let i = this.mobs.length - 1; i >= 0; i--) {
       const mob = this.mobs[i];
@@ -811,9 +863,10 @@ export class Game {
     this.mobs.push(new Mob(type, sx + 0.5, surf));
   }
 
-  _damagePlayer(amount) {
+  _damagePlayer(amount, cause = 'the wilds') {
     this.player.health = Math.max(0, this.player.health - amount);
     this.player.vy = -7; // knockback pop
+    this.lastDamageCause = cause;
     this.audio?.play('hurt');
     this.particles.burst(this.player.x, this.player.y - this.player.h / 2, '#ff5b5b', 8);
     if (!this.reduceMotion) this.hud?.shake?.();

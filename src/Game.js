@@ -100,6 +100,7 @@ export class Game {
     this.events = new WorldEventLog(save.events || {});
     this.mobs = (save.mobs || []).map((m) => Mob.load(m));
     this.animalPeaceTime = save.animalPeaceTime || 0;
+    this.grazerBondTime = save.grazerBondTime || 0;
     this._setup();
   }
 
@@ -439,11 +440,12 @@ export class Game {
       this._handleInteraction(dt);
     }
 
-    const target = this.mode === MODE.SURVIVAL ? this.player : null;
+    const target = this.mode === MODE.SURVIVAL ? this._mobTargetContext() : null;
     for (const m of this.mobs) {
       const hit = m.update(dt, this.world, target);
       if (hit && this.player.alive) this._damagePlayer(hit.damage, `a ${m.type}`);
     }
+    this._updateDinosaurPressure(dt);
     this._spawnMobs(dt);
     this.powerups.update(dt);
     this._trackAnimalFriendship(dt);
@@ -944,6 +946,71 @@ export class Game {
     if (this.mode !== MODE.SURVIVAL || !this.mobs.length) return;
     const near = this.mobs.some((m) => Math.hypot(m.x - this.player.x, m.y - this.player.y) < 3);
     this.animalPeaceTime = near ? this.animalPeaceTime + dt : Math.max(0, this.animalPeaceTime - dt * 0.5);
+    if (this.eraId === 'stone') {
+      const nearGrazer = this.mobs.some((m) => (m.type === 'stego' || m.type === 'trike') &&
+        Math.hypot(m.x - this.player.x, m.y - this.player.y) < 4);
+      this.grazerBondTime = nearGrazer ? (this.grazerBondTime || 0) + dt : Math.max(0, (this.grazerBondTime || 0) - dt * 0.35);
+    }
+  }
+
+  _mobTargetContext() {
+    if (this.eraId !== 'stone') return this.player;
+    const packPressure = this.mobs.filter((m) => m.type === 'raptor' &&
+      Math.hypot(m.x - this.player.x, m.y - this.player.y) < 10).length;
+    const rexDistance = this._nearestMobDistance('rex');
+    const defended = this._hasDinoDefense();
+    return Object.assign(Object.create(this.player), this.player, {
+      packPressure,
+      fearExposed: rexDistance != null && rexDistance < 13 && !defended,
+      defended,
+    });
+  }
+
+  _updateDinosaurPressure(dt) {
+    if (this.mode !== MODE.SURVIVAL || this.eraId !== 'stone') {
+      this.dinoStatus = null;
+      return;
+    }
+    const packPressure = this.mobs.filter((m) => m.type === 'raptor' &&
+      Math.hypot(m.x - this.player.x, m.y - this.player.y) < 10).length;
+    const rexDistance = this._nearestMobDistance('rex');
+    const defended = this._hasDinoDefense();
+    const fear = rexDistance != null && rexDistance < 13 && !defended;
+    if (fear) {
+      this.player.hunger = Math.max(0, this.player.hunger - dt * 0.16);
+      if (!this.reduceMotion && Math.random() < dt * 0.6) this.hud?.shake?.();
+    }
+    this.dinoStatus = {
+      packPressure,
+      rexDistance,
+      defended,
+      grazerBond: Math.min(100, Math.round(((this.grazerBondTime || 0) / 10) * 100)),
+      warning: fear ? 'T-Rex fear zone' : packPressure >= 2 ? 'raptor pack nearby' : defended ? 'defenses steady' : '',
+    };
+  }
+
+  _nearestMobDistance(type) {
+    let best = null;
+    for (const m of this.mobs) {
+      if (m.type !== type) continue;
+      const d = Math.hypot(m.x - this.player.x, m.y - this.player.y);
+      if (best == null || d < best) best = d;
+    }
+    return best;
+  }
+
+  _hasDinoDefense(radius = 7) {
+    if (this.structures?.has('defended_camp') || this.structures?.has('watchtower')) return true;
+    const px = Math.floor(this.player.x);
+    const py = Math.floor(this.player.y);
+    let defense = 0;
+    for (let y = py - radius; y <= py + radius; y++) {
+      for (let x = px - radius; x <= px + radius; x++) {
+        const b = getBlock(this.world.get(x, y));
+        if (b.name === 'torch' || b.name === 'campfire' || b.name === 'hide_wall') defense++;
+      }
+    }
+    return defense >= 4;
   }
 
   _hitMob(mob) {

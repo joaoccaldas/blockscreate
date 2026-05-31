@@ -57,6 +57,7 @@ const { Audio } = await import('../src/systems/Audio.js');
 const { MODE } = await import('../src/core/constants.js');
 const { SaveManager } = await import('../src/persistence/SaveManager.js');
 const { blockId } = await import('../src/core/blocks.js');
+const { Mob } = await import('../src/entities/Mob.js');
 
 let passed = 0;
 const ok = (m) => { console.log(`  ✓ ${m}`); passed++; };
@@ -102,6 +103,16 @@ ok('first-cell era evolves into Age of Dinosaurs');
 for (let i = 0; i < 60; i++) g.update(0.016);
 if (!(g.player.health > 0)) throw new Error('player died unexpectedly');
 ok(`60 ticks run; hp ${g.player.health.toFixed(1)}, onGround ${g.player.onGround}`);
+
+g.mobs = [new Mob('rex', g.player.x + 1.5, g.player.y)];
+g._updateDinosaurPressure(0.016);
+if (!g.dinoStatus || g.dinoStatus.rexDistance == null) {
+  throw new Error(`dinosaur fear status missing: ${JSON.stringify({ era: g.eraId, mode: g.mode, status: g.dinoStatus })}`);
+}
+g.grazerBondTime = 11;
+const grazerJson = SaveManager.toJSON(g);
+if (grazerJson.grazerBondTime < 10) throw new Error('grazer bond time missing from save');
+ok('dinosaur pressure and grazer bond state are tracked');
 
 // Objectives wired and evaluating.
 if (!g.objectives || !g.objectives.all.length) throw new Error('objectives missing');

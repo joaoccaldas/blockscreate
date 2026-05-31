@@ -13,6 +13,7 @@ BlocksCreate is now a modular historical sandbox, but not yet the complete visio
 - **Physical clues:** Age of Dinosaurs can generate clue blocks such as fossil beds, meteor shards, handprints and standing stones.
 - **World events:** Age of Dinosaurs now has cold-night pressure and meteor showers that place physical meteor shards.
 - **RPG encounters:** Age of Dinosaurs can trigger predator migrations and grazer herds; Early Cities can trigger droughts and raider scouts.
+- **Dinosaur behavior:** raptors gain pack pressure, T-Rex creates fear zones, grazers can form a bond, and defended camps reduce survival pressure.
 - **RPG progression:** primitive weapons, defeated-enemy stats, relic powerups and optional mastery goals make runs branch more meaningfully.
 - **Era biomes:** chunks now have deterministic era biomes, starting with fern valleys, fossil basins, meteor scars and ash fields for the Age of Dinosaurs.
 - **Progression:** portals require both CP and mandatory goals. Optional mastery goals grant benefits without blocking advancement.

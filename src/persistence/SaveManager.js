@@ -28,6 +28,7 @@ export const SaveManager = {
       powerups: game.powerups ? game.powerups.serialize() : [],
       events: game.events ? game.events.serialize() : {},
       animalPeaceTime: game.animalPeaceTime || 0,
+      grazerBondTime: game.grazerBondTime || 0,
     };
   },
 
@@ -75,6 +76,7 @@ export const SaveManager = {
     save.discoveries = save.discoveries || [];
     save.clues = save.clues || [];
     save.powerups = save.powerups || [];
+    save.grazerBondTime = save.grazerBondTime || 0;
     save.version = C.SAVE_VERSION;
     return save;
   },

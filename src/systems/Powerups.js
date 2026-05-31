@@ -76,6 +76,13 @@ export const POWERUPS = {
     seconds: 150,
     effects: { hungerDrain: 0.55 },
   },
+  grazer_bond: {
+    id: 'grazer_bond',
+    icon: '🌿',
+    label: 'Grazer Bond',
+    seconds: 180,
+    effects: { predatorDamage: 0.82, hungerDrain: 0.85 },
+  },
 };
 
 export class PowerupManager {

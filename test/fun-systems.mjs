@@ -41,6 +41,19 @@ assert.ok(structures.some((s) => s.id === 'hut'), 'hut should be recognized');
 assert.ok(tracker.has('hut'), 'hut discovery persisted');
 ok('structure tracker recognizes a player-built hut');
 
+const defendedWorld = emptyWorld();
+const campfire = blockId('campfire');
+const torch = blockId('torch');
+const hide = blockId('hide_wall');
+defendedWorld.set(10, 10, campfire);
+defendedWorld.set(8, 10, torch);
+defendedWorld.set(12, 10, torch);
+for (let x = 7; x <= 12; x++) defendedWorld.set(x, 12, hide);
+const defended = new StructureTracker();
+const defendedFound = defended.evaluate({ world: defendedWorld, player: { x: 10, y: 10 } }, { x: 10, y: 10 });
+assert.ok(defendedFound.some((s) => s.id === 'defended_camp'), 'defended camp should be recognized');
+ok('structure tracker recognizes dinosaur defenses');
+
 // --- Structure scan primitives ---
 const ctx = scan(world, { x: 10, y: 10 });
 assert.strictEqual(ctx.roof, 5);
@@ -80,6 +93,8 @@ assert.strictEqual(glove.label, "Builder's Glove");
 assert.ok(powerups.value('reach') > 1, 'reach bonus active');
 powerups.update(11);
 assert.strictEqual(powerups.list().length, 0, 'powerup expires');
+const bond = powerups.grant('grazer_bond', 10);
+assert.ok(bond.effects.predatorDamage < 1, 'grazer bond reduces predator damage');
 ok('powerups grant effects and expire');
 
 // --- World events ---

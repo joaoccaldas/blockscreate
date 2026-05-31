@@ -89,7 +89,10 @@ export class Mob {
     if (this.hostile && target && this.attackCd <= 0) {
       if (Math.abs(this.x - target.x) < 0.8 && Math.abs(this.y - target.y) < 1.4) {
         this.attackCd = 0.9;
-        return { damage: this.def.damage || 8 };
+        let damage = this.def.damage || 8;
+        if (this.type === 'raptor' && (target.packPressure || 0) >= 2) damage *= 1.35;
+        if (this.type === 'rex' && target.fearExposed) damage *= 1.15;
+        return { damage };
       }
     }
     return null;
@@ -110,7 +113,9 @@ export class Mob {
     const dist = Math.abs(dx);
     if (dist < 12) {
       // Chase.
-      const spd = this.def.speed || 3;
+      let spd = this.def.speed || 3;
+      if (this.type === 'raptor') spd *= 1 + Math.min(0.35, (target.packPressure || 0) * 0.12);
+      if (this.type === 'rex' && target.fearExposed) spd *= 1.08;
       this.vx = Math.sign(dx) * spd;
       this.facing = Math.sign(dx) || this.facing;
     } else {

@@ -248,6 +248,10 @@ html, body {
 .cell-progress { background: rgba(118, 247, 221, 0.12); }
 .cell-fill { height: 100%; background: linear-gradient(90deg, #55f0d8, #ffd6ff); width: 0; transition: width 0.3s; }
 .cell-gradient { color: #b8fff2; font-size: 0.7rem; line-height: 1.2; }
+.dino-panel { margin: 6px 0; padding-top: 5px; border-top: 1px solid rgba(111, 192, 78, 0.2); }
+.dino-progress { background: rgba(111, 192, 78, 0.12); }
+.dino-fill { height: 100%; background: linear-gradient(90deg, #6fc04e, #f4d24a); width: 0; transition: width 0.3s; }
+.dino-warning { color: #f7d07a; font-size: 0.7rem; line-height: 1.2; }
 .advance-label { color: var(--muted); font-size: 0.74rem; }
 .advance-btn {
   width: 100%;

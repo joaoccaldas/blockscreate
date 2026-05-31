@@ -90,6 +90,20 @@ export const DISCOVERIES = [
     reward: { cp: 20, powerup: 'feast' },
     check: (g) => g.animalPeaceTime >= 8,
   },
+  {
+    id: 'grazer_bond',
+    icon: '🌿',
+    label: 'Grazer Bond',
+    reward: { cp: 30, powerup: 'grazer_bond' },
+    check: (g) => (g.grazerBondTime || 0) >= 10,
+  },
+  {
+    id: 'defended_camp',
+    icon: '🛡️',
+    label: 'Defended Camp',
+    reward: { cp: 35, powerup: 'fossil_charm' },
+    check: (g) => g.eraId === 'stone' && g.structures?.has('defended_camp'),
+  },
 ];
 
 export class DiscoveryLog {

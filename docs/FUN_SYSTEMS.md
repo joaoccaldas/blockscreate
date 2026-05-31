@@ -102,6 +102,18 @@ The HUD now also exposes cell stability and the nearest chemical gradient. This
 gives the player a learnable loop: drift toward gradients, absorb chemistry,
 raise stability, build a membrane and evolve.
 
+## Dinosaur Survival Behaviors
+
+Age of Dinosaurs now reacts more like a survival ecosystem:
+
+- raptors become faster and hit harder in packs,
+- a nearby T-Rex creates a fear zone unless the player has defenses,
+- peaceful time near stegosaurs or triceratops builds Grazer Bond,
+- defended camps are recognized from fire, torches and protective blocks.
+
+This makes the second era a real jump from cell-scale learning into land
+survival, preparation and defensive building.
+
 ## Save Format
 
 The save now includes:

@@ -60,6 +60,12 @@ First Cell now has an explicit stability and gradient feedback loop. The next
 playtest should watch whether players understand that stability comes from
 chemistry, membranes and proto-cell formation before evolution.
 
+## v4.8 Dinosaur Behavior Readiness Note
+
+Age of Dinosaurs now has stronger survival identity through pack/fear/bond
+systems. The next playtest should tune raptor pack damage and T-Rex fear so
+defenses feel valuable without making early dinosaur survival unfair.
+
 ## Known next steps
 
 - Complete true chunk streaming (current saves now include chunk metadata and modified chunk snapshots, but rendering still uses a dense loaded window).

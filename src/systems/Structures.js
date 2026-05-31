@@ -40,6 +40,14 @@ export const STRUCTURES = [
     check: (ctx) => ctx.vertical >= 6 && ctx.platform >= 3,
   },
   {
+    id: 'defended_camp',
+    icon: '🛡️',
+    label: 'Defended Camp',
+    reward: 35,
+    check: (ctx) => ctx.counts.campfire >= 1 && ctx.counts.torch >= 2 &&
+      ((ctx.counts.hide_wall || 0) + (ctx.counts.cobblestone || 0) + (ctx.counts.thatch || 0)) >= 6,
+  },
+  {
     id: 'portal_ring',
     icon: '🌀',
     label: 'Portal Ring',
@@ -140,4 +148,3 @@ function lineCount(world, x, y, dx, dy) {
   }
   return n;
 }
-

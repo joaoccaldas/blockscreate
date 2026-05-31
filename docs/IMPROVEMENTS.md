@@ -68,3 +68,11 @@ BlocksCreate already has the right spine for "Minecraft meets Civilization": blo
 - Added a First Cell stability meter to the HUD.
 - Added chemical-gradient guidance toward nearby nutrients or mineral vents.
 - Connected absorption, stored resources, membrane building and proto-cell crafting to a visible stability model.
+
+## Implemented In Dinosaur Behavior Pass
+
+- Added raptor pack pressure that increases speed and contact damage.
+- Added T-Rex fear zones that pressure exposed players.
+- Added Grazer Bond progression near stegosaurs/triceratops.
+- Added defended camp structure recognition and related discovery rewards.
+- Added dinosaur HUD feedback for grazer bond, pack pressure and defenses.

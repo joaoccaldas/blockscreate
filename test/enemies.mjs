@@ -54,6 +54,11 @@ const result = close.update(0.05, world, { x: 20, y: groundY, alive: true });
 assert.ok(result && result.damage > 0, 'adjacent hostile returns a contact hit');
 ok('hostile deals contact damage when adjacent');
 
+const raptor = new Mob('raptor', groundClose(), groundY);
+const packHit = raptor.update(0.05, world, { x: 20, y: groundY, alive: true, packPressure: 2 });
+assert.ok(packHit.damage > MOB_TYPES.raptor.damage, 'raptor pack pressure boosts contact damage');
+ok('raptor packs increase danger');
+
 // hurt() returns true when killed and respects hp.
 const boar = new Mob('boar', 20, groundY);
 assert.ok(!boar.hurt(4), 'boar survives a single hit');

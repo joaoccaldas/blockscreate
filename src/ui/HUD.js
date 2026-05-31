@@ -48,6 +48,11 @@ export class HUD {
           <div class="civ-progress cell-progress"><div id="cellStabilityBar" class="cell-fill"></div></div>
           <div id="cellGradient" class="cell-gradient"></div>
         </div>
+        <div id="dinoPanel" class="dino-panel hidden">
+          <div class="civ-row"><span>🌿 Grazer Bond</span><b id="grazerBondVal">0%</b></div>
+          <div class="civ-progress dino-progress"><div id="grazerBondBar" class="dino-fill"></div></div>
+          <div id="dinoWarning" class="dino-warning"></div>
+        </div>
         <div class="civ-progress"><div id="advanceBar" class="advance-fill"></div></div>
         <div id="advanceLabel" class="advance-label"></div>
         <button id="advanceBtn" class="advance-btn hidden">Enter Portal</button>
@@ -263,6 +268,7 @@ export class HUD {
     this.el('settleVal').textContent = game.civ.settlementScore();
     this.el('clueVal').textContent = game.clues?.count?.() || 0;
     this.renderCellStatus(game);
+    this.renderDinoStatus(game);
     const status = game.advancementStatus?.() || {};
     this.el('masteryVal').textContent = `${status.masteryDone || 0}/${status.masteryTotal || 0}`;
     const prog = game.civ.advanceProgress();
@@ -297,6 +303,17 @@ export class HUD {
     this.el('cellGradient').textContent = status.ready
       ? 'ready to evolve'
       : `sense: ${status.gradient}${distance}`;
+  }
+
+  renderDinoStatus(game) {
+    const panel = this.el('dinoPanel');
+    const status = game.dinoStatus;
+    panel.classList.toggle('hidden', game.eraId !== 'stone' || !status);
+    if (game.eraId !== 'stone' || !status) return;
+    this.el('grazerBondVal').textContent = `${status.grazerBond || 0}%`;
+    this.el('grazerBondBar').style.width = `${status.grazerBond || 0}%`;
+    const pack = status.packPressure >= 2 ? ` · pack x${status.packPressure}` : '';
+    this.el('dinoWarning').textContent = `${status.warning || 'listen for movement'}${pack}`;
   }
 
   renderObjectives(game) {

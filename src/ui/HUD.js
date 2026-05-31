@@ -37,9 +37,11 @@ export class HUD {
       </div>
 
       <div id="civPanel" class="civ-panel">
+        <div id="eraStory" class="era-story"></div>
         <div class="civ-row"><span>🏛️ Population</span><b id="popVal">1</b></div>
         <div class="civ-row"><span>✨ Civ Points</span><b id="cpVal">0</b></div>
         <div class="civ-row"><span>🏘️ Settlement</span><b id="settleVal">0</b></div>
+        <div class="civ-row"><span>⭐ Mastery</span><b id="masteryVal">0/0</b></div>
         <div class="civ-progress"><div id="advanceBar" class="advance-fill"></div></div>
         <div id="advanceLabel" class="advance-label"></div>
         <button id="advanceBtn" class="advance-btn hidden">Enter Portal</button>
@@ -200,17 +202,23 @@ export class HUD {
 
     const era = getEra(game.eraId);
     this.el('eraBadge').textContent = `${era.icon} ${era.name}${survival ? '' : ' · Creative'}`;
+    this.el('eraStory').textContent = era.manifest?.subtitle || era.blurb;
 
     this.el('popVal').textContent = game.civ.population;
     this.el('cpVal').textContent = Math.floor(game.civ.cp);
     this.el('settleVal').textContent = game.civ.settlementScore();
+    const status = game.advancementStatus?.() || {};
+    this.el('masteryVal').textContent = `${status.masteryDone || 0}/${status.masteryTotal || 0}`;
     const prog = game.civ.advanceProgress();
     this.el('advanceBar').style.width = `${prog * 100}%`;
     const nxt = nextEra(game.eraId);
+    const gate = !status.mandatoryReady ? 'Finish mandatory goals'
+      : !status.cpReady ? `Need ${Math.max(0, Math.ceil((status.needed || 0) - (status.cp || 0)))} CP`
+        : null;
     this.el('advanceLabel').textContent = nxt
-      ? (game.civ.canAdvance() ? `🌀 Portal to ${nxt.name} is open!` : `Next: ${nxt.name}`)
+      ? (status.ready ? `🌀 Portal to ${nxt.name} is open!` : `${gate || `Next: ${nxt.name}`}`)
       : 'Final era reached';
-    this.el('advanceBtn').classList.toggle('hidden', !(survival && nxt && game.civ.canAdvance()));
+    this.el('advanceBtn').classList.toggle('hidden', !(survival && nxt && status.ready));
 
     this.el('buildIndicator').textContent = game.buildMode ? '🧱 Build' : '⛏ Mine';
     this.el('buildIndicator').classList.toggle('build-on', game.buildMode);
@@ -228,7 +236,8 @@ export class HUD {
     const total = game.objectives.all.length;
     let html = '';
     for (const o of active) {
-      html += `<div class="obj-item"><span class="obj-ic">${o.icon}</span>${o.label}</div>`;
+      const cls = o.kind === 'mastery' ? ' mastery' : o.kind === 'portal' ? ' portal' : '';
+      html += `<div class="obj-item${cls}"><span class="obj-ic">${o.icon}</span><span>${o.label}</span></div>`;
     }
     if (!active.length) html = `<div class="obj-item done">✅ All objectives complete!</div>`;
     html += `<div class="obj-count">${done}/${total} done</div>`;

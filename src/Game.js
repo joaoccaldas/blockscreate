@@ -274,6 +274,23 @@ export class Game {
     return this.mode === MODE.CREATIVE || this.civ.hasBuilt(itemId) || this.inventory.count(itemId) > 0;
   }
 
+  canAdvance() {
+    return this.civ.canAdvanceWith(this.objectives);
+  }
+
+  advancementStatus() {
+    const era = getEra(this.eraId);
+    return {
+      cp: this.civ.cp,
+      needed: era.advanceCost,
+      cpReady: this.civ.canAdvance(),
+      mandatoryReady: this.objectives?.mandatoryDone?.() ?? true,
+      masteryDone: this.objectives?.masteryDone?.() ?? 0,
+      masteryTotal: this.objectives?.masteryTotal?.() ?? 0,
+      ready: this.canAdvance(),
+    };
+  }
+
   exit() {
     SaveManager.save(this);
     this.stop();
@@ -330,7 +347,7 @@ export class Game {
     this._evaluateFunSystems(dt);
 
     // Era advancement.
-    if (this.mode === MODE.SURVIVAL && this.civ.canAdvance()) {
+    if (this.mode === MODE.SURVIVAL && this.canAdvance()) {
       const nxt = nextEra(this.eraId);
       if (nxt && this.unlocked.unlock(nxt.id)) {
         this.audio?.play('unlock');
@@ -362,7 +379,7 @@ export class Game {
   }
 
   _advanceEra() {
-    if (this.mode !== MODE.SURVIVAL || !this.civ.canAdvance()) return false;
+    if (this.mode !== MODE.SURVIVAL || !this.canAdvance()) return false;
     const nxt = nextEra(this.eraId);
     if (!nxt) return false;
     this.unlocked.unlock(nxt.id);

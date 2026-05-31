@@ -10,14 +10,15 @@
  * its blocks/recipes. Milestone 1 ships the Stone Age fully playable; later eras
  * are defined so the portal + unlock system is real and demonstrable.
  */
+import { getEraManifest } from './eraManifests.js';
 
 export const ERAS = [
   {
     id: 'stone',
     order: 0,
-    name: 'Stone Age',
-    blurb: 'Forage, knap flint, tame fire and raise your first settlement.',
-    icon: '🪨',
+    name: 'First Humans',
+    blurb: 'Survive as early humans: shelter, fire, food, tools, clues, and alternate-history echoes.',
+    icon: '🔥',
     unlockCost: 0, // first era, always available
     // CP needed (while in this era) to open the NEXT era's portal
     advanceCost: 250,
@@ -66,6 +67,8 @@ export const ERAS = [
     fullyPlayable: false,
   },
 ];
+
+for (const e of ERAS) e.manifest = getEraManifest(e.id);
 
 export const ERA_BY_ID = {};
 for (const e of ERAS) ERA_BY_ID[e.id] = e;

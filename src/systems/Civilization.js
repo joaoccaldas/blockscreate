@@ -92,6 +92,10 @@ export class Civilization {
     return !!nextEra(this.eraId) && this.cp >= era.advanceCost;
   }
 
+  canAdvanceWith(objectives) {
+    return this.canAdvance() && (!objectives || objectives.mandatoryDone());
+  }
+
   hasBuilt(itemId, count = 1) {
     return (this.placed[itemId] || 0) >= count;
   }

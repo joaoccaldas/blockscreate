@@ -83,6 +83,10 @@ g.update(0.016);
 if (!g.objectives.isDone('gather_wood')) throw new Error('gather objective did not complete');
 ok('objectives evaluate (gather_wood completed after collecting logs)');
 
+g.civ.cp = 9999;
+if (g.canAdvance()) throw new Error('portal opened before mandatory goals completed');
+ok('portal remains gated by mandatory goals even with enough CP');
+
 // Particles fire on block break.
 const before = g.particles.list.length;
 g.mode = MODE.CREATIVE; // instant break
@@ -108,6 +112,7 @@ ok(`save/load round-trip; era ${g2.eraId}, objectives + fun systems restored`);
 
 // Era advancement builds a fresh world and installs the next era objective set.
 g2.civ.cp = 250;
+for (const o of g2.objectives.mandatory()) g2.objectives.completed.add(o.id);
 if (!g2._advanceEra()) throw new Error('advance era returned false');
 if (g2.eraId !== 'bronze') throw new Error(`expected bronze era after advance, got ${g2.eraId}`);
 if (!g2.unlocked.isUnlocked('bronze')) throw new Error('bronze was not unlocked');

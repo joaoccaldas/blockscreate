@@ -12,6 +12,8 @@ import { craft, availableRecipes, canCraft } from '../src/systems/Crafting.js';
 import { RECIPES } from '../src/core/recipes.js';
 import { isSolid, AIR, blockId, dropsOf } from '../src/core/blocks.js';
 import { ObjectiveTracker } from '../src/systems/Objectives.js';
+import { getEra } from '../src/core/eras.js';
+import { getEraManifest } from '../src/core/eraManifests.js';
 
 let passed = 0;
 function ok(name) { console.log(`  ✓ ${name}`); passed++; }
@@ -94,6 +96,18 @@ const bronzeObjectives = new ObjectiveTracker('bronze');
 assert.ok(bronzeObjectives.all.some((o) => o.id === 'smelt_bronze'), 'bronze has era objectives');
 const ironObjectives = new ObjectiveTracker('iron');
 assert.ok(ironObjectives.all.some((o) => o.id === 'iron_pick'), 'iron has era objectives');
-ok('per-era objective sets');
+const firstHumans = new ObjectiveTracker('stone');
+assert.ok(firstHumans.mandatory().length >= 5, 'first era has mandatory goals');
+assert.ok(firstHumans.mastery().length >= 2, 'first era has mastery goals');
+assert.ok(!firstHumans.mandatoryDone(), 'mandatory starts incomplete');
+ok('per-era mandatory and mastery objective sets');
+
+// --- Era manifests ---
+const era = getEra('stone');
+const manifest = getEraManifest('stone');
+assert.strictEqual(era.name, 'First Humans');
+assert.ok(manifest.historicalClues.includes('fossil_bed'), 'first humans has fossil clue metadata');
+assert.ok(manifest.branches.some((b) => b.id === 'saurian_echo'), 'alternate-history branch is data-driven');
+ok('era manifests provide historical context and branches');
 
 console.log(`\nAll ${passed} smoke checks passed.`);

@@ -26,6 +26,7 @@ export const SaveManager = {
       discoveries: game.discoveries ? game.discoveries.serialize() : [],
       clues: game.clues ? game.clues.serialize() : [],
       powerups: game.powerups ? game.powerups.serialize() : [],
+      events: game.events ? game.events.serialize() : {},
       animalPeaceTime: game.animalPeaceTime || 0,
     };
   },

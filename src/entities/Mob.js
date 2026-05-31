@@ -18,7 +18,7 @@ export const MOB_TYPES = {
   chicken: { sprite: 'chicken', food: 1, w: 0.7, h: 0.7, hp: 4, hostile: false },
   goat: { sprite: 'goat', food: 2, w: 1.0, h: 0.95, hp: 6, hostile: false },
 
-  // ---- dinosaurs (First Humans era) ----
+  // ---- dinosaurs (Age of Dinosaurs era) ----
   // Passive grazers: lots of food, slow, big.
   stego: { sprite: 'stego', food: 5, w: 1.6, h: 1.2, hp: 16, hostile: false },
   trike: { sprite: 'trike', food: 5, w: 1.5, h: 1.1, hp: 18, hostile: false },

@@ -9,6 +9,7 @@ import { StructureTracker, scan } from '../src/systems/Structures.js';
 import { DiscoveryLog } from '../src/systems/Discoveries.js';
 import { PowerupManager } from '../src/systems/Powerups.js';
 import { HistoricalClueLog } from '../src/systems/HistoricalClues.js';
+import { WorldEventLog } from '../src/systems/WorldEvents.js';
 import { Civilization } from '../src/systems/Civilization.js';
 
 let passed = 0;
@@ -80,6 +81,29 @@ assert.ok(powerups.value('reach') > 1, 'reach bonus active');
 powerups.update(11);
 assert.strictEqual(powerups.list().length, 0, 'powerup expires');
 ok('powerups grant effects and expire');
+
+// --- World events ---
+const events = new WorldEventLog({ cooldowns: { meteor_shower: 0 } });
+const eventWorld = emptyWorld();
+for (let x = 0; x < eventWorld.width; x++) {
+  eventWorld.set(x, 20, blockId('grass'));
+  eventWorld.heightMap[x] = 20;
+}
+const eventGame = {
+  mode: 'survival',
+  eraId: 'stone',
+  clock: 10,
+  dayFactor: () => 0.1,
+  world: eventWorld,
+  player: { x: 15, y: 19 },
+  particles: { fountain() {} },
+};
+const started = events.update(eventGame, 1);
+assert.ok(events.isActive('cold_night'), 'cold night active at night');
+assert.ok(started.some((e) => e.id === 'cold_night'), 'cold event starts');
+assert.ok(started.some((e) => e.id === 'meteor_shower'), 'meteor event starts');
+assert.ok(eventWorld.grid.includes(blockId('meteor_shard')), 'meteor event places a shard');
+ok('world events create hazards and physical artifacts');
 
 // --- Civilization records creative/building milestones ---
 civ.onBuild('torch', 5, 4);

@@ -11,8 +11,8 @@ A browser-based block-building civilization history sandbox. Mine, build, surviv
   showers that climax in an asteroid impact (craters terrain + damages)
 - Per-era atmosphere: signature color grade, ambient weather (drifting leaves,
   dust, ash), and themed wildlife — defined as data in `src/core/eraTheme.js`
-- Enemies that hunt at night: wolves and boars (First Humans), raiders and
-  bandits (Bronze/Iron), and roaming machines (Industrial), with chase AI,
+- Enemies that hunt at night: raptors and T-Rex (Age of Dinosaurs), raiders
+  and bandits (Bronze/Iron), and roaming machines (Industrial), with chase AI,
   contact damage, screen-shake feedback, and material drops
 - Physical historical clue blocks such as fossils, meteor shards, handprints and standing stones
 - Structure recognition for huts, camps, workshops, watchtowers and portal rings
@@ -21,6 +21,8 @@ A browser-based block-building civilization history sandbox. Mine, build, surviv
   and confirm dialogs guarding destructive actions
 - Themed menus, a labeled inventory, and crafting that shows per-ingredient
   have/need counts and missing stations
+- Era events and hazards: cold nights and meteor showers in the Age of
+  Dinosaurs create shelter pressure and physical meteor-shard clues
 - Generated pixel-art sprites and terrain textures
 - Local save/load plus GitHub Pages deployment
 

@@ -61,6 +61,7 @@ export class HUD {
       <button id="pauseBtn" class="icon-btn" title="Menu (Esc)">☰</button>
       <div id="buildIndicator" class="build-indicator"></div>
       <div id="powerupBar" class="powerup-bar hidden"></div>
+      <div id="eventBar" class="event-bar hidden"></div>
       <div id="toast" class="toast hidden"></div>
       <div id="bigToast" class="big-toast hidden"></div>
 
@@ -273,6 +274,7 @@ export class HUD {
     if (survival) this.renderObjectives(game);
     this.renderDiscoveries(game);
     this.renderPowerups(game);
+    this.renderEvents(game);
     this.renderHotbar(game);
   }
 
@@ -316,6 +318,14 @@ export class HUD {
     bar.innerHTML = active.map((p) =>
       `<span class="powerup" title="${p.label}">${p.icon} ${Math.ceil(p.remaining)}s</span>`
     ).join('');
+  }
+
+  renderEvents(game) {
+    const bar = this.el('eventBar');
+    const active = game.events?.listActive?.() || [];
+    bar.classList.toggle('hidden', !active.length);
+    if (!active.length) return;
+    bar.innerHTML = active.map((e) => `<span class="event-chip" title="${e.text}">${e.icon} ${e.label}</span>`).join('');
   }
 
   renderHotbar(game) {

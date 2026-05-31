@@ -15,6 +15,7 @@ import { DiscoveryLog } from './systems/Discoveries.js';
 import { HistoricalClueLog, clueForBlock } from './systems/HistoricalClues.js';
 import { StructureTracker } from './systems/Structures.js';
 import { PowerupManager } from './systems/Powerups.js';
+import { WorldEventLog } from './systems/WorldEvents.js';
 import { Camera } from './render/Camera.js';
 import { Renderer } from './render/Renderer.js';
 import { Particles } from './render/Particles.js';
@@ -70,6 +71,7 @@ export class Game {
     this.discoveries = new DiscoveryLog();
     this.clues = new HistoricalClueLog();
     this.powerups = new PowerupManager();
+    this.events = new WorldEventLog();
     this.mobs = [];
     this._grantStarter();
     this._setup();
@@ -93,6 +95,7 @@ export class Game {
     this.discoveries = new DiscoveryLog(save.discoveries || []);
     this.clues = new HistoricalClueLog(save.clues || []);
     this.powerups = new PowerupManager(save.powerups || []);
+    this.events = new WorldEventLog(save.events || {});
     this.mobs = (save.mobs || []).map((m) => Mob.load(m));
     this.animalPeaceTime = save.animalPeaceTime || 0;
     this._setup();
@@ -434,6 +437,7 @@ export class Game {
     this.clock = (this.clock + dt) % C.DAY_LENGTH;
     this.world.clock = this.clock;
     this.audio?.setDayFactor(this.dayFactor());
+    this._updateWorldEvents(dt);
 
     this.camera.follow(this.player, dt);
 
@@ -503,6 +507,37 @@ export class Game {
     }
     this.camera.clamp();
     this.hud?.toast(`World expanded: ${this.world.width} tiles wide`, 1600);
+  }
+
+  _updateWorldEvents(dt) {
+    if (!this.events) return;
+    const started = this.events.update(this, dt);
+    for (const e of started) {
+      this.audio?.play('unlock');
+      this.hud?.toast(`${e.icon} ${e.label}: ${e.text}`, 3000);
+    }
+    this._applyHazards(dt);
+  }
+
+  _applyHazards(dt) {
+    if (this.mode !== MODE.SURVIVAL || !this.events?.isActive('cold_night')) return;
+    if (this._hasWarmth()) return;
+    this.player.hunger = Math.max(0, this.player.hunger - dt * 0.5);
+    this.player.health = Math.max(0, this.player.health - dt * 0.25);
+    if (this.player.health <= 0) this.player.alive = false;
+  }
+
+  _hasWarmth(radius = 6) {
+    if (this.structures?.has('hut') || this.structures?.has('camp')) return true;
+    const px = Math.floor(this.player.x);
+    const py = Math.floor(this.player.y);
+    for (let y = py - radius; y <= py + radius; y++) {
+      for (let x = px - radius; x <= px + radius; x++) {
+        const b = getBlock(this.world.get(x, y));
+        if (b.light && Math.hypot(x - px, y - py) <= radius) return true;
+      }
+    }
+    return false;
   }
 
   _footsteps(dt, wasGround) {

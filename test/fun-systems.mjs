@@ -103,14 +103,23 @@ assert.ok(events.isActive('cold_night'), 'cold night active at night');
 assert.ok(started.some((e) => e.id === 'cold_night'), 'cold event starts');
 assert.ok(started.some((e) => e.id === 'meteor_shower'), 'meteor event starts');
 assert.ok(eventWorld.grid.includes(blockId('meteor_shard')), 'meteor event places a shard');
+events.cooldowns.predator_migration = 0;
+eventGame.spawnMobNearPlayer = (type) => { eventGame.spawned = type; return true; };
+const predatorStarted = events.update(eventGame, 1);
+assert.ok(predatorStarted.some((e) => e.id === 'predator_migration'), 'predator migration can start');
+assert.ok(['raptor', 'rex'].includes(eventGame.spawned), 'predator migration spawns a predator');
+events.update(eventGame, 40);
+assert.ok(!events.isActive('predator_migration'), 'temporary events expire');
 ok('world events create hazards and physical artifacts');
 
 // --- Civilization records creative/building milestones ---
 civ.onBuild('torch', 5, 4);
 civ.onBuild('brick', 5, 3);
 civ.onMine('stone', 22);
+civ.onDefeat('raptor');
 assert.ok(civ.light >= 1, 'light tracked');
 assert.ok(civ.hasBuilt('brick'), 'placed material tracked');
+assert.strictEqual(civ.defeated.raptor, 1, 'defeated enemies tracked');
 assert.strictEqual(civ.highestBuild, 3, 'highest build keeps smallest y');
 assert.strictEqual(civ.deepestMine, 22, 'deepest mining depth tracked');
 ok('civilization stores hidden-task milestones');

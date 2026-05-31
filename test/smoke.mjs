@@ -93,6 +93,13 @@ assert.ok(canCraft(planksRecipe, inv2), 'can craft planks from a log');
 assert.ok(craft(planksRecipe, inv2), 'craft planks');
 assert.strictEqual(inv2.count('planks'), 4, 'planks produced');
 assert.strictEqual(inv2.count('log'), 0, 'log consumed');
+const spearRecipe = RECIPES.find((r) => r.id === 'flint_spear');
+inv2.add('flint', 2);
+inv2.add('stick', 2);
+inv2.add('fiber', 1);
+assert.ok(canCraft(spearRecipe, inv2), 'can craft a flint spear from survival materials');
+assert.ok(craft(spearRecipe, inv2), 'craft flint spear');
+assert.strictEqual(inv2.count('flint_spear'), 1, 'flint spear produced');
 ok('crafting consumes inputs, produces outputs, respects era gate');
 
 // --- Drops and stations ---
@@ -124,8 +131,12 @@ const ironObjectives = new ObjectiveTracker('iron');
 assert.ok(ironObjectives.all.some((o) => o.id === 'iron_pick'), 'iron has era objectives');
 const firstEra = new ObjectiveTracker('stone');
 assert.ok(firstEra.mandatory().length >= 5, 'first era has mandatory goals');
-assert.ok(firstEra.mastery().length >= 2, 'first era has mastery goals');
+assert.ok(firstEra.mastery().some((o) => o.id === 'hunt_predator'), 'first era tracks predator mastery');
+assert.ok(firstEra.mastery().some((o) => o.id === 'make_spear'), 'first era tracks weapon mastery');
 assert.ok(!firstEra.mandatoryDone(), 'mandatory starts incomplete');
+const bronzeEra = new ObjectiveTracker('bronze');
+assert.ok(bronzeEra.mastery().some((o) => o.id === 'food_store'), 'bronze has storage mastery');
+assert.ok(bronzeEra.mastery().some((o) => o.id === 'lit_town'), 'bronze has town-light mastery');
 ok('per-era mandatory and mastery objective sets');
 
 // --- Era manifests ---

@@ -520,15 +520,22 @@ export class Game {
   }
 
   _applyHazards(dt) {
-    if (this.mode !== MODE.SURVIVAL || !this.events?.isActive('cold_night')) return;
+    if (this.mode !== MODE.SURVIVAL) return;
+    if (this.events?.isActive('drought')) {
+      this.player.hunger = Math.max(0, this.player.hunger - dt * 0.12);
+      if (this.inventory.count('food') >= 3) this.events._setActive?.('drought', false);
+    }
+    if (!this.events?.isActive('cold_night')) return;
     if (this._hasWarmth()) return;
-    this.player.hunger = Math.max(0, this.player.hunger - dt * 0.5);
-    this.player.health = Math.max(0, this.player.health - dt * 0.25);
+    const ember = this.powerups.value('warmth', 0) > 0 ? 0.35 : 1;
+    this.player.hunger = Math.max(0, this.player.hunger - dt * 0.5 * ember);
+    this.player.health = Math.max(0, this.player.health - dt * 0.25 * ember);
     if (this.player.health <= 0) this.player.alive = false;
   }
 
   _hasWarmth(radius = 6) {
     if (this.structures?.has('hut') || this.structures?.has('camp')) return true;
+    if (this.powerups.value('warmth', 0) > 0) return true;
     const px = Math.floor(this.player.x);
     const py = Math.floor(this.player.y);
     for (let y = py - radius; y <= py + radius; y++) {
@@ -849,7 +856,10 @@ export class Game {
   }
 
   _hitMob(mob) {
-    const dead = mob.hurt(4);
+    const weapon = this.inventory.selectedItem();
+    const weaponDef = weapon ? getItem(weapon.id) : null;
+    const damage = weaponDef?.kind === 'weapon' ? weaponDef.damage : 4;
+    const dead = mob.hurt(damage);
     this.audio?.play('hurt');
     this.particles.burst(mob.x, mob.y - mob.h / 2, mob.hostile ? '#ff7b6b' : '#cf5d6a', 8);
     if (!dead) return;
@@ -862,6 +872,7 @@ export class Game {
       }
     }
     const cp = mob.def.cp || 2;
+    this.civ.onDefeat(mob.type);
     this.civ.addCP(cp * (this.powerups?.multiplier('cpMultiplier') || 1));
     this.hud.toast(mob.hostile ? `Defeated a ${mob.type} (+${cp} CP)` : `Caught a ${mob.type}`);
   }
@@ -889,16 +900,22 @@ export class Game {
     const type = weightedPick(table);
     if (!type || !MOB_TYPES[type]) return;
 
-    // Spawn off-screen to either side, on solid ground.
+    this.spawnMobNearPlayer(type);
+  }
+
+  spawnMobNearPlayer(type) {
+    if (!type || !MOB_TYPES[type] || this.mobs.length >= 12) return false;
     const dir = Math.random() < 0.5 ? -1 : 1;
     const sx = Math.floor(this.player.x + dir * (12 + Math.random() * 6));
-    if (sx < 1 || sx >= this.world.width - 1) return;
+    if (sx < 1 || sx >= this.world.width - 1) return false;
     const surf = this.world.heightMap[sx];
-    if (!isSolid(this.world.get(sx, surf))) return;
+    if (!isSolid(this.world.get(sx, surf))) return false;
     this.mobs.push(new Mob(type, sx + 0.5, surf));
+    return true;
   }
 
   _damagePlayer(amount, cause = 'the wilds') {
+    if (/raptor|rex|boar|wolf/.test(cause)) amount *= this.powerups.multiplier('predatorDamage');
     this.player.health = Math.max(0, this.player.health - amount);
     this.player.vy = -7; // knockback pop
     this.lastDamageCause = cause;

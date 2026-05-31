@@ -19,6 +19,8 @@ export const RECIPES = [
   { id: 'torch',         era: 'stone', out: { id: 'torch', n: 4 }, in: { stick: 1, coal: 1 } },
   { id: 'campfire',      era: 'stone', out: { id: 'campfire', n: 1 }, in: { log: 1, stick: 3 } },
   { id: 'thatch',        era: 'stone', out: { id: 'thatch', n: 4 }, in: { fiber: 2 } },
+  { id: 'bone_knife',    era: 'stone', out: { id: 'bone_knife', n: 1 }, in: { bone_pile: 1, stick: 1 } },
+  { id: 'flint_spear',   era: 'stone', out: { id: 'flint_spear', n: 1 }, in: { flint: 2, stick: 2, fiber: 1 } },
   { id: 'cook_food',     era: 'stone', out: { id: 'food', n: 1 }, in: { raw_food: 1 }, station: 'campfire' },
 
   // --- Bronze Age (defined so the system is complete; needs the era unlocked) ---

@@ -11,7 +11,7 @@
  */
 import { BLOCKS } from './blocks.js';
 
-/** id -> { id, label, kind, place?, tool?, tier?, stack } */
+/** id -> { id, label, kind, place?, tool?, tier?, damage?, stack } */
 export const ITEMS = {};
 
 function add(item) {
@@ -59,6 +59,14 @@ const tools = [
 ];
 for (const [id, label, tool, tier, color] of tools) {
   add({ id, label, kind: 'tool', tool, tier, stack: 1, colors: { base: color, top: color, side: color } });
+}
+
+const weapons = [
+  ['bone_knife', 'Bone Knife', 6, '#d9cfb7'],
+  ['flint_spear', 'Flint Spear', 9, '#6c6f68'],
+];
+for (const [id, label, damage, color] of weapons) {
+  add({ id, label, kind: 'weapon', damage, stack: 1, colors: { base: color, top: color, side: color } });
 }
 
 export function getItem(id) {

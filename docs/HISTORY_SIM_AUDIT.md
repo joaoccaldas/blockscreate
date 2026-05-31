@@ -9,6 +9,8 @@ BlocksCreate is now a modular historical sandbox, but not yet the complete visio
 - **Era specificity:** eras now have manifests for historical framing, hazards, animals, clues, mastery, branches and player form.
 - **Physical clues:** Age of Dinosaurs can generate clue blocks such as fossil beds, meteor shards, handprints and standing stones.
 - **World events:** Age of Dinosaurs now has cold-night pressure and meteor showers that place physical meteor shards.
+- **RPG encounters:** Age of Dinosaurs can trigger predator migrations and grazer herds; Early Cities can trigger droughts and raider scouts.
+- **RPG progression:** primitive weapons, defeated-enemy stats, relic powerups and optional mastery goals make runs branch more meaningfully.
 - **Era biomes:** chunks now have deterministic era biomes, starting with fern valleys, fossil basins, meteor scars and ash fields for the Age of Dinosaurs.
 - **Progression:** portals require both CP and mandatory goals. Optional mastery goals grant benefits without blocking advancement.
 - **Historical consistency:** the opening era is explicitly alternate-history survival fantasy, while later eras use historical sandbox framing.
@@ -23,6 +25,9 @@ BlocksCreate is now a modular historical sandbox, but not yet the complete visio
 - Documented historical/alternate-history branches for each era.
 - Added `HistoricalClueLog` so clue blocks become journal entries and branch pressure.
 - Added `WorldEventLog` so era hazards and events can start affecting play.
+- Added timed random encounters with save persistence and HUD surfacing.
+- Added primitive weapons, predator tracking and relic powerups.
+- Expanded Early Cities mastery toward food storage and town-light planning.
 - Added chunk metadata and modified-chunk snapshots so saves can migrate from dense worlds toward streamed infinite worlds.
 - Added deterministic era biome lookup so future chunks can spawn different resources, clues, hazards and scenery by era.
 

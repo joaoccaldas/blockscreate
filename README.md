@@ -23,6 +23,10 @@ A browser-based block-building civilization history sandbox. Mine, build, surviv
   have/need counts and missing stations
 - Era events and hazards: cold nights and meteor showers in the Age of
   Dinosaurs create shelter pressure and physical meteor-shard clues
+- RPG-style random era encounters: predator migrations, grazer herds, droughts
+  and raider scouts with timed HUD states and save persistence
+- Primitive weapons, predator mastery, relic-style powerups and Early Cities
+  settlement mastery goals
 - Chunk-indexed worlds with deterministic era biomes and modified-chunk
   snapshots, preserving current saves while moving toward true infinite worlds
 - Generated pixel-art sprites and terrain textures

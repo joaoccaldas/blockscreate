@@ -41,6 +41,41 @@ export const POWERUPS = {
     seconds: 45,
     effects: { cpMultiplier: 1.25 },
   },
+  ember_heart: {
+    id: 'ember_heart',
+    icon: '🔥',
+    label: 'Ember Heart',
+    seconds: 150,
+    effects: { warmth: 1, hungerDrain: 0.75 },
+  },
+  fossil_charm: {
+    id: 'fossil_charm',
+    icon: '🦴',
+    label: 'Fossil Charm',
+    seconds: 120,
+    effects: { predatorDamage: 0.7 },
+  },
+  meteor_pick: {
+    id: 'meteor_pick',
+    icon: '☄️',
+    label: 'Meteor Pick',
+    seconds: 90,
+    effects: { miningSpeed: 1.7, cpMultiplier: 1.15 },
+  },
+  city_planner: {
+    id: 'city_planner',
+    icon: '🏛️',
+    label: 'City Planner',
+    seconds: 150,
+    effects: { structureScan: 1, cpMultiplier: 1.1 },
+  },
+  granary_feast: {
+    id: 'granary_feast',
+    icon: '🏺',
+    label: 'Granary Feast',
+    seconds: 150,
+    effects: { hungerDrain: 0.55 },
+  },
 };
 
 export class PowerupManager {
@@ -92,4 +127,3 @@ export class PowerupManager {
     return this.list().map((p) => ({ id: p.id, remaining: p.remaining }));
   }
 }
-

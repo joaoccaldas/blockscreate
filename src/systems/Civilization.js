@@ -37,6 +37,7 @@ export class Civilization {
     this.housing = 0;
     this.light = 0;
     this.placed = {};
+    this.defeated = {};
     this.highestBuild = Number.MAX_SAFE_INTEGER;
     this.deepestMine = 0;
   }
@@ -79,6 +80,10 @@ export class Civilization {
     this.addCP(CP_GAINS.cook);
   }
 
+  onDefeat(type) {
+    this.defeated[type] = (this.defeated[type] || 0) + 1;
+  }
+
   /** Progress (0..1) toward unlocking the next era. */
   advanceProgress() {
     const era = getEra(this.eraId);
@@ -108,7 +113,7 @@ export class Civilization {
     return {
       eraId: this.eraId, cp: this.cp, population: this.population,
       totalMined: this.totalMined, totalCrafted: this.totalCrafted, totalBuilt: this.totalBuilt,
-      housing: this.housing, light: this.light, placed: this.placed,
+      housing: this.housing, light: this.light, placed: this.placed, defeated: this.defeated,
       highestBuild: this.highestBuild, deepestMine: this.deepestMine,
     };
   }
@@ -118,6 +123,7 @@ export class Civilization {
     this.housing ??= 0;
     this.light ??= 0;
     this.placed ??= {};
+    this.defeated ??= {};
     this.highestBuild ??= Number.MAX_SAFE_INTEGER;
     this.deepestMine ??= 0;
   }

@@ -19,7 +19,7 @@ export const ERA_MANIFESTS = {
     animals: ['stegosaurus', 'triceratops', 'raptor', 'tyrannosaurus', 'goat'],
     decorations: ['giant ferns', 'bones', 'standing stones', 'ember pits'],
     mandatory: ['Gather wood', 'Craft planks', 'Craft a stone pickaxe', 'Mine coal', 'Build a shelter', 'Cook food'],
-    mastery: ['Survive an impact', 'Build a portal ring', 'Befriend a grazer', 'Reach deep caves', 'Hunt a predator'],
+    mastery: ['Survive an impact', 'Build a portal ring', 'Befriend a grazer', 'Reach deep caves', 'Craft a spear', 'Hunt a predator'],
     historicalClues: [
       'fossil_bed',
       'cave_painting',
@@ -45,7 +45,7 @@ export const ERA_MANIFESTS = {
     animals: ['goat', 'cow', 'pig', 'chicken'],
     decorations: ['pottery', 'kiln', 'brick walls', 'market markers', 'glyph tablets'],
     mandatory: ['Build a workshop', 'Mine copper', 'Mine tin', 'Craft bronze', 'Build town blocks'],
-    mastery: ['Create roads', 'Store food', 'Build walls', 'Discover glyph clues'],
+    mastery: ['Create roads', 'Store food', 'Light the town', 'Build walls', 'Discover glyph clues'],
     historicalClues: ['clay_tablet', 'trade_bead', 'kiln_mark', 'river_map'],
     branches: [
       { id: 'merchant_city', label: 'Merchant City', condition: 'prioritize trade and roads' },
@@ -95,4 +95,3 @@ export const ERA_MANIFESTS = {
 export function getEraManifest(id) {
   return ERA_MANIFESTS[id] || ERA_MANIFESTS.stone;
 }
-

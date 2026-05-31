@@ -34,6 +34,13 @@ npm run serve            # http://localhost:8000
 5. Push to `main`; confirm the Pages deploy workflow succeeds.
 6. Hard-reload the live site and confirm the service worker activates.
 
+## v4.4 Gameplay Readiness Note
+
+The game now has more run-to-run variation through timed RPG encounters and
+relic powerups. The highest gameplay risk is tuning: predator migrations,
+drought hunger pressure and weapon damage should be playtested for fairness
+before a broader release.
+
 ## Known next steps
 
 - Complete true chunk streaming (current saves now include chunk metadata and modified chunk snapshots, but rendering still uses a dense loaded window).

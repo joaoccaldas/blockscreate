@@ -18,6 +18,8 @@ export const OBJECTIVES = {
     { id: 'cave_paint',   kind: 'mastery',   icon: '🎨', label: 'Mastery: leave cave-art clues',         reward: 20, check: (g) => g.discoveries?.unlocked?.has('first_shelter') && g.civ.hasBuilt('torch', 3) },
     { id: 'fossil_memory',kind: 'mastery',   icon: '🦴', label: 'Mastery: decode fossil memories',       reward: 25, check: (g) => g.clues?.has('fossil_bed') },
     { id: 'meteor_omen',  kind: 'mastery',   icon: '☄️', label: 'Mastery: recover a meteor shard',       reward: 25, check: (g) => g.clues?.has('meteor_shard') },
+    { id: 'make_spear',   kind: 'mastery',   icon: '🪨', label: 'Mastery: craft a Flint Spear',           reward: 20, check: (g) => g.crafted.has('flint_spear') || total(g, 'flint_spear') >= 1 },
+    { id: 'hunt_predator',kind: 'mastery',   icon: '🦖', label: 'Mastery: drive off a predator',          reward: 30, check: (g) => (g.civ.defeated?.raptor || 0) + (g.civ.defeated?.rex || 0) >= 1 },
     { id: 'portal_ring',  kind: 'mastery',   icon: '🌀', label: 'Mastery: build a portal ring',          reward: 35, check: (g) => g.structures?.has('portal_ring') },
     { id: 'advance',      kind: 'portal',    icon: '🌀', label: 'Open the Early Cities portal',          reward: 0,  check: (g) => g.canAdvance() },
   ],
@@ -28,6 +30,8 @@ export const OBJECTIVES = {
     { id: 'smelt_bronze', kind: 'mandatory', icon: '⚒️', label: 'Craft Bronze Ingots',              reward: 25, check: (g) => total(g, 'bronze') >= 1 },
     { id: 'brick_town',   kind: 'mandatory', icon: '🧱', label: 'Place 8 town blocks',               reward: 20, check: (g) => g.civ.totalBuilt >= 8 },
     { id: 'workshop',     kind: 'mastery',   icon: '🛠️', label: 'Mastery: recognized Workshop',     reward: 25, check: (g) => g.structures?.has('workshop') },
+    { id: 'food_store',   kind: 'mastery',   icon: '🏺', label: 'Mastery: store 3 cooked food',      reward: 25, check: (g) => total(g, 'food') >= 3 },
+    { id: 'lit_town',     kind: 'mastery',   icon: '🔥', label: 'Mastery: light the first town',     reward: 25, check: (g) => g.civ.light >= 3 },
     { id: 'advance',      kind: 'portal',    icon: '🌀', label: 'Open the Iron Kingdoms portal',     reward: 0,  check: (g) => g.canAdvance() },
   ],
   iron: [

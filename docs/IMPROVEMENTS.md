@@ -40,3 +40,11 @@ BlocksCreate already has the right spine for "Minecraft meets Civilization": blo
 - Crafting UI feedback for missing stations.
 - Tests covering the new gameplay rules.
 
+## Implemented In RPG Era Pass
+
+- Primitive weapon recipes for `bone_knife` and `flint_spear`.
+- Predator defeat tracking in civilization stats.
+- Optional Age of Dinosaurs mastery for spear crafting and predator defense.
+- Random timed era encounters: predator migration, grazer herd, drought and raider scouts.
+- Relic-style powerups for warmth, predator resistance, mining, city planning and food storage.
+- Early Cities mastery goals for food stores and town lighting, making the next era more about settlement management.

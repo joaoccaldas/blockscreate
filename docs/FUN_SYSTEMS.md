@@ -49,8 +49,40 @@ Powerups are timed effects queried by the game loop:
 - Feast: slower hunger drain
 - Architect's Eye: faster structure scanning
 - Time Shard: CP multiplier
+- Ember Heart: warmth and slower hunger drain
+- Fossil Charm: reduced predator damage
+- Meteor Pick: faster mining with a CP boost
+- City Planner: faster scanning and better settlement reward flow
+- Granary Feast: slower hunger drain for food-storage play
 
 Future relics, rare drops, recipes, or shrine rewards can all call `game.powerups.grant(id)`.
+
+## RPG Era Encounters
+
+File: `src/systems/WorldEvents.js`
+
+World events now include timed encounters, not only ambience:
+
+- Age of Dinosaurs: cold nights, meteor showers, predator migrations and grazer herds.
+- Early Cities: droughts and raider scouts.
+
+Events are randomized through deterministic world state where possible, appear
+as active HUD chips, persist in saves, and can spawn mobs or pressure survival
+stats. This makes each run less predictable while keeping the systems modular.
+
+## Primitive RPG Progression
+
+Files: `src/core/recipes.js`, `src/core/items.js`, `src/systems/Objectives.js`
+
+The first era now has optional weapon and predator mastery:
+
+- `bone_knife`
+- `flint_spear`
+- predator defeat tracking in civilization stats
+- relic discoveries such as Storm Shelter, Meteor Smith and Saurian Echo
+
+Early Cities starts to shift the game from survival toward planning with food
+storage, town lighting and city-planner rewards.
 
 ## Save Format
 

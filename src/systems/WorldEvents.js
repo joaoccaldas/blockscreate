@@ -21,13 +21,45 @@ export const WORLD_EVENTS = {
     label: 'Meteor Shower',
     text: 'A shard from deep time has fallen nearby.',
   },
+  predator_migration: {
+    id: 'predator_migration',
+    icon: '🦖',
+    label: 'Predator Migration',
+    text: 'Hunters are moving through this region. Fire and high ground matter.',
+  },
+  grazer_herd: {
+    id: 'grazer_herd',
+    icon: '🌿',
+    label: 'Grazer Herd',
+    text: 'A peaceful herd passes nearby. Stay calm to earn their trust.',
+  },
+  drought: {
+    id: 'drought',
+    icon: '☀️',
+    label: 'Drought',
+    text: 'Food spoils faster. Store meals and plan the town.',
+  },
+  raider_scouts: {
+    id: 'raider_scouts',
+    icon: '⚔️',
+    label: 'Raider Scouts',
+    text: 'Scouts are probing the settlement. Walls and light discourage them.',
+  },
 };
 
 export class WorldEventLog {
   constructor(data = {}) {
-    this.cooldowns = { meteor_shower: 70, ...(data.cooldowns || {}) };
+    this.cooldowns = {
+      meteor_shower: 70,
+      predator_migration: 95,
+      grazer_herd: 55,
+      drought: 85,
+      raider_scouts: 110,
+      ...(data.cooldowns || {}),
+    };
     this.seen = new Set(data.seen || []);
     this.active = new Set(data.active || []);
+    this.durations = { ...(data.durations || {}) };
     this._coldWasActive = this.active.has('cold_night');
   }
 
@@ -37,6 +69,7 @@ export class WorldEventLog {
       this.active.clear();
       return started;
     }
+    this._tickDurations(dt);
 
     if (game.eraId === 'stone') {
       const cold = game.dayFactor() < 0.22;
@@ -49,6 +82,43 @@ export class WorldEventLog {
         this.cooldowns.meteor_shower = 180;
         this._dropMeteorShard(game);
         started.push(this._markSeen('meteor_shower'));
+      }
+
+      this.cooldowns.predator_migration -= dt;
+      if (this.cooldowns.predator_migration <= 0 && game.dayFactor() < 0.65) {
+        this.cooldowns.predator_migration = 150 + hash2(Math.floor(game.clock), 11, game.world.seed) * 80;
+        this._activate('predator_migration', 35);
+        this._spawnNear(game, hash2(Math.floor(game.clock), 12, game.world.seed) < 0.72 ? 'raptor' : 'rex');
+        started.push(this._markSeen('predator_migration'));
+      }
+
+      this.cooldowns.grazer_herd -= dt;
+      if (this.cooldowns.grazer_herd <= 0 && game.dayFactor() > 0.45) {
+        this.cooldowns.grazer_herd = 120 + hash2(Math.floor(game.clock), 13, game.world.seed) * 70;
+        this._activate('grazer_herd', 30);
+        this._spawnNear(game, hash2(Math.floor(game.clock), 14, game.world.seed) < 0.5 ? 'stego' : 'trike');
+        started.push(this._markSeen('grazer_herd'));
+      }
+    } else if (game.eraId === 'bronze') {
+      this._setActive('cold_night', false);
+
+      this.cooldowns.drought -= dt;
+      if (this.cooldowns.drought <= 0) {
+        this.cooldowns.drought = 160;
+        this._activate('drought', 45);
+        started.push(this._markSeen('drought'));
+      }
+
+      this.cooldowns.raider_scouts -= dt;
+      if (this.cooldowns.raider_scouts <= 0 && game.dayFactor() < 0.5) {
+        this.cooldowns.raider_scouts = 150;
+        this._activate('raider_scouts', 40);
+        this._spawnNear(game, 'raider');
+        started.push(this._markSeen('raider_scouts'));
+      }
+    } else {
+      for (const id of ['cold_night', 'predator_migration', 'grazer_herd', 'drought', 'raider_scouts']) {
+        this._setActive(id, false);
       }
     }
 
@@ -64,12 +134,30 @@ export class WorldEventLog {
       cooldowns: this.cooldowns,
       seen: [...this.seen],
       active: [...this.active],
+      durations: this.durations,
     };
   }
 
   _setActive(id, on) {
     if (on) this.active.add(id);
     else this.active.delete(id);
+  }
+
+  _activate(id, seconds) {
+    this.active.add(id);
+    this.durations[id] = seconds;
+  }
+
+  _tickDurations(dt) {
+    for (const [id, remaining] of Object.entries(this.durations)) {
+      const next = remaining - dt;
+      if (next <= 0) {
+        delete this.durations[id];
+        this.active.delete(id);
+      } else {
+        this.durations[id] = next;
+      }
+    }
   }
 
   _markSeen(id) {
@@ -87,5 +175,10 @@ export class WorldEventLog {
     const y = Math.max(2, surf - 1);
     world.set(x, y, blockId('meteor_shard'));
     game.particles?.fountain(x + 0.5, y, ['#8e6bd6', '#f4d24a', '#fff'], 26);
+  }
+
+  _spawnNear(game, type) {
+    if (!game.spawnMobNearPlayer) return;
+    game.spawnMobNearPlayer(type);
   }
 }

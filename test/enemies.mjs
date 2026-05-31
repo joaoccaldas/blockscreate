@@ -26,10 +26,13 @@ const table = [['a', 1], ['b', 0]];
 assert.strictEqual(weightedPick(table, () => 0.99), 'a', 'zero-weight entry never picked');
 ok('weightedPick honors weights');
 
-// First Humans has wolves/boars as hostiles.
+// Age of Dinosaurs has predator dinosaurs as hostiles, and a meteor event.
 const stone = getEraTheme('stone');
-assert.ok(stone.hostile.some(([t]) => t === 'wolf'), 'stone era has wolves');
-ok('First Humans era defines hostile predators');
+assert.ok(stone.hostile.some(([t]) => t === 'raptor'), 'dino era has raptors');
+assert.ok(stone.hostile.some(([t]) => t === 'rex'), 'dino era has a T-Rex');
+assert.ok(stone.passive.some(([t]) => t === 'stego' || t === 'trike'), 'dino era has grazers');
+assert.ok(stone.asteroidEvent, 'dino era has the asteroid event');
+ok('Age of Dinosaurs defines dinosaur spawns + asteroid event');
 
 // Build a tiny flat world for behavior tests.
 const world = new World({ seed: 7, eraId: 'stone', width: 40, height: 40 });

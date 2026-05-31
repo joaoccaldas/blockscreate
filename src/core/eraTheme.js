@@ -17,19 +17,23 @@
  */
 export const ERA_THEME = {
   stone: {
-    tint: 'rgba(120, 90, 40, 0.05)',
+    tint: 'rgba(120, 110, 40, 0.06)',
     weather: 'leaves',
-    weatherRate: 1.2,
+    weatherRate: 1.4,
     accent: '#6fc04e',
-    passive: [['goat', 3], ['pig', 2], ['chicken', 2], ['cow', 1]],
-    hostile: [['wolf', 3], ['boar', 2]],
-    hostileDay: false,
+    // The age of dinosaurs: grazers roam by day, predators hunt day and night.
+    passive: [['stego', 3], ['trike', 3], ['goat', 2], ['chicken', 1]],
+    hostile: [['raptor', 3], ['rex', 1], ['boar', 1]],
+    hostileDay: true,
+    // Rare meteors streak the sky, building toward an extinction-level event.
+    asteroidEvent: true,
     // Surface scenery props, drawn (non-collidable) by the renderer. Each entry:
     // { kind, chance } — chance is per surface column.
     decorations: [
-      { kind: 'standing_stone', chance: 0.012 },
+      { kind: 'fern', chance: 0.06 },
+      { kind: 'standing_stone', chance: 0.01 },
       { kind: 'bones', chance: 0.02 },
-      { kind: 'shrub', chance: 0.05 },
+      { kind: 'shrub', chance: 0.03 },
     ],
   },
   bronze: {

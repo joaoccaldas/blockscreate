@@ -370,6 +370,7 @@ export class Game {
     this.powerups.update(dt);
     this._trackAnimalFriendship(dt);
     this._ambientWeather(dt);
+    this._updateMeteors(dt);
     this.particles.update(dt);
 
     this.clock = (this.clock + dt) % C.DAY_LENGTH;
@@ -507,6 +508,88 @@ export class Game {
         default: break;
       }
     }
+  }
+
+  /**
+   * Asteroid / meteor-shower event for the age of dinosaurs.
+   *
+   * Streaking meteors cross the sky as omens; occasionally one impacts near the
+   * player — shaking the screen, scorching a small crater, throwing fire
+   * particles, and damaging anything close. It is dangerous but survivable
+   * (shelter helps), reinforcing the "survive the extinction" fantasy.
+   */
+  _updateMeteors(dt) {
+    const theme = getEraTheme(this.eraId);
+    if (!theme.asteroidEvent || this.mode !== MODE.SURVIVAL) { this.meteors = this.meteors || []; return; }
+    this.meteors = this.meteors || [];
+
+    // Spawn cadence: a meteor every ~18-34s; impact chance rises a little with
+    // accumulated time so the era trends toward its climax.
+    this._meteorTimer = (this._meteorTimer || 8) - dt;
+    if (this._meteorTimer <= 0) {
+      this._meteorTimer = 18 + Math.random() * 16;
+      const willImpact = Math.random() < 0.4;
+      const camLeft = this.camera.x - this.camera.tilesX / 2;
+      const tx = willImpact
+        ? this.player.x + (Math.random() - 0.5) * 8     // aim near the player
+        : camLeft + Math.random() * this.camera.tilesX; // just a sky streak
+      this.meteors.push({
+        x: tx + 10, y: this.camera.y - this.camera.tilesY * 0.7,
+        vx: -7 - Math.random() * 3, vy: 11 + Math.random() * 4,
+        impact: willImpact, life: 6,
+      });
+      if (willImpact) this.hud?.toast('☄️ The sky burns — take cover!', 2200);
+    }
+
+    for (let i = this.meteors.length - 1; i >= 0; i--) {
+      const m = this.meteors[i];
+      m.life -= dt;
+      m.x += m.vx * dt;
+      m.y += m.vy * dt;
+      // Smoke/fire trail.
+      if (!this.reduceMotion && Math.random() < 0.8) {
+        this.particles.spawn(m.x, m.y, -m.vx * 0.1, -m.vy * 0.05,
+          { color: ['#ff9b3b', '#ffd27a', '#7a4a2a'][(Math.random() * 3) | 0], life: 0.5, size: 0.14, gravity: 0 });
+      }
+      const groundY = this.world.heightMap[Math.round(m.x)] ?? 9999;
+      if (m.impact && m.y >= groundY - 1) {
+        this._meteorImpact(Math.round(m.x), groundY);
+        this.meteors.splice(i, 1);
+      } else if (m.life <= 0 || m.y > this.world.height) {
+        this.meteors.splice(i, 1);
+      }
+    }
+  }
+
+  _meteorImpact(cx, cy) {
+    this.audio?.play('break');
+    if (!this.reduceMotion) this.hud?.shake?.();
+    this.particles.fountain(cx + 0.5, cy - 0.5, ['#ff9b3b', '#ffd27a', '#ff5b3b', '#7a4a2a'], 40);
+
+    // Carve a shallow crater and scorch the rim.
+    const r = 2;
+    for (let dx = -r; dx <= r; dx++) {
+      for (let dy = -r; dy <= r; dy++) {
+        if (dx * dx + dy * dy > r * r) continue;
+        const x = cx + dx;
+        const y = cy + dy;
+        if (this.world.inBounds(x, y) && getBlock(this.world.get(x, y)).hardness !== Infinity) {
+          this.world.set(x, y, AIR);
+        }
+      }
+    }
+
+    // Damage the player + mobs caught in the blast.
+    if (Math.hypot(this.player.x - (cx + 0.5), this.player.y - (cy + 0.5)) < 4) {
+      this._damagePlayer(35);
+    }
+    for (let i = this.mobs.length - 1; i >= 0; i--) {
+      const mob = this.mobs[i];
+      if (Math.hypot(mob.x - (cx + 0.5), mob.y - (cy + 0.5)) < 4) {
+        if (mob.hurt(30)) this.mobs.splice(i, 1);
+      }
+    }
+    this.hud?.toast('☄️ Impact!', 1500);
   }
 
   _handleInteraction(dt) {
@@ -753,6 +836,7 @@ export class Game {
       powerups: this.powerups,
       dayFactor: this.dayFactor(),
       tint: getEraTheme(this.eraId).tint,
+      meteors: this.meteors,
       hover: this.hover,
       ghost: this.ghost,
       dt,

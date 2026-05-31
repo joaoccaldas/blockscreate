@@ -38,7 +38,7 @@ export class Renderer {
    * scene = { world, camera, player, mobs, particles, dayFactor, hover, ghost, dt }
    */
   render(scene) {
-    const { world, camera, player, mobs, particles, dayFactor, tint, hover, ghost, dt = 0 } = scene;
+    const { world, camera, player, mobs, particles, dayFactor, tint, meteors, hover, ghost, dt = 0 } = scene;
     const ctx = this.ctx;
     const W = this.canvas.width;
     const H = this.canvas.height;
@@ -64,6 +64,7 @@ export class Renderer {
     }
 
     this.drawDecorations(world, era, camera, T, x0, x1);
+    if (meteors && meteors.length) this.drawMeteors(camera, meteors, T);
     this.drawMobs(camera, mobs, T);
     this.drawPlayer(camera, player, T);
     if (particles) this.drawParticles(camera, particles, T);
@@ -322,6 +323,19 @@ export class Renderer {
     const baseX = sx + T / 2;
     const groundY = sy; // top of the surface tile
     switch (kind) {
+      case 'fern': {
+        // Prehistoric fronds fanning up from the ground.
+        ctx.strokeStyle = '#3f8a44';
+        ctx.lineWidth = Math.max(1.5, T * 0.05);
+        for (let i = -2; i <= 2; i++) {
+          ctx.beginPath();
+          ctx.moveTo(baseX, groundY);
+          ctx.quadraticCurveTo(baseX + i * T * 0.12, groundY - T * 0.5,
+            baseX + i * T * 0.28, groundY - T * 0.9 + Math.abs(i) * T * 0.12);
+          ctx.stroke();
+        }
+        break;
+      }
       case 'shrub':
         ctx.fillStyle = '#3f7a32';
         ctx.beginPath();
@@ -410,6 +424,31 @@ export class Renderer {
         break;
       default:
         break;
+    }
+  }
+
+  /** Falling meteors: a glowing head with a fiery tail. */
+  drawMeteors(camera, meteors, T) {
+    const ctx = this.ctx;
+    for (const m of meteors) {
+      const { sx, sy } = camera.worldToScreen(m.x, m.y);
+      const len = m.impact ? 2.4 : 1.6;
+      // Tail (opposite the velocity direction).
+      const grad = ctx.createLinearGradient(sx, sy, sx - m.vx * len, sy - m.vy * len);
+      grad.addColorStop(0, m.impact ? 'rgba(255,180,80,0.95)' : 'rgba(255,220,150,0.9)');
+      grad.addColorStop(1, 'rgba(255,120,40,0)');
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = m.impact ? T * 0.32 : T * 0.18;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(sx - m.vx * len, sy - m.vy * len);
+      ctx.stroke();
+      // Head.
+      ctx.fillStyle = '#fff4d6';
+      ctx.beginPath();
+      ctx.arc(sx, sy, (m.impact ? 0.32 : 0.2) * T, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 

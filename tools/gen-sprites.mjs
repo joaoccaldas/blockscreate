@@ -126,7 +126,85 @@ function machine() {
   return p;
 }
 
-const sprites = { wolf, boar, raider, bandit, machine };
+// ---------- Stegosaurus: green grazer with back plates ----------
+function stego() {
+  const p = px();
+  const body = [86, 138, 74, 255];
+  const dark = shade(body, 0.7);
+  const plate = [120, 170, 90, 255];
+  legs(p, dark, 24, [7, 12, 18, 23]);
+  p.ellipse(15, 17, 11, 6, body);       // big body
+  p.ellipse(26, 18, 4, 4, body);        // small head
+  p.rect(2, 16, 6, 3, body);            // tail base
+  p.rect(0, 15, 3, 2, dark);            // tail tip
+  // back plates
+  for (let i = 0; i < 4; i++) {
+    const bx = 9 + i * 4;
+    p.rect(bx, 9 - (i === 1 || i === 2 ? 1 : 0), 3, 4, plate);
+  }
+  p.set(27, 17, [30, 40, 20, 255]);     // eye
+  return p;
+}
+
+// ---------- Triceratops: bulky with frill + horns ----------
+function trike() {
+  const p = px();
+  const body = [120, 132, 96, 255];
+  const dark = shade(body, 0.7);
+  legs(p, dark, 24, [7, 12, 17, 22]);
+  p.ellipse(14, 17, 10, 6, body);       // body
+  p.ellipse(24, 17, 5, 5, body);        // head
+  p.rect(26, 9, 5, 9, shade(body, 0.85)); // frill
+  p.rect(28, 13, 3, 1, [240, 235, 220, 255]); // nose horn area
+  p.rect(27, 11, 1, 3, [240, 235, 220, 255]); // brow horn
+  p.rect(29, 11, 1, 3, [240, 235, 220, 255]); // brow horn
+  p.rect(2, 16, 5, 3, body);            // tail
+  p.set(25, 16, [30, 30, 20, 255]);     // eye
+  return p;
+}
+
+// ---------- Raptor: lean fast predator, raised tail, claws ----------
+function raptor() {
+  const p = px();
+  const body = [124, 138, 74, 255];
+  const dark = shade(body, 0.7);
+  const belly = [180, 180, 120, 255];
+  p.rect(10, 20, 3, 7, dark);           // legs
+  p.rect(16, 20, 3, 7, dark);
+  p.ellipse(14, 16, 7, 4, body);        // body
+  p.rect(15, 14, 5, 2, belly);
+  p.ellipse(22, 12, 4, 3, body);        // head up high
+  p.rect(25, 12, 3, 2, body);           // snout
+  p.rect(4, 12, 8, 2, body);            // raised tail
+  p.rect(2, 11, 3, 2, dark);
+  p.set(24, 11, [255, 90, 60, 255]);    // eye
+  p.set(25, 13, [240, 240, 230, 255]);  // teeth
+  p.rect(11, 27, 3, 1, [230, 220, 60, 255]); // claw
+  return p;
+}
+
+// ---------- T-Rex: huge apex predator, tiny arms, big jaw ----------
+function rex() {
+  const p = px();
+  const body = [95, 114, 66, 255];
+  const dark = shade(body, 0.65);
+  const belly = [150, 160, 100, 255];
+  p.rect(10, 22, 4, 9, dark);           // thick legs
+  p.rect(17, 22, 4, 9, dark);
+  p.ellipse(15, 16, 9, 6, body);        // massive body
+  p.rect(13, 15, 8, 4, belly);
+  p.ellipse(24, 11, 6, 5, body);        // big head
+  p.rect(27, 12, 4, 4, body);           // jaw/snout
+  p.rect(3, 12, 9, 3, body);            // heavy tail
+  p.rect(1, 11, 3, 2, dark);
+  p.rect(20, 17, 3, 2, body);           // tiny arm
+  p.set(26, 9, [255, 200, 40, 255]);    // eye
+  // teeth row
+  for (let i = 0; i < 4; i++) p.rect(27 + i, 16, 1, 1, [245, 245, 235, 255]);
+  return p;
+}
+
+const sprites = { stego, trike, raptor, rex, wolf, boar, raider, bandit, machine };
 let count = 0;
 for (const name in sprites) {
   const png = sprites[name]().toPNG();

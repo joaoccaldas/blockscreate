@@ -18,6 +18,14 @@ export const MOB_TYPES = {
   chicken: { sprite: 'chicken', food: 1, w: 0.7, h: 0.7, hp: 4, hostile: false },
   goat: { sprite: 'goat', food: 2, w: 1.0, h: 0.95, hp: 6, hostile: false },
 
+  // ---- dinosaurs (First Humans era) ----
+  // Passive grazers: lots of food, slow, big.
+  stego: { sprite: 'stego', food: 5, w: 1.6, h: 1.2, hp: 16, hostile: false },
+  trike: { sprite: 'trike', food: 5, w: 1.5, h: 1.1, hp: 18, hostile: false },
+  // Predators.
+  raptor: { sprite: 'raptor', w: 1.0, h: 1.0, hp: 12, hostile: true, damage: 12, speed: 4.6, color: '#7c8a4a', drop: 'raw_food', dropN: 2, cp: 6 },
+  rex: { sprite: 'rex', w: 1.8, h: 2.0, hp: 40, hostile: true, damage: 24, speed: 3.0, color: '#5f7242', drop: 'raw_food', dropN: 4, cp: 16 },
+
   // ---- hostile ---- (color is used when no sprite exists yet)
   wolf: { sprite: 'wolf', w: 1.0, h: 0.8, hp: 10, hostile: true, damage: 8, speed: 3.6, color: '#6b6b73', drop: 'raw_food', dropN: 1, cp: 4 },
   boar: { sprite: 'boar', w: 1.1, h: 0.9, hp: 12, hostile: true, damage: 10, speed: 3.0, color: '#7a5a3a', drop: 'raw_food', dropN: 2, cp: 4 },

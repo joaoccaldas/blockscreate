@@ -16,9 +16,9 @@ export const ERAS = [
   {
     id: 'stone',
     order: 0,
-    name: 'First Humans',
-    blurb: 'Survive as early humans: shelter, fire, food, tools, clues, and alternate-history echoes.',
-    icon: '🔥',
+    name: 'Age of Dinosaurs',
+    blurb: 'Survive among living dinosaurs: tame fire, build shelter, dodge raptors and a T-Rex, and outlast the asteroid.',
+    icon: '🦖',
     unlockCost: 0, // first era, always available
     // CP needed (while in this era) to open the NEXT era's portal
     advanceCost: 250,

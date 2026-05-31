@@ -122,4 +122,17 @@ if (!g2.unlocked.isUnlocked('bronze')) throw new Error('bronze was not unlocked'
 if (!g2.objectives.all.some((o) => o.id === 'smelt_bronze')) throw new Error('bronze objectives missing after advance');
 ok('HUD-era advancement enters a fresh Bronze Age world');
 
+// Asteroid event: a meteor impact carves a crater and hurts a nearby player.
+const g3 = newGame();
+g3.newWorld('stone', MODE.SURVIVAL);
+const ix = Math.round(g3.player.x) + 1;
+const iy = g3.world.heightMap[ix];
+g3.player.x = ix + 0.5; g3.player.y = iy; g3.player.health = 100;
+const solidBefore = g3.world.get(ix, iy);
+g3._meteorImpact(ix, iy);
+if (g3.world.get(ix, iy) !== 0) throw new Error('impact did not carve a crater');
+if (g3.player.health >= 100) throw new Error('impact did not damage a nearby player');
+void solidBefore;
+ok('asteroid impact craters terrain and damages a nearby player');
+
 console.log(`\nAll ${passed} integration checks passed.`);

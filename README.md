@@ -6,7 +6,9 @@ A browser-based block-building civilization history sandbox. Mine, build, surviv
 
 - Block placement, mining, crafting, inventory and survival
 - Era-specific progression with mandatory and optional mastery goals
-- First Humans era with shelter, fire, tools, food, fossil clues and alternate-history hooks
+- Age of Dinosaurs first era: survive among living dinosaurs (stegosaurus,
+  triceratops, raptor, T-Rex), tame fire, build shelter, and endure meteor
+  showers that climax in an asteroid impact (craters terrain + damages)
 - Per-era atmosphere: signature color grade, ambient weather (drifting leaves,
   dust, ash), and themed wildlife — defined as data in `src/core/eraTheme.js`
 - Enemies that hunt at night: wolves and boars (First Humans), raiders and

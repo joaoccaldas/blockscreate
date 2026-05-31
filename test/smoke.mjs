@@ -124,8 +124,8 @@ ok('per-era mandatory and mastery objective sets');
 // --- Era manifests ---
 const era = getEra('stone');
 const manifest = getEraManifest('stone');
-assert.strictEqual(era.name, 'First Humans');
-assert.ok(manifest.historicalClues.includes('fossil_bed'), 'first humans has fossil clue metadata');
+assert.strictEqual(era.name, 'Age of Dinosaurs');
+assert.ok(manifest.historicalClues.includes('fossil_bed'), 'dinosaur era has fossil clue metadata');
 assert.ok(manifest.branches.some((b) => b.id === 'saurian_echo'), 'alternate-history branch is data-driven');
 assert.ok(BLOCK_BY_NAME.fossil_bed.clue === 'fossil_bed', 'clue blocks map to clue ids');
 ok('era manifests provide historical context and branches');

@@ -13,6 +13,7 @@
  */
 import { getBlock, AIR } from '../core/blocks.js';
 import { getEra } from '../core/eras.js';
+import { getEraTheme } from '../core/eraTheme.js';
 
 const BLOCK_ATLAS = {
   grass: [0, 0], dirt: [1, 0], stone: [2, 0], cobblestone: [2, 0], sand: [3, 0],
@@ -62,6 +63,7 @@ export class Renderer {
       }
     }
 
+    this.drawDecorations(world, era, camera, T, x0, x1);
     this.drawMobs(camera, mobs, T);
     this.drawPlayer(camera, player, T);
     if (particles) this.drawParticles(camera, particles, T);
@@ -284,6 +286,131 @@ export class Renderer {
     ctx.fillStyle = '#1b1b1b';
     const eo = player.facing > 0 ? w * 0.55 : w * 0.22;
     ctx.fillRect(px + eo, py + h * 0.16, w * 0.16, h * 0.08);
+  }
+
+  /**
+   * Era-flavored surface scenery (non-collidable). Deterministic from the
+   * world seed + column, so props are stable as the camera pans and across
+   * reloads. Drawn on top of the surface tile of each visible column.
+   */
+  drawDecorations(world, era, camera, T, x0, x1) {
+    const theme = getEraTheme(world.eraId);
+    if (!theme.decorations || !theme.decorations.length) return;
+    const ctx = this.ctx;
+    for (let tx = x0; tx <= x1; tx++) {
+      if (tx < 0 || tx >= world.width) continue;
+      const surf = world.heightMap[tx];
+      // Don't decorate underwater / out-of-range columns.
+      if (surf <= 0 || surf >= world.height) continue;
+      const top = world.get(tx, surf);
+      if (top === AIR) continue;
+      // Pick at most one prop per column via stable hash.
+      const h = hash2(tx + (world.originX || 0), world.seed % 9973);
+      let acc = 0;
+      let chosen = null;
+      for (const d of theme.decorations) {
+        acc += d.chance;
+        if (h < acc) { chosen = d.kind; break; }
+      }
+      if (!chosen) continue;
+      const { sx, sy } = camera.worldToScreen(tx, surf);
+      this.drawProp(ctx, chosen, sx, sy, T, hash2(tx * 3 + 1, world.seed % 7919));
+    }
+  }
+
+  drawProp(ctx, kind, sx, sy, T, r) {
+    const baseX = sx + T / 2;
+    const groundY = sy; // top of the surface tile
+    switch (kind) {
+      case 'shrub':
+        ctx.fillStyle = '#3f7a32';
+        ctx.beginPath();
+        ctx.arc(baseX, groundY - T * 0.18, T * 0.28, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#4e9a3e';
+        ctx.beginPath();
+        ctx.arc(baseX - T * 0.18, groundY - T * 0.1, T * 0.18, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      case 'bones':
+        ctx.strokeStyle = '#e6e1cf';
+        ctx.lineWidth = Math.max(2, T * 0.08);
+        ctx.beginPath();
+        ctx.moveTo(baseX - T * 0.25, groundY - 2);
+        ctx.lineTo(baseX + T * 0.25, groundY - 2);
+        ctx.stroke();
+        ctx.fillStyle = '#e6e1cf';
+        ctx.fillRect(baseX - T * 0.3, groundY - 4, 3, 4);
+        ctx.fillRect(baseX + T * 0.25, groundY - 4, 3, 4);
+        break;
+      case 'standing_stone':
+        ctx.fillStyle = '#6f6f78';
+        ctx.fillRect(baseX - T * 0.18, groundY - T * 1.4, T * 0.36, T * 1.4);
+        ctx.fillStyle = '#565660';
+        ctx.fillRect(baseX - T * 0.18, groundY - T * 1.4, T * 0.12, T * 1.4);
+        ctx.fillStyle = 'rgba(255,210,120,0.5)';
+        ctx.fillRect(baseX - T * 0.05, groundY - T * 0.9, T * 0.08, T * 0.5); // carved glyph glow
+        break;
+      case 'pot':
+        ctx.fillStyle = '#a9743b';
+        ctx.beginPath();
+        ctx.ellipse(baseX, groundY - T * 0.3, T * 0.22, T * 0.32, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#7d5026';
+        ctx.fillRect(baseX - T * 0.12, groundY - T * 0.62, T * 0.24, T * 0.12);
+        break;
+      case 'kiln':
+        ctx.fillStyle = '#8a5230';
+        ctx.fillRect(baseX - T * 0.3, groundY - T * 0.8, T * 0.6, T * 0.8);
+        ctx.fillStyle = '#3a2418';
+        ctx.fillRect(baseX - T * 0.12, groundY - T * 0.4, T * 0.24, T * 0.4); // mouth
+        ctx.fillStyle = `rgba(255,140,40,${0.5 + 0.3 * Math.sin(this.t * 5 + r * 6)})`;
+        ctx.fillRect(baseX - T * 0.08, groundY - T * 0.32, T * 0.16, T * 0.3); // fire glow
+        break;
+      case 'lamp_post': {
+        ctx.fillStyle = '#3a3a42';
+        ctx.fillRect(baseX - 2, groundY - T * 1.6, 4, T * 1.6);
+        ctx.fillStyle = '#2c2c33';
+        ctx.fillRect(baseX - T * 0.16, groundY - T * 1.8, T * 0.32, T * 0.24);
+        ctx.save();
+        ctx.globalAlpha = 0.6 + 0.2 * Math.sin(this.t * 3 + r * 6);
+        ctx.fillStyle = '#ffdf91';
+        ctx.beginPath();
+        ctx.arc(baseX, groundY - T * 1.68, T * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        break;
+      }
+      case 'banner':
+        ctx.fillStyle = '#5a3a23';
+        ctx.fillRect(baseX - 1, groundY - T * 1.5, 3, T * 1.5);
+        ctx.fillStyle = r < 0.5 ? '#8a3b3b' : '#3b5a8a';
+        ctx.fillRect(baseX + 2, groundY - T * 1.45, T * 0.4, T * 0.7);
+        break;
+      case 'smokestack': {
+        ctx.fillStyle = '#5a4038';
+        ctx.fillRect(baseX - T * 0.18, groundY - T * 2.0, T * 0.36, T * 2.0);
+        ctx.fillStyle = '#3a2a24';
+        ctx.fillRect(baseX - T * 0.22, groundY - T * 2.05, T * 0.44, T * 0.14);
+        // puffs of smoke
+        ctx.fillStyle = 'rgba(120,120,128,0.5)';
+        for (let i = 0; i < 3; i++) {
+          const pY = groundY - T * 2.1 - ((this.t * 12 + i * 14 + r * 20) % 40);
+          ctx.beginPath();
+          ctx.arc(baseX, pY, T * 0.2 + i * 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        break;
+      }
+      case 'pipe':
+        ctx.fillStyle = '#6a6e76';
+        ctx.fillRect(baseX - T * 0.3, groundY - T * 0.3, T * 0.6, T * 0.3);
+        ctx.fillStyle = '#52555c';
+        ctx.fillRect(baseX - T * 0.3, groundY - T * 0.3, T * 0.6, 3);
+        break;
+      default:
+        break;
+    }
   }
 
   drawMobs(camera, mobs, T) {

@@ -7,6 +7,23 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>BlocksCreate — Build Across the Ages</title>
+  <meta name="description" content="A 2D pseudo-3D Minecraft-meets-Civilization history sandbox. Mine, build, survive, and lead a settlement through the ages." />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
+
+  <!-- Social cards -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="BlocksCreate — Build Across the Ages" />
+  <meta property="og:description" content="Mine, build, survive, and lead a civilization through the ages in this block sandbox." />
+  <meta property="og:image" content="assets/icons/icon-512.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="BlocksCreate — Build Across the Ages" />
+  <meta name="twitter:description" content="Mine, build, survive, and lead a civilization through the ages." />
+  <meta name="twitter:image" content="assets/icons/icon-512.png" />
+
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -91,5 +108,13 @@
   </section>
 
   <script type="module" src="src/main.js"></script>
+  <script>
+    // Register the service worker for offline play (no-op if unsupported).
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => { /* offline is best-effort */ });
+      });
+    }
+  </script>
 </body>
 </html>

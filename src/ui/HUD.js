@@ -94,6 +94,8 @@ export class HUD {
               <input type="checkbox" id="setMusic" ${s?.get('music') ? 'checked' : ''}></label>
             <label class="slider"><span>🔍 Zoom</span>
               <input type="range" id="setZoom" min="0.7" max="1.6" step="0.05" value="${s?.get('zoomPref') ?? 1}"></label>
+            <label class="toggle"><span>♿ Reduce motion</span>
+              <input type="checkbox" id="setReduceMotion" ${s?.get('reduceMotion') ? 'checked' : ''}></label>
           </div>
           <div class="pause-actions">
             <button id="pSave" class="btn">💾 Save</button>
@@ -116,6 +118,7 @@ export class HUD {
     this.el('setSound').onchange = (e) => this.h.onSetSound?.(e.target.checked);
     this.el('setMusic').onchange = (e) => this.h.onSetMusic?.(e.target.checked);
     this.el('setZoom').oninput = (e) => this.h.onSetZoom?.(parseFloat(e.target.value));
+    this.el('setReduceMotion').onchange = (e) => this.h.onSetReduceMotion?.(e.target.checked);
 
     this.el('pSave').onclick = () => { this.h.onSave?.(); this.toast('Game saved'); };
     this.el('pExport').onclick = () => this.h.onExport?.();

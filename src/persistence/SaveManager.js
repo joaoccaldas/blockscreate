@@ -43,10 +43,39 @@ export const SaveManager = {
   load() {
     try {
       const raw = localStorage.getItem(C.SAVE_KEY);
-      return raw ? JSON.parse(raw) : null;
+      if (!raw) return null;
+      return this.migrate(JSON.parse(raw));
     } catch (e) {
+      console.warn('Save load failed; ignoring corrupt save.', e);
       return null;
     }
+  },
+
+  /**
+   * Bring an older/foreign save up to the current schema. Returns null if the
+   * save is too broken or from a newer version we can't understand, so the
+   * caller falls back to the main menu instead of crashing.
+   */
+  migrate(save) {
+    if (!save || typeof save !== 'object' || !save.world) return null;
+    const v = save.version || 1;
+    if (v > C.SAVE_VERSION) {
+      console.warn(`Save is from a newer version (v${v}); refusing to load.`);
+      return null;
+    }
+    // Defaults for fields added after a save was written, so old saves load.
+    save.mode = save.mode || 'survival';
+    save.eraId = save.eraId || 'stone';
+    save.clock = typeof save.clock === 'number' ? save.clock : 0;
+    save.crafted = save.crafted || [];
+    save.objectives = save.objectives || [];
+    save.mobs = save.mobs || [];
+    save.structures = save.structures || [];
+    save.discoveries = save.discoveries || [];
+    save.clues = save.clues || [];
+    save.powerups = save.powerups || [];
+    save.version = C.SAVE_VERSION;
+    return save;
   },
 
   hasSave() {

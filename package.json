@@ -1,0 +1,14 @@
+{
+  "name": "blockscreate",
+  "version": "4.0.0",
+  "description": "A 2D pseudo-3D Minecraft-meets-Civilization history sandbox that plays across the ages.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node tools/run-tests.mjs",
+    "gen:sprites": "node tools/gen-sprites.mjs",
+    "serve": "python3 -m http.server 8000"
+  },
+  "license": "MIT",
+  "author": "Joao Caldas"
+}

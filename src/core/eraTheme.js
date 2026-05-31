@@ -24,6 +24,13 @@ export const ERA_THEME = {
     passive: [['goat', 3], ['pig', 2], ['chicken', 2], ['cow', 1]],
     hostile: [['wolf', 3], ['boar', 2]],
     hostileDay: false,
+    // Surface scenery props, drawn (non-collidable) by the renderer. Each entry:
+    // { kind, chance } — chance is per surface column.
+    decorations: [
+      { kind: 'standing_stone', chance: 0.012 },
+      { kind: 'bones', chance: 0.02 },
+      { kind: 'shrub', chance: 0.05 },
+    ],
   },
   bronze: {
     tint: 'rgba(210, 170, 90, 0.06)',
@@ -33,6 +40,11 @@ export const ERA_THEME = {
     passive: [['cow', 3], ['pig', 2], ['goat', 2], ['chicken', 2]],
     hostile: [['raider', 3], ['wolf', 1]],
     hostileDay: false,
+    decorations: [
+      { kind: 'pot', chance: 0.03 },
+      { kind: 'kiln', chance: 0.01 },
+      { kind: 'shrub', chance: 0.03 },
+    ],
   },
   iron: {
     tint: 'rgba(90, 100, 120, 0.07)',
@@ -42,6 +54,10 @@ export const ERA_THEME = {
     passive: [['cow', 2], ['goat', 2], ['chicken', 2]],
     hostile: [['raider', 3], ['bandit', 2]],
     hostileDay: false,
+    decorations: [
+      { kind: 'lamp_post', chance: 0.02 },
+      { kind: 'banner', chance: 0.015 },
+    ],
   },
   industrial: {
     tint: 'rgba(70, 70, 80, 0.12)',
@@ -51,6 +67,11 @@ export const ERA_THEME = {
     passive: [['cow', 1], ['chicken', 2]],
     hostile: [['machine', 3], ['bandit', 2]],
     hostileDay: true,
+    decorations: [
+      { kind: 'smokestack', chance: 0.018 },
+      { kind: 'lamp_post', chance: 0.02 },
+      { kind: 'pipe', chance: 0.025 },
+    ],
   },
 };
 

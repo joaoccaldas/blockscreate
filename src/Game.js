@@ -127,6 +127,19 @@ export class Game {
     this._onResize = () => this.resize();
     window.addEventListener('resize', this._onResize);
     window.addEventListener('orientationchange', this._onResize);
+
+    // Auto-pause when the tab is hidden or loses focus, so the player never
+    // returns to a dead character or a huge time-skip; also flushes a save.
+    this._onHide = () => {
+      if (document.hidden && !this.paused && this.running) {
+        this._pause();
+        try { SaveManager.save(this); } catch (e) { /* best effort */ }
+      }
+    };
+    document.addEventListener('visibilitychange', this._onHide);
+    window.addEventListener('blur', this._onHide);
+
+    this._applyReduceMotion();
   }
 
   _teardownView() {
@@ -134,6 +147,11 @@ export class Game {
       window.removeEventListener('resize', this._onResize);
       window.removeEventListener('orientationchange', this._onResize);
       this._onResize = null;
+    }
+    if (this._onHide) {
+      document.removeEventListener('visibilitychange', this._onHide);
+      window.removeEventListener('blur', this._onHide);
+      this._onHide = null;
     }
     this.input?.destroy();
     this.hud?.destroy();
@@ -200,6 +218,7 @@ export class Game {
       onSetSound: (v) => { this.audio?.setSound(v); this.settings?.set('sound', v); },
       onSetMusic: (v) => { this.audio?.setMusic(v); this.settings?.set('music', v); },
       onSetZoom: (v) => { this.settings?.set('zoomPref', v); this.resize(); },
+      onSetReduceMotion: (v) => { this.settings?.set('reduceMotion', v); this._applyReduceMotion(); },
       onSave: () => SaveManager.save(this),
       onExport: () => SaveManager.exportFile(this),
       onImport: (f) => this._import(f),
@@ -307,9 +326,24 @@ export class Game {
     if (!this.running) return;
     let dt = (now - this.last) / 1000;
     this.last = now;
-    if (dt > 0.05) dt = 0.05;
-    if (!this.paused) this.update(dt);
-    this.draw(dt);
+    if (dt > 0.05) dt = 0.05; // clamp big stalls (and tab-restore jumps)
+    try {
+      if (!this.paused) this.update(dt);
+      this.draw(dt);
+      this._crashes = 0;
+    } catch (err) {
+      // A single bad frame must never kill the game. Log, count, and keep
+      // going; if it persists, save and surface a friendly message instead of
+      // a frozen black screen.
+      console.error('Frame error:', err);
+      this._crashes = (this._crashes || 0) + 1;
+      if (this._crashes >= 60) {
+        this.running = false;
+        try { SaveManager.save(this); } catch (e) { /* best effort */ }
+        this.hud?.bigToast?.('⚠️ Something went wrong — your progress was saved.<br><small>Return to the menu and reload.</small>', 8000);
+        return;
+      }
+    }
     requestAnimationFrame(this._frame);
   };
 
@@ -436,7 +470,15 @@ export class Game {
   }
 
   /** Era-flavored ambient weather particles drifting across the view. */
+  _applyReduceMotion() {
+    const on = !!this.settings?.get('reduceMotion');
+    try { document.body.classList.toggle('reduce-motion', on); } catch (e) { /* no DOM in tests */ }
+  }
+
+  get reduceMotion() { return !!this.settings?.get('reduceMotion'); }
+
   _ambientWeather(dt) {
+    if (this.reduceMotion) return; // accessibility: no drifting particles
     const theme = getEraTheme(this.eraId);
     if (!theme.weather || theme.weather === 'none' || !theme.weatherRate) return;
     this._weatherAccum = (this._weatherAccum || 0) + dt * theme.weatherRate;
@@ -691,7 +733,7 @@ export class Game {
     this.player.vy = -7; // knockback pop
     this.audio?.play('hurt');
     this.particles.burst(this.player.x, this.player.y - this.player.h / 2, '#ff5b5b', 8);
-    this.hud?.shake?.();
+    if (!this.reduceMotion) this.hud?.shake?.();
     if (this.player.health <= 0) this.player.alive = false;
   }
 

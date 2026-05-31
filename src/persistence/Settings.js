@@ -8,6 +8,7 @@ const DEFAULTS = {
   sound: true,
   music: false,
   zoomPref: 1.0, // multiplies the auto-fit zoom (0.7 .. 1.6)
+  reduceMotion: false, // accessibility: skip weather/shake/decorative animation
 };
 
 export class Settings {

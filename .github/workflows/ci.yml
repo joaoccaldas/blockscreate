@@ -1,0 +1,41 @@
+name: CI
+
+# Runs the headless test suites and a syntax check on every push and PR so
+# regressions are caught before they reach the deployed Pages site.
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Syntax check all modules
+        run: |
+          for f in $(find src test tools -name '*.js' -o -name '*.mjs'); do
+            node --check "$f"
+          done
+
+      - name: Regenerate enemy sprites and verify no drift
+        run: |
+          node tools/gen-sprites.mjs
+          if ! git diff --quiet -- assets/generated/sprites; then
+            echo "::error::Enemy sprites are stale. Run 'node tools/gen-sprites.mjs' and commit."
+            git --no-pager diff --stat -- assets/generated/sprites
+            exit 1
+          fi
+
+      - name: Run test suites
+        run: node tools/run-tests.mjs

@@ -578,3 +578,27 @@ html, body {
   80% { transform: translate(3px, -2px); }
 }
 @keyframes hurtFade { from { opacity: 1; } to { opacity: 0; } }
+
+/* ============================================================
+   v4.0 — accessibility
+   ============================================================ */
+/* Respect the OS "reduce motion" setting: disable decorative animation. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .floaties { display: none; }
+}
+
+/* App-level reduced-motion (settings toggle adds .reduce-motion to <body>). */
+body.reduce-motion .floaties { display: none; }
+body.reduce-motion .hurt-shake { animation: none; }
+body.reduce-motion .title { animation: none; }
+
+/* Focus visibility for keyboard users. */
+button:focus-visible, input:focus-visible, .era-card:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}

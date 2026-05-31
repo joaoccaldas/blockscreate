@@ -42,7 +42,10 @@ globalThis.window = {
   devicePixelRatio: 1,
   AudioContext: undefined, // Audio gracefully no-ops without a context
 };
-globalThis.document = { createElement: makeEl, body: makeEl(), getElementById: makeEl, querySelector: () => makeEl() };
+globalThis.document = {
+  createElement: makeEl, body: makeEl(), getElementById: makeEl, querySelector: () => makeEl(),
+  addEventListener: noop, removeEventListener: noop, hidden: false,
+};
 globalThis.Image = class { set src(v) {} };
 globalThis.performance = { now: () => Date.now() };
 globalThis.requestAnimationFrame = noop;

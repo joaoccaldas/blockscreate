@@ -1,0 +1,40 @@
+/**
+ * Crafting recipes — gated by era so progression feels earned.
+ *
+ * A recipe is pure data: inputs (item id -> qty), an output (item id + qty),
+ * the era it unlocks in, and an optional station requirement. The Crafting
+ * system reads this list; adding content never touches gameplay code.
+ */
+
+export const RECIPES = [
+  // --- Stone Age ---
+  { id: 'planks',        era: 'stone', out: { id: 'planks', n: 4 }, in: { log: 1 } },
+  { id: 'stick',         era: 'stone', out: { id: 'stick', n: 4 }, in: { planks: 2 } },
+  { id: 'wood_pickaxe',  era: 'stone', out: { id: 'wood_pickaxe', n: 1 }, in: { planks: 3, stick: 2 } },
+  { id: 'wood_axe',      era: 'stone', out: { id: 'wood_axe', n: 1 }, in: { planks: 3, stick: 2 } },
+  { id: 'wood_shovel',   era: 'stone', out: { id: 'wood_shovel', n: 1 }, in: { planks: 1, stick: 2 } },
+  { id: 'stone_pickaxe', era: 'stone', out: { id: 'stone_pickaxe', n: 1 }, in: { cobblestone: 3, stick: 2 } },
+  { id: 'stone_axe',     era: 'stone', out: { id: 'stone_axe', n: 1 }, in: { cobblestone: 3, stick: 2 } },
+  { id: 'stone_shovel',  era: 'stone', out: { id: 'stone_shovel', n: 1 }, in: { cobblestone: 1, stick: 2 } },
+  { id: 'torch',         era: 'stone', out: { id: 'torch', n: 4 }, in: { stick: 1, coal: 1 } },
+  { id: 'campfire',      era: 'stone', out: { id: 'campfire', n: 1 }, in: { log: 1, stick: 3 } },
+  { id: 'thatch',        era: 'stone', out: { id: 'thatch', n: 4 }, in: { fiber: 2 } },
+  { id: 'cook_food',     era: 'stone', out: { id: 'food', n: 1 }, in: { raw_food: 1, coal: 1 } },
+
+  // --- Bronze Age (defined so the system is complete; needs the era unlocked) ---
+  { id: 'copper_ingot',  era: 'bronze', out: { id: 'copper', n: 1 }, in: { copper_ore: 1, coal: 1 } },
+  { id: 'tin_ingot',     era: 'bronze', out: { id: 'tin', n: 1 }, in: { tin_ore: 1, coal: 1 } },
+  { id: 'bronze_ingot',  era: 'bronze', out: { id: 'bronze', n: 2 }, in: { copper: 1, tin: 1 } },
+  { id: 'brick',         era: 'bronze', out: { id: 'brick', n: 4 }, in: { clay: 4, coal: 1 } },
+  { id: 'bronze_pickaxe',era: 'bronze', out: { id: 'bronze_pickaxe', n: 1 }, in: { bronze: 3, stick: 2 } },
+
+  // --- Iron Age ---
+  { id: 'iron_ingot',    era: 'iron', out: { id: 'iron', n: 1 }, in: { iron_ore: 1, coal: 1 } },
+  { id: 'gold_ingot',    era: 'iron', out: { id: 'gold', n: 1 }, in: { gold_ore: 1, coal: 1 } },
+  { id: 'iron_pickaxe',  era: 'iron', out: { id: 'iron_pickaxe', n: 1 }, in: { iron: 3, stick: 2 } },
+];
+
+/** Recipes available given the set of unlocked era ids. */
+export function recipesForEras(unlockedSet) {
+  return RECIPES.filter((r) => unlockedSet.has(r.era));
+}

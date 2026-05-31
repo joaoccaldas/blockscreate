@@ -1,176 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BlocksCreate - Build Your World</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BlocksCreate — Build Across the Ages</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <!-- Landing Page -->
-    <div id="landingPage" class="landing-page">
-        <div class="stars-background"></div>
-        <div class="floating-blocks"></div>
-        
-        <div class="landing-content">
-            <div class="logo-container">
-                <h1 class="game-title">
-                    <span class="block-letter">B</span>
-                    <span class="block-letter">l</span>
-                    <span class="block-letter">o</span>
-                    <span class="block-letter">c</span>
-                    <span class="block-letter">k</span>
-                    <span class="block-letter">s</span>
-                    <span class="block-letter">C</span>
-                    <span class="block-letter">r</span>
-                    <span class="block-letter">e</span>
-                    <span class="block-letter">a</span>
-                    <span class="block-letter">t</span>
-                    <span class="block-letter">e</span>
-                </h1>
-                <p class="tagline">Build, Explore, Create Your World</p>
-            </div>
-
-            <div class="game-info">
-                <div class="info-card fade-in-up" style="animation-delay: 0.2s">
-                    <div class="info-icon">🎮</div>
-                    <h3>Craft & Build</h3>
-                    <p>Create amazing structures with blocks</p>
-                </div>
-                <div class="info-card fade-in-up" style="animation-delay: 0.4s">
-                    <div class="info-icon">🌍</div>
-                    <h3>Explore</h3>
-                    <p>Discover a vast world of possibilities</p>
-                </div>
-                <div class="info-card fade-in-up" style="animation-delay: 0.6s">
-                    <div class="info-icon">⚡</div>
-                    <h3>Survive</h3>
-                    <p>Gather resources and thrive</p>
-                </div>
-            </div>
-
-            <div class="menu-buttons">
-                <button class="menu-btn primary-btn pulse" id="startGameBtn">
-                    <span class="btn-icon">▶</span>
-                    <span>Start Game</span>
-                </button>
-                <button class="menu-btn secondary-btn" id="selectCharacterBtn">
-                    <span class="btn-icon">👤</span>
-                    <span>Select Character</span>
-                </button>
-                <button class="menu-btn secondary-btn" id="achievementsBtn">
-                    <span class="btn-icon">🏆</span>
-                    <span>Achievements</span>
-                </button>
-            </div>
-
-            <div class="version-info">Version 1.0.0</div>
-        </div>
+  <!-- Landing -->
+  <section id="landing" class="screen active">
+    <div class="bg-grid"></div>
+    <div class="menu">
+      <h1 class="title">Blocks<span>Create</span></h1>
+      <p class="subtitle">A civilization simulation, one block at a time. Mine, build, and lead your people through the ages.</p>
+      <div class="menu-buttons">
+        <button id="playBtn" class="btn primary">▶ Play</button>
+        <button id="continueBtn" class="btn">⏳ Continue</button>
+        <button id="howtoBtn" class="btn">❓ How to Play</button>
+      </div>
+      <p class="version">v2.0 · modular engine</p>
     </div>
+  </section>
 
-    <!-- Character Selection Screen (Hidden by default) -->
-    <div id="characterSelection" class="character-screen hidden">
-        <div class="screen-container">
-            <h2 class="screen-title">Select Your Character</h2>
-            <div class="characters-grid">
-                <div class="character-card" data-character="steve">
-                    <div class="character-avatar">👨‍🌾</div>
-                    <h3>Steve</h3>
-                    <p>The Classic Builder</p>
-                </div>
-                <div class="character-card" data-character="alex">
-                    <div class="character-avatar">👩‍🌾</div>
-                    <h3>Alex</h3>
-                    <p>The Adventurer</p>
-                </div>
-                <div class="character-card" data-character="miner">
-                    <div class="character-avatar">⛏️</div>
-                    <h3>Miner</h3>
-                    <p>The Resource Master</p>
-                </div>
-                <div class="character-card" data-character="builder">
-                    <div class="character-avatar">🏗️</div>
-                    <h3>Builder</h3>
-                    <p>The Architect</p>
-                </div>
-            </div>
-            <button class="menu-btn back-btn" id="backFromCharacter">← Back to Menu</button>
-        </div>
+  <!-- Time Portals / era + mode select -->
+  <section id="portal" class="screen">
+    <div class="bg-grid"></div>
+    <div class="portal-inner">
+      <h2>🌀 Time Portals</h2>
+      <div class="mode-toggle">
+        <button id="modeSurvival" class="mode-btn on">⚔️ Survival</button>
+        <button id="modeCreative" class="mode-btn">🎨 Creative</button>
+      </div>
+      <p id="modeHint" class="mode-hint"></p>
+      <div id="eraGrid" class="era-grid"></div>
+      <button id="portalBack" class="btn back">← Back</button>
     </div>
+  </section>
 
-    <!-- Achievements Screen (Hidden by default) -->
-    <div id="achievementsScreen" class="achievements-screen hidden">
-        <div class="screen-container">
-            <h2 class="screen-title">🏆 Achievements</h2>
-            <div class="achievements-grid">
-                <div class="achievement-card unlocked">
-                    <div class="achievement-icon">🌟</div>
-                    <h3>First Steps</h3>
-                    <p>Play your first game</p>
-                    <div class="achievement-status">Unlocked!</div>
-                </div>
-                <div class="achievement-card locked">
-                    <div class="achievement-icon">🏠</div>
-                    <h3>Home Builder</h3>
-                    <p>Build your first structure</p>
-                    <div class="achievement-status">Locked</div>
-                </div>
-                <div class="achievement-card locked">
-                    <div class="achievement-icon">⛏️</div>
-                    <h3>Master Miner</h3>
-                    <p>Mine 100 blocks</p>
-                    <div class="achievement-status">Locked</div>
-                </div>
-                <div class="achievement-card locked">
-                    <div class="achievement-icon">💎</div>
-                    <h3>Diamond Hunter</h3>
-                    <p>Find rare resources</p>
-                    <div class="achievement-status">Locked</div>
-                </div>
-                <div class="achievement-card locked">
-                    <div class="achievement-icon">🎨</div>
-                    <h3>Creative Genius</h3>
-                    <p>Use all block types</p>
-                    <div class="achievement-status">Locked</div>
-                </div>
-                <div class="achievement-card locked">
-                    <div class="achievement-icon">🌍</div>
-                    <h3>World Explorer</h3>
-                    <p>Explore the entire map</p>
-                    <div class="achievement-status">Locked</div>
-                </div>
-            </div>
-            <button class="menu-btn back-btn" id="backFromAchievements">← Back to Menu</button>
-        </div>
+  <!-- How to play -->
+  <section id="howto" class="screen">
+    <div class="bg-grid"></div>
+    <div class="howto-inner">
+      <h2>How to Play</h2>
+      <ul class="howto-list">
+        <li><b>Move:</b> A/D or ← → &nbsp;·&nbsp; <b>Jump:</b> W / ↑ / Space</li>
+        <li><b>Mine:</b> hold <b>left-click</b> on a nearby block</li>
+        <li><b>Place / Eat:</b> <b>right-click</b> with a block or food selected</li>
+        <li><b>Hotbar:</b> keys <b>1–9</b> or scroll wheel</li>
+        <li><b>Inventory:</b> <b>E</b> &nbsp;·&nbsp; <b>Crafting:</b> <b>C</b></li>
+        <li><b>Creative flight:</b> press <b>F</b>, then W/S to rise and fall</li>
+        <li><b>Goal (Survival):</b> gather &amp; build to earn ✨ Civ Points and open the portal to the next era.</li>
+      </ul>
+      <button id="howtoBack" class="btn back">← Back</button>
     </div>
+  </section>
 
-    <!-- Game Container (Hidden until game starts) -->
-    <div id="gameContainer" class="game-container hidden">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
-        <div id="uiContainer">
-            <button id="saveBtn">Save</button>
-            <button id="loadBtn">Load</button>
-            <button id="inventoryBtn">Inventory (E)</button>
-            <button id="craftingBtn">Crafting (C)</button>
-            <button id="mainMenuBtn">Main Menu</button>
-            <div id="hotbar"></div>
-        </div>
-
-        <!-- Inventory Menu -->
-        <div id="inventoryMenu">
-            <h2>Inventory</h2>
-            <div id="inventoryContent"></div>
-            <button id="closeInventory">Close</button>
-        </div>
-
-        <!-- Crafting Menu -->
-        <div id="craftingMenu">
-            <h2>Crafting Recipes</h2>
-            <div id="craftingContent"></div>
-            <button id="closeCrafting">Close</button>
-        </div>
+  <!-- Game -->
+  <section id="game" class="screen game-screen">
+    <div class="game-stage">
+      <canvas id="gameCanvas" width="960" height="600"></canvas>
+      <div id="hud"></div>
+      <div class="game-controls">
+        <button id="btnMenu" class="mini">☰ Menu</button>
+        <button id="btnSave" class="mini">💾 Save</button>
+        <button id="btnExport" class="mini">⬇ Export</button>
+        <label class="mini import-label">⬆ Import
+          <input id="importInput" type="file" accept="application/json" hidden />
+        </label>
+      </div>
+      <div id="flash" class="flash"></div>
     </div>
+  </section>
 
-    <script src="game.js"></script>
+  <script type="module" src="src/main.js"></script>
 </body>
 </html>

@@ -62,6 +62,12 @@ const defs = [
   { id: 25, name: 'standing_stone',     label: 'Standing Stone',     solid: true,  hardness: 2.2, tool: 'pickaxe', colors: { base: '#6c6f68', top: '#85887f', side: '#4f524c' }, era: 'stone', drops: 'standing_stone', clue: 'migration_marker' },
   { id: 26, name: 'hide_wall',          label: 'Hide Wall',          solid: true,  hardness: 0.5, tool: 'hand',    colors: { base: '#9a6a42', top: '#b78254', side: '#704a2c' }, era: 'stone' },
   { id: 27, name: 'bone_pile',          label: 'Bone Pile',          solid: true,  hardness: 0.6, tool: 'hand',    colors: { base: '#cfc5a8', top: '#eee3c5', side: '#9b9077' }, era: 'stone', drops: 'bone_pile' },
+
+  // Origin-of-life era
+  { id: 28, name: 'primordial_mud',      label: 'Primordial Mud',     solid: true,  hardness: 0.25, tool: 'hand',   colors: { base: '#276f68', top: '#3fb8a8', side: '#1d514d' }, era: 'cell', drops: 'primordial_mud' },
+  { id: 29, name: 'nutrient_blob',       label: 'Nutrient Blob',      solid: true,  hardness: 0.15, tool: 'hand',   colors: { base: '#73e06a', top: '#b8ff85', side: '#3aa84d' }, era: 'cell', drops: 'nutrient_blob', light: 0.15 },
+  { id: 30, name: 'mineral_vent',        label: 'Mineral Vent',       solid: true,  hardness: 0.35, tool: 'hand',   colors: { base: '#506a76', top: '#9bd6e0', side: '#35424a' }, era: 'cell', drops: 'mineral_vent', light: 0.25 },
+  { id: 31, name: 'lipid_membrane',      label: 'Lipid Membrane',     solid: true,  hardness: 0.2,  tool: 'hand',   colors: { base: '#e8a8ff', top: '#ffd6ff', side: '#9f66c8' }, era: 'cell', drops: 'lipid_membrane' },
 ];
 
 // fix accidental typo above without breaking the table layout

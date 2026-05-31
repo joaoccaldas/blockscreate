@@ -66,7 +66,7 @@ export const SaveManager = {
     }
     // Defaults for fields added after a save was written, so old saves load.
     save.mode = save.mode || 'survival';
-    save.eraId = save.eraId || 'stone';
+    save.eraId = save.eraId || 'cell';
     save.clock = typeof save.clock === 'number' ? save.clock : 0;
     save.crafted = save.crafted || [];
     save.objectives = save.objectives || [];

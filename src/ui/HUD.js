@@ -451,11 +451,11 @@ export class HUD {
    */
   showOnboarding(done, touch = false) {
     const steps = [
-      { icon: '🦖', title: 'Welcome to BlocksCreate', body: 'You\'ve arrived in the Age of Dinosaurs. Survive, build, and lead your people through time.' },
+      { icon: '🫧', title: 'Welcome to BlocksCreate', body: 'Begin at the origin of life. Gather nutrients, form a membrane, and evolve through time.' },
       { icon: '⛏️', title: 'Mine the world', body: touch ? 'Tap a nearby block to mine it. Hold to keep mining.' : 'Hold left-click on a nearby block to mine it.' },
       { icon: '🧱', title: 'Build & place', body: touch ? 'Tap the ⛏/🧱 button to switch to Build, then tap to place the selected block.' : 'Right-click to place the selected block (or press Q to toggle Build/Mine).' },
       { icon: '🎒', title: 'Inventory & crafting', body: touch ? 'Use the ☰ menu for Inventory and Crafting.' : 'Press E for Inventory and C for Crafting. Numbers 1–9 pick a hotbar slot.' },
-      { icon: '🎯', title: 'Complete objectives', body: 'Finish the objectives (top-right) to earn ✨ Civ Points and open the portal to the next era. Watch for ☄️ meteors — take cover!' },
+      { icon: '🎯', title: 'Complete objectives', body: 'Finish the objectives (top-right) to earn ✨ Civ Points and open the portal to the next era. Each era unlocks richer tools and systems.' },
     ];
     let i = 0;
     const screen = this.el('onboarding');

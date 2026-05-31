@@ -41,6 +41,13 @@ relic powerups. The highest gameplay risk is tuning: predator migrations,
 drought hunger pressure and weapon damage should be playtested for fairness
 before a broader release.
 
+## v4.5 Origin Era Readiness Note
+
+The first era now intentionally teaches the interaction loop with fewer systems
+than the dinosaur era. The main remaining tuning need is feel: the cell form
+should eventually get distinct movement/visuals so it feels like swimming,
+absorbing and self-organizing rather than only mining smaller blocks.
+
 ## Known next steps
 
 - Complete true chunk streaming (current saves now include chunk metadata and modified chunk snapshots, but rendering still uses a dense loaded window).

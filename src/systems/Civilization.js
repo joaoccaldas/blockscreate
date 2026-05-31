@@ -23,7 +23,7 @@ const CP_GAINS = {
 
 // Blocks that count as "building your settlement".
 const SETTLEMENT_BLOCKS = new Set([
-  'planks', 'cobblestone', 'brick', 'thatch', 'campfire', 'torch', 'log',
+  'lipid_membrane', 'planks', 'cobblestone', 'brick', 'thatch', 'campfire', 'torch', 'log',
 ]);
 
 export class Civilization {

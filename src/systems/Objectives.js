@@ -8,6 +8,16 @@
  * -> advance) and so adding per-era objective sets later is just more data.
  */
 export const OBJECTIVES = {
+  cell: [
+    { id: 'absorb_nutrients', kind: 'mandatory', icon: '🫧', label: 'Absorb 3 Nutrient Blobs',             reward: 12, check: (g) => total(g, 'nutrient_blob') >= 3 },
+    { id: 'collect_minerals', kind: 'mandatory', icon: '♨️', label: 'Collect minerals from a warm vent',  reward: 12, check: (g) => total(g, 'mineral_vent') >= 1 },
+    { id: 'make_membrane',    kind: 'mandatory', icon: '🟣', label: 'Craft a Lipid Membrane',             reward: 16, check: (g) => g.crafted.has('lipid_membrane') || total(g, 'lipid_membrane') >= 1 },
+    { id: 'build_membrane',   kind: 'mandatory', icon: '🧬', label: 'Build a 4-block membrane boundary',  reward: 18, check: (g) => g.civ.hasBuilt('lipid_membrane', 4) },
+    { id: 'stabilize_cell',   kind: 'mandatory', icon: '🧫', label: 'Stabilize a Proto-Cell',             reward: 22, check: (g) => g.crafted.has('proto_cell') || total(g, 'proto_cell') >= 1 },
+    { id: 'extra_nutrients',  kind: 'mastery',   icon: '🌿', label: 'Mastery: store extra nutrients',     reward: 18, check: (g) => total(g, 'nutrient_blob') >= 6 },
+    { id: 'ventborn',         kind: 'mastery',   icon: '♨️', label: 'Mastery: map 3 warm vents',          reward: 20, check: (g) => total(g, 'mineral_vent') >= 3 },
+    { id: 'advance',          kind: 'portal',    icon: '🦖', label: 'Evolve into the Age of Dinosaurs',   reward: 0,  check: (g) => g.canAdvance() },
+  ],
   stone: [
     { id: 'gather_wood',  kind: 'mandatory', icon: '🪵', label: 'Forage: collect 3 Wood',                reward: 10, check: (g) => total(g, 'log') >= 3 },
     { id: 'make_planks',  kind: 'mandatory', icon: '🟫', label: 'Shape wood into Planks',                reward: 10, check: (g) => g.crafted.has('planks') },

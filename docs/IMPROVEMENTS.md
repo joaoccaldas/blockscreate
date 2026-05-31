@@ -48,3 +48,10 @@ BlocksCreate already has the right spine for "Minecraft meets Civilization": blo
 - Random timed era encounters: predator migration, grazer herd, drought and raider scouts.
 - Relic-style powerups for warmth, predator resistance, mining, city planning and food storage.
 - Early Cities mastery goals for food stores and town lighting, making the next era more about settlement management.
+
+## Implemented In Origin Era Pass
+
+- Added **First Cell** as the new opening era before dinosaurs.
+- Added science-inspired origin-of-life framing: nutrients, warm vents, membranes and proto-cell stabilization.
+- Added cell-era blocks, recipes, objectives, biome hooks and a smaller player form.
+- Updated onboarding and how-to copy so the game starts simple and gains complexity as eras unlock.

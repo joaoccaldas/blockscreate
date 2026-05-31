@@ -64,6 +64,7 @@ export class Game {
     this.world = new World({ seed: (Math.random() * 1e9) | 0, eraId });
     this.world.generate();
     this.player = new Player(this.world.spawn.x + 0.5, this.world.spawn.y);
+    this._applyEraPlayerForm();
     this.inventory = new Inventory();
     this.civ = new Civilization(eraId);
     this.objectives = new ObjectiveTracker(eraId);
@@ -85,6 +86,7 @@ export class Game {
     this.world = World.deserialize(save.world);
     this.player = new Player(0, 0);
     this.player.load(save.player);
+    this._applyEraPlayerForm();
     this.inventory = new Inventory();
     this.inventory.load(save.inventory);
     this.civ = new Civilization(this.eraId);
@@ -105,13 +107,22 @@ export class Game {
     const era = getEra(this.eraId);
     for (const id of era.starter || []) this.inventory.add(id, 1);
     if (this.mode === MODE.CREATIVE) {
-      ['grass', 'dirt', 'stone', 'cobblestone', 'sand', 'water', 'log', 'planks', 'leaves',
+      ['primordial_mud', 'nutrient_blob', 'mineral_vent', 'lipid_membrane',
+        'grass', 'dirt', 'stone', 'cobblestone', 'sand', 'water', 'log', 'planks', 'leaves',
         'thatch', 'brick', 'torch', 'campfire', 'clay', 'gravel',
         'coal_ore', 'copper_ore', 'tin_ore', 'iron_ore', 'gold_ore']
         .forEach((id) => this.inventory.add(id, 99));
-    } else {
+    } else if (this.eraId !== 'cell') {
       // Survival: a couple of torches to start; everything else is earned.
       this.inventory.add('torch', 4);
+    }
+  }
+
+  _applyEraPlayerForm() {
+    if (!this.player) return;
+    if (this.eraId === 'cell') {
+      this.player.w = 0.55;
+      this.player.h = 0.9;
     }
   }
 
@@ -598,6 +609,10 @@ export class Game {
         case 'ash':
           this.particles.spawn(x, yTop, (Math.random() - 0.5) * 0.6, 1.0,
             { color: ['#444', '#666', '#888'][(Math.random() * 3) | 0], life: 5, size: 0.1, gravity: 1.0 });
+          break;
+        case 'bubbles':
+          this.particles.spawn(x, cam.y + cam.tilesY / 2, (Math.random() - 0.5) * 0.4, -1.5,
+            { color: 'rgba(180,255,245,0.65)', life: 4, size: 0.12, gravity: -0.2 });
           break;
         default: break;
       }

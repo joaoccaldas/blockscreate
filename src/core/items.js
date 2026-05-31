@@ -27,6 +27,7 @@ for (const id in BLOCKS) {
 
 // 2) Raw materials (mined drops that are not placeable on their own).
 const materials = [
+  ['proto_cell', 'Proto-Cell', '#76f7dd'],
   ['stick', 'Stick', '#9a7038'],
   ['coal', 'Coal', '#222222'],
   ['copper', 'Copper Ingot', '#c87f4a'],

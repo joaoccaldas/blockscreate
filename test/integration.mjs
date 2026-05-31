@@ -75,6 +75,24 @@ const g = newGame();
 g.newWorld('stone', MODE.SURVIVAL);
 ok(`game built; world ${g.world.width}x${g.world.height}, spawn ${JSON.stringify(g.world.spawn)}`);
 
+const gCell = newGame();
+gCell.newWorld('cell', MODE.SURVIVAL);
+if (gCell.eraId !== 'cell') throw new Error('cell era did not start');
+if (gCell.player.h >= 1.8) throw new Error('cell player form was not applied');
+gCell.inventory.add('nutrient_blob', 3);
+gCell.inventory.add('mineral_vent', 1);
+gCell.inventory.add('lipid_membrane', 4);
+gCell.civ.onBuild('lipid_membrane');
+gCell.civ.onBuild('lipid_membrane');
+gCell.civ.onBuild('lipid_membrane');
+gCell.civ.onBuild('lipid_membrane');
+gCell.crafted.add('proto_cell');
+gCell.civ.cp = 80;
+gCell.update(0.016);
+if (!gCell.canAdvance()) throw new Error('cell era did not unlock evolution after mandatory goals');
+if (!gCell._advanceEra() || gCell.eraId !== 'stone') throw new Error('cell era did not evolve into dinosaurs');
+ok('first-cell era evolves into Age of Dinosaurs');
+
 for (let i = 0; i < 60; i++) g.update(0.016);
 if (!(g.player.health > 0)) throw new Error('player died unexpectedly');
 ok(`60 ticks run; hp ${g.player.health.toFixed(1)}, onGround ${g.player.onGround}`);

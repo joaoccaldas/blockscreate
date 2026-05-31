@@ -7,19 +7,32 @@
  * available in Creative mode (free build, no survival pressure).
  *
  * Eras are data: adding a fully new age later means adding an entry here plus
- * its blocks/recipes. Milestone 1 ships the Stone Age fully playable; later eras
- * are defined so the portal + unlock system is real and demonstrable.
+ * its blocks/recipes. The opening era is intentionally tiny: the first cell
+ * teaches interaction before the UI and simulation broaden into later ages.
  */
 import { getEraManifest } from './eraManifests.js';
 
 export const ERAS = [
   {
-    id: 'stone',
+    id: 'cell',
     order: 0,
+    name: 'First Cell',
+    blurb: 'Begin as chemistry at a warm vent: absorb nutrients, form a membrane, and become alive.',
+    icon: '🫧',
+    unlockCost: 0,
+    advanceCost: 80,
+    sky: { day: ['#69d6d0', '#b8fff2'], night: ['#071a28', '#123c4a'] },
+    ground: '#2aa79b',
+    starter: [],
+    fullyPlayable: true,
+  },
+  {
+    id: 'stone',
+    order: 1,
     name: 'Age of Dinosaurs',
     blurb: 'Survive among living dinosaurs: tame fire, build shelter, dodge raptors and a T-Rex, and outlast the asteroid.',
     icon: '🦖',
-    unlockCost: 0, // first era, always available
+    unlockCost: 80,
     // CP needed (while in this era) to open the NEXT era's portal
     advanceCost: 250,
     sky: { day: ['#8fd0ff', '#cdeeff'], night: ['#0b1430', '#1c2a55'] },
@@ -29,7 +42,7 @@ export const ERAS = [
   },
   {
     id: 'bronze',
-    order: 1,
+    order: 2,
     name: 'Bronze Age',
     blurb: 'Smelt copper and tin, lay bricks, and grow a true town.',
     icon: '⚒️',
@@ -42,7 +55,7 @@ export const ERAS = [
   },
   {
     id: 'iron',
-    order: 2,
+    order: 3,
     name: 'Iron Age',
     blurb: 'Forge iron, mint gold, and build a city that endures.',
     icon: '🛡️',
@@ -55,7 +68,7 @@ export const ERAS = [
   },
   {
     id: 'industrial',
-    order: 3,
+    order: 4,
     name: 'Industrial Age',
     blurb: 'Steam, steel and smoke — civilization accelerates.',
     icon: '🏭',

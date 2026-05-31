@@ -7,18 +7,22 @@ BlocksCreate is now a modular historical sandbox, but not yet the complete visio
 - **World generation:** expandable persistent worlds. The map starts finite (`320x110`) but grows horizontally in chunk-sized regions while preserving edits. True chunk streaming is still next.
 - **Persistence:** edited worlds, generated/modified chunk metadata, civilization stats, objectives, discoveries, structures, historical clues and powerups persist in saves.
 - **Era specificity:** eras now have manifests for historical framing, hazards, animals, clues, mastery, branches and player form.
+- **Origin era:** the progression now begins with **First Cell**, a simplified origin-of-life era about nutrients, warm vents, membranes and proto-cell stabilization.
 - **Physical clues:** Age of Dinosaurs can generate clue blocks such as fossil beds, meteor shards, handprints and standing stones.
 - **World events:** Age of Dinosaurs now has cold-night pressure and meteor showers that place physical meteor shards.
 - **RPG encounters:** Age of Dinosaurs can trigger predator migrations and grazer herds; Early Cities can trigger droughts and raider scouts.
 - **RPG progression:** primitive weapons, defeated-enemy stats, relic powerups and optional mastery goals make runs branch more meaningfully.
 - **Era biomes:** chunks now have deterministic era biomes, starting with fern valleys, fossil basins, meteor scars and ash fields for the Age of Dinosaurs.
 - **Progression:** portals require both CP and mandatory goals. Optional mastery goals grant benefits without blocking advancement.
-- **Historical consistency:** the opening era is explicitly alternate-history survival fantasy, while later eras use historical sandbox framing.
+- **Historical consistency:** First Cell is science-inspired abstraction, Age of Dinosaurs is explicitly alternate-history survival fantasy, and later eras use historical sandbox framing.
 
 ## What Improved In This Pass
 
+- Added a pre-dinosaur **First Cell** era so progression begins at the origin of life.
+- Added origin-era blocks/resources: primordial mud, nutrient blobs, mineral vents and lipid membranes.
+- Added origin-era recipes and objectives that teach interaction before larger survival systems appear.
 - Added `eraManifests.js` so eras scale as data packs.
-- Reframed the first era as **Age of Dinosaurs** while preserving `stone` save compatibility.
+- Reframed `stone` as **Age of Dinosaurs** while preserving save compatibility.
 - Added mandatory, mastery and portal objective categories.
 - Added advancement gating through `game.canAdvance()`.
 - Improved HUD clarity with era story text, mastery count and explicit gate reason.

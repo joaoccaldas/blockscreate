@@ -11,13 +11,18 @@
  * world's era, which keeps each age feeling distinct.
  */
 import { C } from '../core/constants.js';
-import { blockId, AIR } from '../core/blocks.js';
+import { blockId, AIR, isSolid } from '../core/blocks.js';
 import { fbm1D, hash2 } from './noise.js';
 import { getEra } from '../core/eras.js';
 
 export const CHUNK_W = 32;
 
 export const ERA_BIOMES = {
+  cell: [
+    { id: 'warm_vent', label: 'Warm Vent', clueBias: 1.2, treeBias: 0, ash: 0 },
+    { id: 'nutrient_tide', label: 'Nutrient Tide', clueBias: 1.8, treeBias: 0, ash: 0 },
+    { id: 'mineral_shelf', label: 'Mineral Shelf', clueBias: 1.4, treeBias: 0, ash: 0 },
+  ],
   stone: [
     { id: 'fern_valley', label: 'Fern Valley', clueBias: 1.0, treeBias: 1.45, ash: 0 },
     { id: 'fossil_basin', label: 'Fossil Basin', clueBias: 2.4, treeBias: 0.75, ash: 0.05 },
@@ -91,7 +96,9 @@ export class World {
   generate() {
     const ID = blockIds();
     for (let x = 0; x < this.width; x++) this.generateColumn(x, ID);
-    for (let x = 0; x < this.width; x++) this.carveColumn(x, ID, getEra(this.eraId));
+    if (this.eraId !== 'cell') {
+      for (let x = 0; x < this.width; x++) this.carveColumn(x, ID, getEra(this.eraId));
+    }
     this.scatterTrees(ID, 0, this.width);
     this.scatterClues(ID, 0, this.width);
     this.markGeneratedRange(0, this.width);
@@ -150,6 +157,10 @@ export class World {
   generateColumn(x, ID = blockIds()) {
     const gx = this.globalX(x);
     const biome = this.biomeAtLocal(x);
+    if (this.eraId === 'cell') {
+      this.generateCellColumn(x, ID, biome);
+      return;
+    }
     const seaLevel = C.SURFACE + 6;
     const n = fbm1D(gx * 0.06, this.seed, 4);
     const surf = Math.floor(C.SURFACE + (n - 0.5) * 26);
@@ -180,6 +191,30 @@ export class World {
       for (let y = seaLevel; y < surf; y++) {
         if (this.grid[this.idx(x, y)] === AIR) this.grid[this.idx(x, y)] = ID.water;
       }
+    }
+  }
+
+  generateCellColumn(x, ID = blockIds(), biome = this.biomeAtLocal(x)) {
+    const gx = this.globalX(x);
+    const n = fbm1D(gx * 0.08, this.seed + 1919, 3);
+    const surf = Math.floor(C.SURFACE + 2 + (n - 0.5) * 12);
+    this.heightMap[x] = surf;
+
+    for (let y = 0; y < this.height; y++) {
+      let id = AIR;
+      if (y === this.height - 1) id = ID.bedrock;
+      else if (y >= surf) {
+        const depth = y - surf;
+        id = depth <= 3 ? ID.primordial : ID.stone;
+        const r = hash2(gx, y, this.seed + 191);
+        const nutrientRate = biome.id === 'nutrient_tide' ? 0.17 : 0.09;
+        const ventRate = biome.id === 'warm_vent' || biome.id === 'mineral_shelf' ? 0.07 : 0.035;
+        if (depth <= 7 && r < nutrientRate) id = ID.nutrient;
+        else if (depth >= 2 && depth <= 12 && r > 1 - ventRate) id = ID.vent;
+      } else if (y >= surf - 8) {
+        id = ID.water;
+      }
+      this.grid[this.idx(x, y)] = id;
     }
   }
 
@@ -231,8 +266,10 @@ export class World {
     const era = getEra(this.eraId);
     for (let x = 0; x < left; x++) this.generateColumn(x, ID);
     for (let x = left + oldWidth; x < newWidth; x++) this.generateColumn(x, ID);
-    for (let x = 0; x < left; x++) this.carveColumn(x, ID, era);
-    for (let x = left + oldWidth; x < newWidth; x++) this.carveColumn(x, ID, era);
+    if (this.eraId !== 'cell') {
+      for (let x = 0; x < left; x++) this.carveColumn(x, ID, era);
+      for (let x = left + oldWidth; x < newWidth; x++) this.carveColumn(x, ID, era);
+    }
     for (let x = left; x < left + oldWidth; x++) this.recomputeColumnTop(x);
 
     this.spawn.x += left;
@@ -253,6 +290,7 @@ export class World {
   }
 
   scatterTrees(ID, start = 0, count = this.width) {
+    if (this.eraId === 'cell') return;
     const end = Math.min(this.width - 3, start + count);
     for (let x = Math.max(3, start); x < end; x++) {
       const surf = this.heightMap[x];
@@ -308,7 +346,7 @@ export class World {
   findSpawn() {
     const x = Math.floor(this.width / 2);
     for (let y = 0; y < this.height; y++) {
-      if (this.grid[this.idx(x, y)] !== AIR) {
+      if (isSolid(this.grid[this.idx(x, y)])) {
         this.spawn = { x, y: y - 1 };
         return;
       }
@@ -406,6 +444,10 @@ function blockIds() {
     handprint: blockId('charcoal_handprint'),
     standingStone: blockId('standing_stone'),
     hideWall: blockId('hide_wall'),
+    primordial: blockId('primordial_mud'),
+    nutrient: blockId('nutrient_blob'),
+    vent: blockId('mineral_vent'),
+    membrane: blockId('lipid_membrane'),
   };
 }
 

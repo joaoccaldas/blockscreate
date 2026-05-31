@@ -16,6 +16,19 @@
  *   accent      decoration/foliage accent color used by the renderer
  */
 export const ERA_THEME = {
+  cell: {
+    tint: 'rgba(60, 210, 190, 0.12)',
+    weather: 'bubbles',
+    weatherRate: 1.8,
+    accent: '#55f0d8',
+    passive: [],
+    hostile: [],
+    hostileDay: false,
+    decorations: [
+      { kind: 'bubble', chance: 0.08 },
+      { kind: 'vent', chance: 0.018 },
+    ],
+  },
   stone: {
     tint: 'rgba(120, 110, 40, 0.06)',
     weather: 'leaves',

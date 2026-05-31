@@ -6,6 +6,26 @@
  * evolve as data.
  */
 export const ERA_MANIFESTS = {
+  cell: {
+    id: 'cell',
+    title: 'First Cell',
+    subtitle: 'gather chemistry, form a membrane, and cross the threshold into life',
+    historicalNote:
+      'A simplified origin-of-life sandbox inspired by warm vents, nutrient gradients, membranes, and self-organization. It teaches the game at tiny scale before history explodes outward.',
+    accuracy: 'science-inspired abstraction',
+    playerForm: 'proto-cell',
+    coreLoop: ['absorb nutrients', 'sense gradients', 'collect minerals', 'form membrane', 'stabilize life'],
+    hazards: ['dilution', 'scarcity', 'unstable chemistry'],
+    animals: ['none yet'],
+    decorations: ['bubbles', 'mineral vents', 'micro currents'],
+    mandatory: ['Absorb nutrients', 'Collect vent minerals', 'Craft a lipid membrane', 'Build a membrane boundary', 'Stabilize a proto-cell'],
+    mastery: ['Store extra nutrients', 'Map a warm vent', 'Build a stronger membrane'],
+    historicalClues: ['chemical_gradient', 'warm_vent', 'first_membrane'],
+    branches: [
+      { id: 'cellular_line', label: 'Cellular Line', condition: 'stabilize the proto-cell' },
+      { id: 'ventborn', label: 'Ventborn', condition: 'master mineral vents before evolving' },
+    ],
+  },
   stone: {
     id: 'stone',
     title: 'Age of Dinosaurs',

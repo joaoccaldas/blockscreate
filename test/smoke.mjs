@@ -31,11 +31,19 @@ assert.ok(world.grid.includes(blockId('clay')), 'world includes clay deposits');
 assert.ok(world.grid.includes(blockId('gravel')), 'world includes gravel seams');
 assert.ok(world.grid.includes(blockId('fossil_bed')) || world.grid.includes(blockId('meteor_shard')) ||
   world.grid.includes(blockId('standing_stone')) || world.grid.includes(blockId('charcoal_handprint')),
-'first era includes at least one historical clue');
+'dinosaur era includes at least one historical clue');
 assert.ok(world.getChunkSummary().generated > 0, 'world tracks generated chunks');
 assert.strictEqual(world.getChunkSummary().modified, 0, 'fresh generation has no modified chunks');
 assert.ok(world.biomeAtLocal(world.spawn.x).id, 'era biome lookup is deterministic');
 ok('world generates terrain + valid spawn');
+
+const cellWorld = new World({ seed: 2026, eraId: 'cell' });
+cellWorld.generate();
+assert.ok(cellWorld.grid.includes(blockId('nutrient_blob')), 'cell era has nutrient blobs');
+assert.ok(cellWorld.grid.includes(blockId('mineral_vent')), 'cell era has mineral vents');
+assert.ok(isSolid(cellWorld.get(cellWorld.spawn.x, cellWorld.spawn.y + 1)), 'cell era spawn has ground');
+assert.ok(cellWorld.biomeAtLocal(cellWorld.spawn.x).id, 'cell era has biome lookup');
+ok('first-cell world generates nutrients and vents');
 
 // --- RLE round-trip ---
 const rle = rleEncode(world.grid);
@@ -86,6 +94,15 @@ const stoneRecipes = availableRecipes(stoneSet);
 assert.ok(stoneRecipes.every((r) => r.era === 'stone'), 'only stone recipes when only stone unlocked');
 assert.ok(stoneRecipes.length < RECIPES.length, 'bronze/iron recipes gated out');
 
+const cellSet = new Set(['cell']);
+const cellRecipes = availableRecipes(cellSet);
+assert.ok(cellRecipes.every((r) => r.era === 'cell'), 'only cell recipes when only cell unlocked');
+const membraneRecipe = RECIPES.find((r) => r.id === 'lipid_membrane');
+const invCell = new Inventory();
+invCell.add('nutrient_blob', 2);
+assert.ok(craft(membraneRecipe, invCell), 'craft membrane from nutrients');
+assert.strictEqual(invCell.count('lipid_membrane'), 4, 'membrane produced');
+
 const inv2 = new Inventory();
 inv2.add('log', 1);
 const planksRecipe = RECIPES.find((r) => r.id === 'planks');
@@ -129,17 +146,23 @@ const bronzeObjectives = new ObjectiveTracker('bronze');
 assert.ok(bronzeObjectives.all.some((o) => o.id === 'smelt_bronze'), 'bronze has era objectives');
 const ironObjectives = new ObjectiveTracker('iron');
 assert.ok(ironObjectives.all.some((o) => o.id === 'iron_pick'), 'iron has era objectives');
-const firstEra = new ObjectiveTracker('stone');
-assert.ok(firstEra.mandatory().length >= 5, 'first era has mandatory goals');
-assert.ok(firstEra.mastery().some((o) => o.id === 'hunt_predator'), 'first era tracks predator mastery');
-assert.ok(firstEra.mastery().some((o) => o.id === 'make_spear'), 'first era tracks weapon mastery');
-assert.ok(!firstEra.mandatoryDone(), 'mandatory starts incomplete');
+const cellEra = new ObjectiveTracker('cell');
+assert.ok(cellEra.mandatory().some((o) => o.id === 'stabilize_cell'), 'cell era has life-stabilization goal');
+assert.ok(cellEra.all.some((o) => o.id === 'advance'), 'cell era opens evolution portal');
+const dinosaurEra = new ObjectiveTracker('stone');
+assert.ok(dinosaurEra.mandatory().length >= 5, 'dinosaur era has mandatory goals');
+assert.ok(dinosaurEra.mastery().some((o) => o.id === 'hunt_predator'), 'dinosaur era tracks predator mastery');
+assert.ok(dinosaurEra.mastery().some((o) => o.id === 'make_spear'), 'dinosaur era tracks weapon mastery');
+assert.ok(!dinosaurEra.mandatoryDone(), 'mandatory starts incomplete');
 const bronzeEra = new ObjectiveTracker('bronze');
 assert.ok(bronzeEra.mastery().some((o) => o.id === 'food_store'), 'bronze has storage mastery');
 assert.ok(bronzeEra.mastery().some((o) => o.id === 'lit_town'), 'bronze has town-light mastery');
 ok('per-era mandatory and mastery objective sets');
 
 // --- Era manifests ---
+const originEra = getEra('cell');
+assert.strictEqual(originEra.name, 'First Cell');
+assert.strictEqual(getEraManifest('cell').playerForm, 'proto-cell');
 const era = getEra('stone');
 const manifest = getEraManifest('stone');
 assert.strictEqual(era.name, 'Age of Dinosaurs');

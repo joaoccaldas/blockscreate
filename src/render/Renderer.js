@@ -346,6 +346,21 @@ export class Renderer {
         ctx.arc(baseX - T * 0.18, groundY - T * 0.1, T * 0.18, 0, Math.PI * 2);
         ctx.fill();
         break;
+      case 'bubble':
+        ctx.strokeStyle = 'rgba(190,255,245,0.65)';
+        ctx.lineWidth = Math.max(1, T * 0.04);
+        ctx.beginPath();
+        ctx.arc(baseX + (r - 0.5) * T * 0.4, groundY - T * (0.25 + r * 0.8), T * (0.12 + r * 0.12), 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+      case 'vent':
+        ctx.fillStyle = '#40545d';
+        ctx.fillRect(baseX - T * 0.18, groundY - T * 0.65, T * 0.36, T * 0.65);
+        ctx.fillStyle = 'rgba(140,255,235,0.55)';
+        ctx.beginPath();
+        ctx.arc(baseX, groundY - T * 0.72, T * 0.28, 0, Math.PI * 2);
+        ctx.fill();
+        break;
       case 'bones':
         ctx.strokeStyle = '#e6e1cf';
         ctx.lineWidth = Math.max(2, T * 0.08);

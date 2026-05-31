@@ -6,7 +6,9 @@ A browser-based block-building civilization history sandbox. Mine, build, surviv
 
 - Block placement, mining, crafting, inventory and survival
 - Era-specific progression with mandatory and optional mastery goals
-- Age of Dinosaurs first era: survive among living dinosaurs (stegosaurus,
+- First Cell origin era: gather nutrients, collect vent minerals, form a lipid
+  membrane, stabilize a proto-cell, then evolve into the Age of Dinosaurs
+- Age of Dinosaurs survival era: survive among living dinosaurs (stegosaurus,
   triceratops, raptor, T-Rex), tame fire, build shelter, and endure meteor
   showers that climax in an asteroid impact (craters terrain + damages)
 - Per-era atmosphere: signature color grade, ambient weather (drifting leaves,

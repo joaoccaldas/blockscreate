@@ -74,7 +74,7 @@ stats. This makes each run less predictable while keeping the systems modular.
 
 Files: `src/core/recipes.js`, `src/core/items.js`, `src/systems/Objectives.js`
 
-The first era now has optional weapon and predator mastery:
+The dinosaur era now has optional weapon and predator mastery:
 
 - `bone_knife`
 - `flint_spear`
@@ -83,6 +83,15 @@ The first era now has optional weapon and predator mastery:
 
 Early Cities starts to shift the game from survival toward planning with food
 storage, town lighting and city-planner rewards.
+
+## Progressive UI And Feature Complexity
+
+BlocksCreate now starts with a deliberately small **First Cell** era. The player
+only needs to understand a few actions: absorb nutrients, collect minerals,
+craft a membrane, place a boundary and stabilize a proto-cell. The next era then
+opens the broader survival/building simulation with dinosaurs, fire, shelter,
+weapons and hazards. This supports the design principle that the game grows in
+complexity as the player evolves.
 
 ## Save Format
 

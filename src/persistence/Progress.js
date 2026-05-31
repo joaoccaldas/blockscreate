@@ -11,7 +11,7 @@ const KEY = 'blockscreate.progress.v1';
 
 export class Progress {
   constructor() {
-    this.unlocked = new Set(['stone']); // Stone Age always available
+    this.unlocked = new Set(['cell']); // origin era always available
     this.load();
   }
 
@@ -46,7 +46,7 @@ export class Progress {
     try {
       const raw = localStorage.getItem(KEY);
       if (raw) this.unlocked = new Set(JSON.parse(raw));
-      this.unlocked.add('stone');
+      this.unlocked.add('cell');
     } catch (e) { /* ignore */ }
   }
 }

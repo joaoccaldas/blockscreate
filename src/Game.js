@@ -24,6 +24,7 @@ import { SaveManager } from './persistence/SaveManager.js';
 import { getBlock, dropsOf, isSolid, AIR } from './core/blocks.js';
 import { getItem, isPlaceable } from './core/items.js';
 import { getEra, nextEra } from './core/eras.js';
+import { getEraTheme, weightedPick } from './core/eraTheme.js';
 
 export class Game {
   constructor({ canvas, hudRoot, sprites, progress, settings, audio, onExit }) {
@@ -326,10 +327,15 @@ export class Game {
       this._handleInteraction(dt);
     }
 
-    for (const m of this.mobs) m.update(dt, this.world);
+    const target = this.mode === MODE.SURVIVAL ? this.player : null;
+    for (const m of this.mobs) {
+      const hit = m.update(dt, this.world, target);
+      if (hit && this.player.alive) this._damagePlayer(hit.damage);
+    }
     this._spawnMobs(dt);
     this.powerups.update(dt);
     this._trackAnimalFriendship(dt);
+    this._ambientWeather(dt);
     this.particles.update(dt);
 
     this.clock = (this.clock + dt) % C.DAY_LENGTH;
@@ -425,6 +431,38 @@ export class Game {
         this.audio?.play('step');
         this.particles.spawn(p.x, p.y, -Math.sign(p.vx) * 1.5, -1,
           { color: 'rgba(180,160,140,0.8)', life: 0.3, size: 0.08, gravity: 14 });
+      }
+    }
+  }
+
+  /** Era-flavored ambient weather particles drifting across the view. */
+  _ambientWeather(dt) {
+    const theme = getEraTheme(this.eraId);
+    if (!theme.weather || theme.weather === 'none' || !theme.weatherRate) return;
+    this._weatherAccum = (this._weatherAccum || 0) + dt * theme.weatherRate;
+    while (this._weatherAccum >= 1) {
+      this._weatherAccum -= 1;
+      const cam = this.camera;
+      const x = cam.x + (Math.random() - 0.5) * cam.tilesX;
+      const yTop = cam.y - cam.tilesY / 2 - 1;
+      switch (theme.weather) {
+        case 'leaves':
+          this.particles.spawn(x, yTop + Math.random() * 2, (Math.random() - 0.5) * 1.5, 1.2,
+            { color: ['#5a9e3f', '#6fc04e', '#caa55a'][(Math.random() * 3) | 0], life: 4, size: 0.12, gravity: 1.5 });
+          break;
+        case 'dust':
+          this.particles.spawn(x, cam.y + (Math.random() - 0.5) * cam.tilesY, 2 + Math.random() * 2, 0,
+            { color: 'rgba(210,190,140,0.5)', life: 2.5, size: 0.08, gravity: 0 });
+          break;
+        case 'snow':
+          this.particles.spawn(x, yTop, (Math.random() - 0.5) * 0.8, 1.6,
+            { color: '#eaf2ff', life: 5, size: 0.1, gravity: 0.8 });
+          break;
+        case 'ash':
+          this.particles.spawn(x, yTop, (Math.random() - 0.5) * 0.6, 1.0,
+            { color: ['#444', '#666', '#888'][(Math.random() * 3) | 0], life: 5, size: 0.1, gravity: 1.0 });
+          break;
+        default: break;
       }
     }
   }
@@ -599,16 +637,21 @@ export class Game {
   }
 
   _hitMob(mob) {
-    mob.health -= 3;
-    mob.vy = -6;
+    const dead = mob.hurt(4);
     this.audio?.play('hurt');
-    this.particles.burst(mob.x, mob.y - mob.h / 2, '#cf5d6a', 8);
-    if (mob.health <= 0) {
-      this.mobs.splice(this.mobs.indexOf(mob), 1);
-      if (this.mode === MODE.SURVIVAL) this.inventory.add('raw_food', mob.def.food);
-      this.civ.addCP(2);
-      this.hud.toast(`Caught a ${mob.type}`);
+    this.particles.burst(mob.x, mob.y - mob.h / 2, mob.hostile ? '#ff7b6b' : '#cf5d6a', 8);
+    if (!dead) return;
+    this.mobs.splice(this.mobs.indexOf(mob), 1);
+    if (this.mode === MODE.SURVIVAL) {
+      if (mob.hostile) {
+        if (mob.def.drop) this.inventory.add(mob.def.drop, mob.def.dropN || 1);
+      } else {
+        this.inventory.add('raw_food', mob.def.food);
+      }
     }
+    const cp = mob.def.cp || 2;
+    this.civ.addCP(cp * (this.powerups?.multiplier('cpMultiplier') || 1));
+    this.hud.toast(mob.hostile ? `Defeated a ${mob.type} (+${cp} CP)` : `Caught a ${mob.type}`);
   }
 
   _overlapsPlayer(x, y) {
@@ -619,17 +662,37 @@ export class Game {
 
   _spawnMobs(dt) {
     this.mobTimer -= dt;
-    const day = this.dayFactor() > 0.4;
-    if (this.mobTimer > 0 || this.mobs.length >= 8 || !day) return;
-    this.mobTimer = 5;
+    if (this.mobTimer > 0 || this.mobs.length >= 9) return;
+    this.mobTimer = 4 + Math.random() * 3;
+
+    const theme = getEraTheme(this.eraId);
+    const isDay = this.dayFactor() > 0.4;
+
+    // Decide passive vs hostile. Hostiles come out at night (or any time in
+    // eras flagged hostileDay), and only in Survival.
+    const wantHostile = this.mode === MODE.SURVIVAL && theme.hostile.length &&
+      (!isDay || theme.hostileDay) && Math.random() < 0.6;
+    const table = wantHostile ? theme.hostile : theme.passive;
+    if (!table || !table.length) return;
+    const type = weightedPick(table);
+    if (!type || !MOB_TYPES[type]) return;
+
+    // Spawn off-screen to either side, on solid ground.
     const dir = Math.random() < 0.5 ? -1 : 1;
-    const sx = Math.floor(this.player.x + dir * (10 + Math.random() * 6));
+    const sx = Math.floor(this.player.x + dir * (12 + Math.random() * 6));
     if (sx < 1 || sx >= this.world.width - 1) return;
     const surf = this.world.heightMap[sx];
     if (!isSolid(this.world.get(sx, surf))) return;
-    const types = Object.keys(MOB_TYPES);
-    const type = types[(Math.random() * types.length) | 0];
     this.mobs.push(new Mob(type, sx + 0.5, surf));
+  }
+
+  _damagePlayer(amount) {
+    this.player.health = Math.max(0, this.player.health - amount);
+    this.player.vy = -7; // knockback pop
+    this.audio?.play('hurt');
+    this.particles.burst(this.player.x, this.player.y - this.player.h / 2, '#ff5b5b', 8);
+    this.hud?.shake?.();
+    if (this.player.health <= 0) this.player.alive = false;
   }
 
   /** 1 at noon, 0 at midnight. */
@@ -647,6 +710,7 @@ export class Game {
       particles: this.particles,
       powerups: this.powerups,
       dayFactor: this.dayFactor(),
+      tint: getEraTheme(this.eraId).tint,
       hover: this.hover,
       ghost: this.ghost,
       dt,

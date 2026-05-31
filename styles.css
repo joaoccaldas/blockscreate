@@ -522,3 +522,59 @@ html, body {
   .touch-left, .touch-right { bottom: calc(56px + var(--safe-b)); }
   .tbtn { width: 52px; height: 52px; font-size: 1.25rem; }
 }
+
+/* ============================================================
+   v3.6 — era theming, richer inventory & crafting, combat FX
+   ============================================================ */
+
+/* Era portal cards: extra flavor line + animal list. */
+.era-sub { color: var(--muted); font-size: 0.85rem; min-height: 2.6em; margin: 0 0 0.4rem; }
+.era-meta { color: var(--text); font-size: 0.78rem; opacity: 0.85; margin: 0 0 0.4rem; }
+
+/* Inventory: labeled cells instead of bare swatches. */
+#invGrid.grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.inv-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  min-height: 64px;
+  justify-content: center;
+}
+.inv-cell:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--accent); }
+.inv-cell.empty { cursor: default; opacity: 0.4; }
+.inv-cell.empty:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(255,255,255,0.1); }
+.inv-name { font-size: 0.66rem; line-height: 1.1; text-align: center; color: var(--text); }
+.inv-cell .count { position: absolute; top: 3px; right: 6px; }
+
+/* Crafting: per-ingredient have/need chips. */
+.ing-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; }
+.ing { font-size: 0.7rem; padding: 1px 6px; border-radius: 6px; }
+.ing.ok { background: rgba(111, 192, 78, 0.22); color: #cdeeb4; }
+.ing.miss { background: rgba(224, 87, 79, 0.22); color: #f3b6b2; }
+
+/* Player-hurt feedback: red vignette + shake on the game stage. */
+.hurt-shake { animation: hurtShake 0.3s ease; }
+.hurt-shake::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 120px 30px rgba(220, 40, 40, 0.55);
+  animation: hurtFade 0.32s ease forwards;
+  z-index: 5;
+}
+@keyframes hurtShake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-6px, 3px); }
+  40% { transform: translate(5px, -3px); }
+  60% { transform: translate(-4px, 2px); }
+  80% { transform: translate(3px, -2px); }
+}
+@keyframes hurtFade { from { opacity: 1; } to { opacity: 0; } }

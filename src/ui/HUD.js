@@ -310,11 +310,17 @@ export class HUD {
     grid.innerHTML = '';
     game.inventory.slots.forEach((s, i) => {
       const cell = document.createElement('div');
-      cell.className = 'slot';
-      cell.innerHTML = this.slotInner(s);
+      cell.className = 'inv-cell' + (s ? '' : ' empty');
+      const item = s ? getItem(s.id) : null;
+      const color = item?.colors?.base || 'transparent';
+      const tool = item?.kind === 'tool' ? ' tool' : '';
+      cell.innerHTML = s
+        ? `<span class="swatch${tool}" style="background:${color}"></span>` +
+          `<span class="inv-name">${item?.label || s.id}</span>` +
+          (s.n > 1 ? `<span class="count">${s.n}</span>` : '')
+        : '';
       if (s) {
-        const item = getItem(s.id);
-        cell.title = `${item?.label || s.id} ×${s.n}`;
+        cell.title = `${item?.label || s.id} ×${s.n} — tap to send to hotbar`;
         cell.onclick = () => this.h.onPickSlot?.(i);
       }
       grid.appendChild(cell);
@@ -328,11 +334,17 @@ export class HUD {
     for (const r of recipes) {
       const ok = canCraft(r, game.inventory, game);
       const out = getItem(r.out.id);
+      // Per-ingredient have/need, so disabled recipes explain themselves.
       const ins = Object.entries(r.in)
-        .map(([id, n]) => `${getItem(id)?.label || id} ×${n}`)
-        .join(', ');
-      const station = r.station && !game.hasStation?.(r.station)
-        ? `<em>Needs built ${getItem(r.station)?.label || r.station}</em>`
+        .map(([id, n]) => {
+          const have = game.inventory.count(id);
+          const cls = have >= n ? 'ing ok' : 'ing miss';
+          return `<span class="${cls}">${getItem(id)?.label || id} ${have}/${n}</span>`;
+        })
+        .join('');
+      const needStation = r.station && !game.hasStation?.(r.station);
+      const station = needStation
+        ? `<span class="ing miss">Needs ${getItem(r.station)?.label || r.station}</span>`
         : '';
       const row = document.createElement('div');
       row.className = 'craft-row' + (ok ? '' : ' disabled');
@@ -340,7 +352,7 @@ export class HUD {
         <span class="swatch" style="background:${out?.colors?.base || '#888'}"></span>
         <div class="craft-info">
           <b>${out?.label || r.out.id} ×${r.out.n}</b>
-          <small>${ins}${station ? ` · ${station}` : ''}</small>
+          <div class="ing-list">${ins}${station}</div>
         </div>
         <button ${ok ? '' : 'disabled'}>Craft</button>`;
       row.querySelector('button').onclick = () => this.h.onCraft?.(r);
@@ -352,6 +364,14 @@ export class HUD {
   showInventory(show) { this.el('inventoryPanel').classList.toggle('hidden', !show); }
   showCrafting(show) { this.el('craftPanel').classList.toggle('hidden', !show); }
   showPause(show) { this.el('pauseMenu').classList.toggle('hidden', !show); }
+
+  /** Brief red damage flash + shake when the player is hurt. */
+  shake() {
+    const stage = this.root.parentElement || this.root;
+    stage.classList.add('hurt-shake');
+    clearTimeout(this._shakeT);
+    this._shakeT = setTimeout(() => stage.classList.remove('hurt-shake'), 320);
+  }
 
   destroy() {
     const tc = this.root.querySelector('#touchControls');

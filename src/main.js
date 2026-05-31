@@ -74,16 +74,24 @@ function buildPortals() {
   for (const era of ERAS) {
     const unlocked = progress.isUnlocked(era.id);
     const playable = unlocked && (era.fullyPlayable || chosenMode === MODE.CREATIVE);
+    const m = era.manifest || {};
+    const [skyA, skyB] = era.sky?.day || ['#456', '#234'];
     const card = document.createElement('div');
     card.className = 'era-card' + (unlocked ? '' : ' locked') + (playable ? '' : ' soon');
+    // Paint each card with its own era's sky + ground so ages feel distinct.
+    card.style.background =
+      `linear-gradient(160deg, ${skyA}33, ${skyB}22), var(--panel)`;
+    card.style.borderColor = `${era.ground}88`;
+    const animals = (m.animals || []).slice(0, 3).join(' · ');
     card.innerHTML = `
-      <div class="era-icon">${era.icon}</div>
-      <h3>${era.name}</h3>
-      <p>${era.blurb}</p>
+      <div class="era-icon" style="filter: drop-shadow(0 2px 6px ${era.ground}aa)">${era.icon}</div>
+      <h3>${m.title || era.name}</h3>
+      <p class="era-sub">${m.subtitle || era.blurb}</p>
+      ${animals ? `<p class="era-meta">🐾 ${animals}</p>` : ''}
       <div class="era-foot">${
         !unlocked ? '🔒 Locked'
           : playable ? '▶ Enter'
-            : '🚧 Coming soon'
+            : '🚧 Survival soon · Creative ok'
       }</div>
     `;
     if (playable) {

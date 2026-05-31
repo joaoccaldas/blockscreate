@@ -7,9 +7,16 @@ A browser-based block-building civilization history sandbox. Mine, build, surviv
 - Block placement, mining, crafting, inventory and survival
 - Era-specific progression with mandatory and optional mastery goals
 - First Humans era with shelter, fire, tools, food, fossil clues and alternate-history hooks
+- Per-era atmosphere: signature color grade, ambient weather (drifting leaves,
+  dust, ash), and themed wildlife — defined as data in `src/core/eraTheme.js`
+- Enemies that hunt at night: wolves and boars (First Humans), raiders and
+  bandits (Bronze/Iron), and roaming machines (Industrial), with chase AI,
+  contact damage, screen-shake feedback, and material drops
 - Physical historical clue blocks such as fossils, meteor shards, handprints and standing stones
 - Structure recognition for huts, camps, workshops, watchtowers and portal rings
 - Hidden discoveries and timed powerups
+- Themed menus, a labeled inventory, and crafting that shows per-ingredient
+  have/need counts and missing stations
 - Generated pixel-art sprites and terrain textures
 - Local save/load plus GitHub Pages deployment
 
@@ -24,6 +31,7 @@ node test/fun-systems.mjs
 node test/assets.mjs
 node test/smoke.mjs
 node test/integration.mjs
+node test/enemies.mjs
 ```
 
 ## Current Engine Note

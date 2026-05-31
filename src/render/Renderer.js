@@ -37,7 +37,7 @@ export class Renderer {
    * scene = { world, camera, player, mobs, particles, dayFactor, hover, ghost, dt }
    */
   render(scene) {
-    const { world, camera, player, mobs, particles, dayFactor, hover, ghost, dt = 0 } = scene;
+    const { world, camera, player, mobs, particles, dayFactor, tint, hover, ghost, dt = 0 } = scene;
     const ctx = this.ctx;
     const W = this.canvas.width;
     const H = this.canvas.height;
@@ -70,6 +70,12 @@ export class Renderer {
     if (hover && hover.valid) this.drawHover(camera, hover, T);
 
     this.applyDayNight(dayFactor, W, H);
+
+    // Era signature color wash, on top of everything.
+    if (tint) {
+      ctx.fillStyle = tint;
+      ctx.fillRect(0, 0, W, H);
+    }
   }
 
   drawSky(era, dayFactor, camera, W, H) {
@@ -302,11 +308,42 @@ export class Renderer {
         ctx.imageSmoothingEnabled = false;
         ctx.drawImage(sprite, sx - w / 2, sy - h, w, h);
       } else {
-        ctx.fillStyle = '#cf9d6a';
-        ctx.fillRect(sx - w / 2, sy - h, w, h);
+        // No sprite yet (e.g. enemies): draw a readable blocky creature.
+        this.drawCreatureShape(ctx, sx, sy, w, h, m);
       }
       ctx.restore();
+
+      // Hit flash overlay (drawn unflipped).
+      if (m.hitFlash > 0) {
+        ctx.globalAlpha = Math.min(0.6, m.hitFlash * 3);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(sx - w / 2, sy - h, w, h);
+        ctx.globalAlpha = 1;
+      }
+
+      // Health bar for hostiles that have taken damage.
+      if (m.hostile && m.health < (m.def.hp || 10)) {
+        const frac = Math.max(0, m.health / (m.def.hp || 10));
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(sx - w / 2, sy - h - 7, w, 4);
+        ctx.fillStyle = '#ff5b5b';
+        ctx.fillRect(sx - w / 2, sy - h - 7, w * frac, 4);
+      }
     }
+  }
+
+  /** Simple procedural body for sprite-less creatures (enemies). */
+  drawCreatureShape(ctx, sx, sy, w, h, m) {
+    const color = m.def.color || '#cf9d6a';
+    ctx.fillStyle = color;
+    ctx.fillRect(sx - w / 2, sy - h, w, h);
+    // darker legs/base
+    ctx.fillStyle = shade(color, 0.7);
+    ctx.fillRect(sx - w / 2, sy - h * 0.25, w, h * 0.25);
+    // menacing eye
+    ctx.fillStyle = m.hostile ? '#ff3b3b' : '#1b1b1b';
+    const eo = (m.facing > 0 ? 0.2 : -0.35) * w;
+    ctx.fillRect(sx + eo, sy - h * 0.8, w * 0.16, h * 0.12);
   }
 
   drawParticles(camera, particles, T) {

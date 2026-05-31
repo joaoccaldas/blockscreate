@@ -23,6 +23,8 @@ A browser-based block-building civilization history sandbox. Mine, build, surviv
   have/need counts and missing stations
 - Era events and hazards: cold nights and meteor showers in the Age of
   Dinosaurs create shelter pressure and physical meteor-shard clues
+- Chunk-indexed worlds with deterministic era biomes and modified-chunk
+  snapshots, preserving current saves while moving toward true infinite worlds
 - Generated pixel-art sprites and terrain textures
 - Local save/load plus GitHub Pages deployment
 
@@ -42,7 +44,7 @@ node test/enemies.mjs
 
 ## Current Engine Note
 
-Worlds are persistent and now expand horizontally near the edges. The next engine milestone is true chunked infinite world generation with modified-chunk saves.
+Worlds are persistent and now expand horizontally near the edges in chunk-sized regions. Saves include generated/modified chunk metadata and modified chunk snapshots; the next engine milestone is replacing the dense-grid fallback with true streaming chunks.
 
 ## Author
 

@@ -36,6 +36,6 @@ npm run serve            # http://localhost:8000
 
 ## Known next steps
 
-- True chunked infinite worlds (currently finite + horizontal expansion).
+- Complete true chunk streaming (current saves now include chunk metadata and modified chunk snapshots, but rendering still uses a dense loaded window).
 - Enemy sprite sheets with walk frames (current sprites are single-frame).
 - An end-to-end browser smoke test (Playwright) for menu → play → save → resume.

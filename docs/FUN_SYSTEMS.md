@@ -59,6 +59,8 @@ The save now includes:
 - `structures`
 - `discoveries`
 - `powerups`
+- `events`
+- `world.chunks` with generated/modified chunk indexes, era biomes, and modified chunk snapshots
 - `animalPeaceTime`
 
 Older saves remain tolerant because loaders default missing fields.
@@ -67,3 +69,12 @@ Older saves remain tolerant because loaders default missing fields.
 
 Players now get surprise rewards for building, exploring, and experimenting. The game can recognize useful structures while still leaving building creative and open-ended. This is the right foundation for blueprints, decorative blocks, relic hunts, era-specific buildings, and shareable structure saves.
 
+## Chunked Exploration
+
+File: `src/world/World.js`
+
+The world still renders from a dense grid today, but it now tracks chunk ids,
+modified chunks, chunk snapshots, and deterministic era biomes. That gives
+future systems a clean place to attach hidden ruins, rare powerups, local
+hazards, and alternate-history consequences without making every column behave
+the same.

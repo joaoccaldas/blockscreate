@@ -5,7 +5,7 @@
  * without needing a browser.
  */
 import assert from 'node:assert';
-import { World, rleEncode, rleDecode } from '../src/world/World.js';
+import { World, CHUNK_W, rleEncode, rleDecode } from '../src/world/World.js';
 import { Inventory } from '../src/systems/Inventory.js';
 import { Civilization } from '../src/systems/Civilization.js';
 import { craft, availableRecipes, canCraft } from '../src/systems/Crafting.js';
@@ -32,6 +32,9 @@ assert.ok(world.grid.includes(blockId('gravel')), 'world includes gravel seams')
 assert.ok(world.grid.includes(blockId('fossil_bed')) || world.grid.includes(blockId('meteor_shard')) ||
   world.grid.includes(blockId('standing_stone')) || world.grid.includes(blockId('charcoal_handprint')),
 'first era includes at least one historical clue');
+assert.ok(world.getChunkSummary().generated > 0, 'world tracks generated chunks');
+assert.strictEqual(world.getChunkSummary().modified, 0, 'fresh generation has no modified chunks');
+assert.ok(world.biomeAtLocal(world.spawn.x).id, 'era biome lookup is deterministic');
 ok('world generates terrain + valid spawn');
 
 // --- RLE round-trip ---
@@ -46,6 +49,8 @@ ok(`RLE round-trip lossless (compressed ${world.grid.length} -> ${rle.length})`)
 const ser = world.serialize();
 const w2 = World.deserialize(ser);
 assert.deepStrictEqual([...w2.grid], [...world.grid], 'world serialize round-trip');
+assert.strictEqual(w2.chunkWidth, CHUNK_W, 'chunk width persists');
+assert.deepStrictEqual(w2.getChunkSummary(), world.getChunkSummary(), 'chunk summary persists');
 ok('world serialize/deserialize');
 
 // --- Expandable world persistence ---
@@ -62,7 +67,9 @@ assert.ok(expandable.originX < 0, 'origin shifts when prepending');
 const expandedRoundTrip = World.deserialize(expandable.serialize());
 assert.strictEqual(expandedRoundTrip.get(13, 10), marker, 'expanded world save preserves edits');
 assert.strictEqual(expandedRoundTrip.originX, expandable.originX, 'origin persists');
-ok('world expands horizontally and persists edits');
+assert.ok(expandedRoundTrip.serialize().chunks.modified.length >= 1, 'modified chunk list persists');
+assert.ok(expandedRoundTrip.serialize().chunks.snapshots.some((c) => c.rle.length > 0), 'modified chunk snapshot exists');
+ok('world expands horizontally and persists chunk edits');
 
 // --- Inventory ---
 const inv = new Inventory();
@@ -115,10 +122,10 @@ const bronzeObjectives = new ObjectiveTracker('bronze');
 assert.ok(bronzeObjectives.all.some((o) => o.id === 'smelt_bronze'), 'bronze has era objectives');
 const ironObjectives = new ObjectiveTracker('iron');
 assert.ok(ironObjectives.all.some((o) => o.id === 'iron_pick'), 'iron has era objectives');
-const firstHumans = new ObjectiveTracker('stone');
-assert.ok(firstHumans.mandatory().length >= 5, 'first era has mandatory goals');
-assert.ok(firstHumans.mastery().length >= 2, 'first era has mastery goals');
-assert.ok(!firstHumans.mandatoryDone(), 'mandatory starts incomplete');
+const firstEra = new ObjectiveTracker('stone');
+assert.ok(firstEra.mandatory().length >= 5, 'first era has mandatory goals');
+assert.ok(firstEra.mastery().length >= 2, 'first era has mastery goals');
+assert.ok(!firstEra.mandatoryDone(), 'mandatory starts incomplete');
 ok('per-era mandatory and mastery objective sets');
 
 // --- Era manifests ---

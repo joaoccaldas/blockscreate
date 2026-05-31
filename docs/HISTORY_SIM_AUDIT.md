@@ -4,11 +4,12 @@
 
 BlocksCreate is now a modular historical sandbox, but not yet the complete vision.
 
-- **World generation:** expandable persistent worlds. The map starts finite (`320x110`) but grows horizontally near edges while preserving edits. True chunk streaming is still next.
-- **Persistence:** edited worlds, civilization stats, objectives, discoveries, structures, historical clues and powerups persist in saves.
+- **World generation:** expandable persistent worlds. The map starts finite (`320x110`) but grows horizontally in chunk-sized regions while preserving edits. True chunk streaming is still next.
+- **Persistence:** edited worlds, generated/modified chunk metadata, civilization stats, objectives, discoveries, structures, historical clues and powerups persist in saves.
 - **Era specificity:** eras now have manifests for historical framing, hazards, animals, clues, mastery, branches and player form.
 - **Physical clues:** Age of Dinosaurs can generate clue blocks such as fossil beds, meteor shards, handprints and standing stones.
 - **World events:** Age of Dinosaurs now has cold-night pressure and meteor showers that place physical meteor shards.
+- **Era biomes:** chunks now have deterministic era biomes, starting with fern valleys, fossil basins, meteor scars and ash fields for the Age of Dinosaurs.
 - **Progression:** portals require both CP and mandatory goals. Optional mastery goals grant benefits without blocking advancement.
 - **Historical consistency:** the opening era is explicitly alternate-history survival fantasy, while later eras use historical sandbox framing.
 
@@ -22,20 +23,24 @@ BlocksCreate is now a modular historical sandbox, but not yet the complete visio
 - Documented historical/alternate-history branches for each era.
 - Added `HistoricalClueLog` so clue blocks become journal entries and branch pressure.
 - Added `WorldEventLog` so era hazards and events can start affecting play.
+- Added chunk metadata and modified-chunk snapshots so saves can migrate from dense worlds toward streamed infinite worlds.
+- Added deterministic era biome lookup so future chunks can spawn different resources, clues, hazards and scenery by era.
 
 ## Next Technical Frontier
 
-The next engine-level milestone should be **true chunked infinite worlds**:
+The next engine-level milestone should complete **true chunked infinite worlds**:
 
-1. Split world grid into deterministic chunks.
-2. Save only modified chunks.
+1. Replace the dense-grid fallback with loaded chunk windows.
+2. Save only modified chunks as the authoritative world state.
 3. Stream chunks around the player.
 4. Attach biome, hazard, clue and ruin generation to era manifests.
 5. Let alternate-history branches alter future chunk generation.
 
-This pass adds the bridge: deterministic horizontal expansion with `originX`
-saved in the world snapshot, so the player can keep exploring beyond the initial
-map without losing built structures.
+This pass upgrades the bridge: deterministic horizontal expansion now carries
+chunk ids, generated/modified chunk indexes, era biome metadata and modified
+chunk snapshots. The player can keep exploring beyond the initial map without
+losing built structures, and the save format now has the hooks needed for real
+streaming.
 
 ## UX/Gamibility Notes
 

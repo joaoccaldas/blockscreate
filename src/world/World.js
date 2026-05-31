@@ -3,8 +3,9 @@
  *
  * The world is a dense 2D grid of block ids (Uint8Array, row-major). It is
  * generated deterministically from a seed, then mutated by the player. For
- * persistence we save the seed plus a run-length-encoded snapshot of the grid,
- * so even hand-built worlds stay small in localStorage.
+ * persistence we save the seed, chunk metadata and a run-length-encoded
+ * snapshot of the loaded grid, so even hand-built worlds stay small in
+ * localStorage while the format moves toward true chunk streaming.
  *
  * Generation is era-aware: deeper/rarer ores only appear once their era is the
  * world's era, which keeps each age feeling distinct.
@@ -14,8 +15,34 @@ import { blockId, AIR } from '../core/blocks.js';
 import { fbm1D, hash2 } from './noise.js';
 import { getEra } from '../core/eras.js';
 
+export const CHUNK_W = 32;
+
+export const ERA_BIOMES = {
+  stone: [
+    { id: 'fern_valley', label: 'Fern Valley', clueBias: 1.0, treeBias: 1.45, ash: 0 },
+    { id: 'fossil_basin', label: 'Fossil Basin', clueBias: 2.4, treeBias: 0.75, ash: 0.05 },
+    { id: 'meteor_scars', label: 'Meteor Scars', clueBias: 2.0, treeBias: 0.55, ash: 0.18 },
+    { id: 'ash_field', label: 'Ash Field', clueBias: 1.35, treeBias: 0.35, ash: 0.32 },
+  ],
+  bronze: [
+    { id: 'river_clay', label: 'River Clay', clueBias: 1.25, treeBias: 0.8, ash: 0 },
+    { id: 'copper_hills', label: 'Copper Hills', clueBias: 0.9, treeBias: 0.7, ash: 0 },
+    { id: 'trade_plain', label: 'Trade Plain', clueBias: 1.1, treeBias: 1.0, ash: 0 },
+  ],
+  iron: [
+    { id: 'iron_ridge', label: 'Iron Ridge', clueBias: 0.9, treeBias: 0.55, ash: 0 },
+    { id: 'kingdom_plain', label: 'Kingdom Plain', clueBias: 1.1, treeBias: 1.0, ash: 0 },
+    { id: 'roadland', label: 'Roadland', clueBias: 1.2, treeBias: 0.85, ash: 0 },
+  ],
+  industrial: [
+    { id: 'coal_belt', label: 'Coal Belt', clueBias: 0.8, treeBias: 0.35, ash: 0.2 },
+    { id: 'rail_flat', label: 'Rail Flat', clueBias: 0.95, treeBias: 0.6, ash: 0.06 },
+    { id: 'smog_lowland', label: 'Smog Lowland', clueBias: 1.0, treeBias: 0.3, ash: 0.25 },
+  ],
+};
+
 export class World {
-  constructor({ seed, eraId, width = C.WORLD_W, height = C.WORLD_H, originX = 0 }) {
+  constructor({ seed, eraId, width = C.WORLD_W, height = C.WORLD_H, originX = 0, chunks = null }) {
     this.seed = seed >>> 0;
     this.eraId = eraId;
     this.originX = originX;
@@ -24,6 +51,9 @@ export class World {
     this.grid = new Uint8Array(width * height);
     this.heightMap = new Int16Array(width);
     this.spawn = { x: Math.floor(width / 2), y: 0 };
+    this.chunkWidth = chunks?.width || CHUNK_W;
+    this.generatedChunks = new Set(chunks?.generated || []);
+    this.modifiedChunks = new Set(chunks?.modified || []);
   }
 
   idx(x, y) {
@@ -42,6 +72,7 @@ export class World {
   set(x, y, id) {
     if (!this.inBounds(x, y)) return false;
     this.grid[this.idx(x, y)] = id;
+    this.markModified(x);
     if (x >= 0 && x < this.width) this.recomputeColumnTop(x);
     return true;
   }
@@ -63,6 +94,8 @@ export class World {
     for (let x = 0; x < this.width; x++) this.carveColumn(x, ID, getEra(this.eraId));
     this.scatterTrees(ID, 0, this.width);
     this.scatterClues(ID, 0, this.width);
+    this.markGeneratedRange(0, this.width);
+    this.modifiedChunks.clear();
     this.findSpawn();
   }
 
@@ -70,8 +103,53 @@ export class World {
     return this.originX + x;
   }
 
+  localX(gx) {
+    return gx - this.originX;
+  }
+
+  chunkKeyAtLocal(x) {
+    return this.chunkKeyAtGlobal(this.globalX(x));
+  }
+
+  chunkKeyAtGlobal(gx) {
+    return Math.floor(gx / this.chunkWidth);
+  }
+
+  chunkBounds(key) {
+    const globalStart = key * this.chunkWidth;
+    const start = Math.max(0, this.localX(globalStart));
+    const end = Math.min(this.width, this.localX(globalStart + this.chunkWidth));
+    return { key, globalStart, start, end, width: Math.max(0, end - start) };
+  }
+
+  markGeneratedRange(start, count) {
+    const end = start + count;
+    for (let x = start; x < end; x += this.chunkWidth) {
+      const key = this.chunkKeyAtLocal(x);
+      this.generatedChunks.add(key);
+    }
+    if (count > 0) this.generatedChunks.add(this.chunkKeyAtLocal(end - 1));
+  }
+
+  markModified(x) {
+    this.generatedChunks.add(this.chunkKeyAtLocal(x));
+    this.modifiedChunks.add(this.chunkKeyAtLocal(x));
+  }
+
+  biomeAtLocal(x) {
+    return this.biomeAtGlobal(this.globalX(x));
+  }
+
+  biomeAtGlobal(gx) {
+    const list = ERA_BIOMES[this.eraId] || ERA_BIOMES.stone;
+    const chunk = this.chunkKeyAtGlobal(gx);
+    const n = hash2(chunk, this.seed % 9973, this.seed + 8181);
+    return list[Math.min(list.length - 1, Math.floor(n * list.length))];
+  }
+
   generateColumn(x, ID = blockIds()) {
     const gx = this.globalX(x);
+    const biome = this.biomeAtLocal(x);
     const seaLevel = C.SURFACE + 6;
     const n = fbm1D(gx * 0.06, this.seed, 4);
     const surf = Math.floor(C.SURFACE + (n - 0.5) * 26);
@@ -91,8 +169,10 @@ export class World {
         id = ID.grass;
       }
 
+      if (id === ID.grass && biome.ash && hash2(gx, y, this.seed + 7171) < biome.ash) id = ID.gravel;
       if (id === ID.grass && surf >= seaLevel) id = ID.sand;
       if (id === ID.dirt && surf >= seaLevel - 2 && hash2(gx, y, this.seed + 7070) > 0.72) id = ID.clay;
+      if (id === ID.stone && biome.id === 'fossil_basin' && hash2(gx, y, this.seed + 7272) > 0.992) id = ID.fossil;
       this.grid[this.idx(x, y)] = id;
     }
 
@@ -135,6 +215,7 @@ export class World {
 
     const oldWidth = this.width;
     const oldGrid = this.grid;
+    const oldModified = new Set(this.modifiedChunks);
     const newWidth = oldWidth + left + right;
     this.width = newWidth;
     this.originX -= left;
@@ -155,10 +236,13 @@ export class World {
     for (let x = left; x < left + oldWidth; x++) this.recomputeColumnTop(x);
 
     this.spawn.x += left;
+    this.markGeneratedRange(0, left);
+    this.markGeneratedRange(left + oldWidth, right);
     this.scatterTrees(ID, 0, left);
     this.scatterTrees(ID, left + oldWidth, right);
     this.scatterClues(ID, 0, left);
     this.scatterClues(ID, left + oldWidth, right);
+    this.modifiedChunks = oldModified;
     return { left, right };
   }
 
@@ -174,7 +258,8 @@ export class World {
       const surf = this.heightMap[x];
       if (this.grid[this.idx(x, surf)] !== ID.grass) continue;
       const gx = this.globalX(x);
-      if (hash2(gx, 17, this.seed + 9090) > 0.12) continue;
+      const biome = this.biomeAtLocal(x);
+      if (hash2(gx, 17, this.seed + 9090) > 0.12 * (biome.treeBias || 1)) continue;
       const h = 4 + Math.floor(hash2(gx, 19, this.seed + 9191) * 3);
       const topY = surf - h;
       for (let y = surf - 1; y >= topY; y--) {
@@ -203,15 +288,17 @@ export class World {
     const end = Math.min(this.width - 4, start + count);
     for (let x = Math.max(4, start); x < end; x++) {
       const gx = this.globalX(x);
+      const biome = this.biomeAtLocal(x);
+      const clueBias = biome.clueBias || 1;
       const surf = this.heightMap[x];
-      if (hash2(gx, 31, this.seed + 1111) < 0.006 && this.get(x, surf - 1) === AIR) {
+      if (hash2(gx, 31, this.seed + 1111) < 0.006 * clueBias && this.get(x, surf - 1) === AIR) {
         this.set(x, surf - 1, ID.meteor);
       }
-      if (hash2(gx, 37, this.seed + 2222) < 0.008 && this.get(x, surf) !== AIR && this.get(x, surf - 1) === AIR) {
+      if (hash2(gx, 37, this.seed + 2222) < 0.008 * clueBias && this.get(x, surf) !== AIR && this.get(x, surf - 1) === AIR) {
         this.set(x, surf - 1, ID.standingStone);
         if (this.inBounds(x, surf - 2)) this.set(x, surf - 2, ID.standingStone);
       }
-      if (hash2(gx, 41, this.seed + 3333) < 0.006) {
+      if (hash2(gx, 41, this.seed + 3333) < 0.006 * clueBias) {
         const y = Math.max(4, surf - 2);
         if (this.get(x, y) === AIR) this.set(x, y, ID.handprint);
       }
@@ -238,7 +325,45 @@ export class World {
       originX: this.originX,
       width: this.width,
       height: this.height,
+      chunks: this.serializeChunks(),
       rle: rleEncode(this.grid),
+    };
+  }
+
+  serializeChunks() {
+    const modified = [...this.modifiedChunks].sort((a, b) => a - b);
+    return {
+      width: this.chunkWidth,
+      generated: [...this.generatedChunks].sort((a, b) => a - b),
+      modified,
+      biomes: [...this.generatedChunks].sort((a, b) => a - b)
+        .map((key) => ({ key, id: this.biomeAtGlobal(key * this.chunkWidth).id })),
+      snapshots: modified.map((key) => {
+        const bounds = this.chunkBounds(key);
+        return { key, start: bounds.globalStart, width: bounds.width, rle: this.rleSlice(bounds.start, bounds.end) };
+      }),
+    };
+  }
+
+  rleSlice(start, end) {
+    const width = Math.max(0, end - start);
+    const slice = new Uint8Array(width * this.height);
+    if (!width) return [];
+    for (let y = 0; y < this.height; y++) {
+      slice.set(this.grid.subarray(y * this.width + start, y * this.width + end), y * width);
+    }
+    return rleEncode(slice);
+  }
+
+  getChunkSummary() {
+    return {
+      width: this.chunkWidth,
+      generated: this.generatedChunks.size,
+      modified: this.modifiedChunks.size,
+      visibleRange: {
+        from: this.chunkKeyAtLocal(0),
+        to: this.chunkKeyAtLocal(this.width - 1),
+      },
     };
   }
 
@@ -249,9 +374,11 @@ export class World {
       width: data.width,
       height: data.height,
       originX: data.originX || 0,
+      chunks: data.chunks,
     });
     rleDecode(data.rle, w.grid);
     for (let x = 0; x < w.width; x++) w.recomputeColumnTop(x);
+    if (!data.chunks) w.markGeneratedRange(0, w.width);
     w.findSpawn();
     return w;
   }

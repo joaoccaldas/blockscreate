@@ -48,6 +48,7 @@ export class Renderer {
 
     ctx.clearRect(0, 0, W, H);
     this.drawSky(era, dayFactor, camera, W, H);
+    if (world.eraId === 'cell') this.drawMicroscopeField(camera, W, H);
 
     // Visible tile range.
     const x0 = Math.floor(camera.x - camera.tilesX / 2) - 1;
@@ -160,6 +161,49 @@ export class Renderer {
     ctx.fill();
   }
 
+  drawMicroscopeField(camera, W, H) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    for (let i = 0; i < 36; i++) {
+      const depth = 0.25 + (i % 5) * 0.16;
+      const sx = (((hash(i, 11) * W * 1.5) - camera.x * 17 * depth + this.t * (7 + i % 6)) % (W + 160)) - 80;
+      const sy = (((hash(i, 12) * H * 1.25) - camera.y * 9 * depth + Math.sin(this.t + i) * 8) % (H + 120)) - 60;
+      const r = 5 + hash(i, 13) * 20;
+      ctx.globalAlpha = 0.08 + hash(i, 14) * 0.12;
+      ctx.strokeStyle = i % 4 === 0 ? '#ffd6ff' : '#76f7dd';
+      ctx.lineWidth = Math.max(1, r * 0.12);
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 0.16;
+    ctx.strokeStyle = '#b8fff2';
+    for (let i = 0; i < 9; i++) {
+      const y = H * (0.15 + i * 0.085) + Math.sin(this.t * 0.7 + i) * 10;
+      ctx.beginPath();
+      for (let x = -30; x <= W + 30; x += 18) {
+        const yy = y + Math.sin((x + camera.x * 22) * 0.018 + i) * 10;
+        if (x === -30) ctx.moveTo(x, yy);
+        else ctx.lineTo(x, yy);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.save();
+    const vignette = ctx.createRadialGradient(
+      W * 0.52, H * 0.48, Math.min(W, H) * 0.18,
+      W * 0.52, H * 0.48, Math.max(W, H) * 0.64,
+    );
+    vignette.addColorStop(0, 'rgba(255,255,255,0)');
+    vignette.addColorStop(0.68, 'rgba(4,18,32,0.08)');
+    vignette.addColorStop(1, 'rgba(0,0,0,0.36)');
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
   drawBlock(camera, world, tx, ty, id, T) {
     const ctx = this.ctx;
     const b = getBlock(id);
@@ -245,6 +289,20 @@ export class Renderer {
     if (player.form === 'cell') {
       const pulse = 1 + Math.sin(this.t * 5) * 0.08;
       ctx.save();
+      const sprite = this.sprites.cell;
+      if (sprite && sprite.complete && sprite.naturalWidth) {
+        ctx.imageSmoothingEnabled = false;
+        ctx.globalAlpha = 0.38;
+        ctx.fillStyle = '#76f7dd';
+        ctx.beginPath();
+        ctx.arc(sx, sy - h * 0.45, h * 0.68 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        const size = Math.max(w, h) * 1.55 * pulse;
+        ctx.drawImage(sprite, sx - size / 2, sy - h * 0.48 - size / 2, size, size);
+        ctx.restore();
+        return;
+      }
       ctx.globalAlpha = 0.95;
       ctx.fillStyle = 'rgba(118,247,221,0.26)';
       ctx.beginPath();

@@ -98,6 +98,11 @@ walking, nearby nutrients and mineral vents are absorbed automatically, and the
 HUD swaps survival labels toward life/stability. This makes the origin era feel
 like a different biological scale instead of a normal character in a tiny cave.
 
+The renderer now reinforces that scale with a microscope pass: translucent
+organelles, chemical strands, a vignette and a committed proto-cell sprite. The
+landing screen also uses generated pixel art that bridges first life, blocks
+and dinosaurs, so the game's premise is visible before the first click.
+
 The HUD now also exposes cell stability and the nearest chemical gradient. This
 gives the player a learnable loop: drift toward gradients, absorb chemistry,
 raise stability, build a membrane and evolve.

@@ -20,7 +20,7 @@ Ten improvements, why each matters, and how it was verified.
 
 ```bash
 npm test                 # runs every suite in test/
-node tools/gen-sprites.mjs   # regenerate enemy art (should be no-op / no diff)
+node tools/gen-sprites.mjs   # regenerate character + landing art (should be no-op / no diff)
 node tools/gen-icons.mjs     # regenerate app icons
 npm run serve            # http://localhost:8000
 ```
@@ -65,6 +65,14 @@ chemistry, membranes and proto-cell formation before evolution.
 Age of Dinosaurs now has stronger survival identity through pack/fear/bond
 systems. The next playtest should tune raptor pack damage and T-Rex fear so
 defenses feel valuable without making early dinosaur survival unfair.
+
+## v4.9 Microscopic Origin Readiness Note
+
+First Cell now reads as a microscopic environment instead of a tiny normal world:
+the player has a dedicated sprite, the renderer adds chemical/organism overlays,
+and the landing page has generated pixel art that shows the origin-to-dinosaur
+promise immediately. The next playtest should watch whether players understand
+why vent minerals, nutrients and membranes matter before the evolution gate.
 
 ## Known next steps
 

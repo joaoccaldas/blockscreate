@@ -69,6 +69,13 @@ BlocksCreate already has the right spine for "Minecraft meets Civilization": blo
 - Added chemical-gradient guidance toward nearby nutrients or mineral vents.
 - Connected absorption, stored resources, membrane building and proto-cell crafting to a visible stability model.
 
+## Implemented In Microscopic Origin Art Pass
+
+- Added a generated First Cell sprite so the opening form is a real asset, not a fallback shape.
+- Added a microscope renderer layer with drifting cells, chemical strands and a vignette in the origin era.
+- Added a generated pixel-art landing scene showing the journey from microscopic life to dinosaurs and block building.
+- Cached the new assets offline and expanded asset tests to validate the committed PNG contract.
+
 ## Implemented In Dinosaur Behavior Pass
 
 - Added raptor pack pressure that increases speed and contact damage.

@@ -1,13 +1,13 @@
 /**
  * Reproducible enemy sprite generator.
  *
- * Produces deterministic 32x32 RGBA pixel-art sprites for the hostile mobs that
- * previously rendered as plain colored boxes. Run:
+ * Produces deterministic RGBA pixel-art sprites for runtime characters and
+ * presentation art. Run:
  *
  *   node tools/gen-sprites.mjs
  *
- * Output lands in assets/generated/sprites/ and is committed, so the game has
- * no build/runtime dependency — this script just lets us regenerate art.
+ * Output lands in assets/generated/ and is committed, so the game has no
+ * build/runtime dependency — this script just lets us regenerate art.
  *
  * Sprites face RIGHT (the renderer mirrors for left-facing mobs) and sit on the
  * bottom edge so they align with the ground like the existing animal sprites.
@@ -16,7 +16,9 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { Pix } from './pnglib.mjs';
 
 const OUT = 'assets/generated/sprites';
+const LANDING_OUT = 'assets/generated/landing';
 mkdirSync(OUT, { recursive: true });
+mkdirSync(LANDING_OUT, { recursive: true });
 
 const S = 32;
 const px = (...args) => new Pix(S, S);
@@ -26,6 +28,116 @@ const shade = ([r, g, b], f) => [Math.round(r * f), Math.round(g * f), Math.roun
 
 function legs(p, color, y, xs) {
   for (const x of xs) p.rect(x, y, 3, 5, color);
+}
+
+// ---------- First Cell: translucent membrane + nucleus + drifting cilia ----------
+function cell() {
+  const p = px();
+  const glow = [118, 247, 221, 70];
+  const membrane = [255, 214, 255, 230];
+  const cytoplasm = [118, 247, 221, 168];
+  const inner = [184, 255, 242, 138];
+  const nucleus = [159, 102, 200, 255];
+  p.ellipse(16, 17, 13, 11, glow);
+  p.ellipse(16, 17, 10, 9, membrane);
+  p.ellipse(16, 17, 9, 8, cytoplasm);
+  p.ellipse(13, 15, 4, 3, inner);
+  p.ellipse(20, 18, 3, 3, nucleus);
+  p.ellipse(21, 17, 1, 1, [226, 190, 255, 255]);
+  for (let i = 0; i < 13; i++) {
+    const a = i * Math.PI * 2 / 13;
+    const x = Math.round(16 + Math.cos(a) * 12);
+    const y = Math.round(17 + Math.sin(a) * 10);
+    p.set(x, y, membrane);
+  }
+  p.set(9, 12, [255, 255, 255, 150]);
+  p.set(11, 11, [255, 255, 255, 120]);
+  p.set(24, 22, [64, 216, 205, 140]);
+  return p;
+}
+
+function blend(a, b, t, alpha = 255) {
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * t),
+    Math.round(a[1] + (b[1] - a[1]) * t),
+    Math.round(a[2] + (b[2] - a[2]) * t),
+    alpha,
+  ];
+}
+
+function line(p, x0, y0, x1, y1, color) {
+  const steps = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+  for (let i = 0; i <= steps; i++) {
+    const t = steps ? i / steps : 0;
+    p.set(Math.round(x0 + (x1 - x0) * t), Math.round(y0 + (y1 - y0) * t), color);
+  }
+}
+
+function landingOrigin() {
+  const w = 960;
+  const h = 540;
+  const p = new Pix(w, h);
+  const top = [9, 24, 45];
+  const bottom = [18, 77, 83];
+  for (let y = 0; y < h; y++) {
+    const c = blend(top, bottom, y / h);
+    p.rect(0, y, w, 1, c);
+  }
+
+  // Microscopic water, vents and chemical gradients on the left.
+  for (let i = 0; i < 54; i++) {
+    const x = Math.round((i * 83) % 610);
+    const y = Math.round(35 + ((i * 131) % 430));
+    const r = 5 + (i % 7);
+    p.ellipse(x, y, r, r, [119, 247, 221, 26 + (i % 4) * 12]);
+  }
+  for (let i = 0; i < 16; i++) {
+    const x = 40 + i * 32;
+    line(p, x, 430, x + 55, 320 + (i % 5) * 18, [176, 255, 230, 50]);
+    line(p, x + 1, 430, x + 56, 320 + (i % 5) * 18, [176, 255, 230, 35]);
+  }
+  p.rect(0, 430, 500, 110, [17, 83, 75, 255]);
+  for (let x = 0; x < 500; x += 26) {
+    const y = 430 + ((x * 7) % 45);
+    p.ellipse(x, y, 26, 13, [45, 136, 103, 220]);
+  }
+  for (let i = 0; i < 9; i++) {
+    const x = 58 + i * 48;
+    p.rect(x, 404 - (i % 3) * 8, 18, 80, [56, 77, 85, 255]);
+    p.rect(x + 3, 392 - (i % 3) * 8, 12, 18, [154, 217, 221, 210]);
+    p.ellipse(x + 9, 388 - (i % 3) * 8, 20, 8, [118, 247, 221, 60]);
+  }
+  p.ellipse(210, 245, 96, 78, [255, 214, 255, 150]);
+  p.ellipse(210, 245, 84, 68, [112, 240, 220, 136]);
+  p.ellipse(176, 225, 36, 24, [184, 255, 242, 100]);
+  p.ellipse(252, 260, 26, 22, [159, 102, 200, 245]);
+  p.ellipse(260, 252, 8, 7, [226, 190, 255, 230]);
+
+  // The right side hints at the next scale: blocks, land and dinosaur danger.
+  p.rect(500, 350, 460, 190, [45, 95, 60, 255]);
+  for (let x = 500; x < 960; x += 40) {
+    const y = 348 + ((x * 3) % 34);
+    p.rect(x, y, 40, 38, [89, 145, 72, 255]);
+    p.rect(x, y + 30, 40, 80, [77, 62, 50, 255]);
+  }
+  p.rect(640, 262, 210, 72, [78, 100, 54, 255]);
+  p.ellipse(820, 236, 48, 34, [78, 100, 54, 255]);
+  p.rect(846, 244, 74, 24, [78, 100, 54, 255]);
+  p.rect(668, 318, 24, 92, [54, 70, 42, 255]);
+  p.rect(748, 316, 24, 94, [54, 70, 42, 255]);
+  p.rect(560, 265, 100, 28, [78, 100, 54, 255]);
+  p.rect(534, 252, 38, 18, [54, 70, 42, 255]);
+  p.set(850, 226, [255, 214, 82, 255]);
+  for (let i = 0; i < 5; i++) p.rect(870 + i * 8, 266, 4, 4, [242, 238, 210, 255]);
+
+  // Pixel sun/moon portal between biological and civilization scales.
+  p.ellipse(520, 190, 76, 76, [244, 210, 74, 55]);
+  p.ellipse(520, 190, 52, 52, [244, 210, 74, 125]);
+  for (let i = 0; i < 22; i++) {
+    const a = i * Math.PI * 2 / 22;
+    line(p, 520 + Math.cos(a) * 60, 190 + Math.sin(a) * 60, 520 + Math.cos(a) * 92, 190 + Math.sin(a) * 92, [244, 210, 74, 65]);
+  }
+  return p;
 }
 
 // ---------- Wolf: low grey quadruped, ears + tail + red eye ----------
@@ -204,7 +316,7 @@ function rex() {
   return p;
 }
 
-const sprites = { stego, trike, raptor, rex, wolf, boar, raider, bandit, machine };
+const sprites = { cell, stego, trike, raptor, rex, wolf, boar, raider, bandit, machine };
 let count = 0;
 for (const name in sprites) {
   const png = sprites[name]().toPNG();
@@ -212,4 +324,9 @@ for (const name in sprites) {
   console.log(`  ✓ ${OUT}/${name}.png (${png.length} bytes)`);
   count++;
 }
-console.log(`\nGenerated ${count} enemy sprites.`);
+
+const landing = landingOrigin().toPNG();
+writeFileSync(`${LANDING_OUT}/origin-to-dinos.png`, landing);
+console.log(`  ✓ ${LANDING_OUT}/origin-to-dinos.png (${landing.length} bytes)`);
+
+console.log(`\nGenerated ${count} character sprites and 1 landing scene.`);

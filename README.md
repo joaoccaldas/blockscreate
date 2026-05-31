@@ -7,7 +7,8 @@ A browser-based block-building civilization history sandbox. Mine, build, surviv
 - Block placement, mining, crafting, inventory and survival
 - Era-specific progression with mandatory and optional mastery goals
 - First Cell origin era: gather nutrients, collect vent minerals, form a lipid
-  membrane, stabilize a proto-cell, then evolve into the Age of Dinosaurs
+  membrane, stabilize a proto-cell, then evolve into the Age of Dinosaurs, with
+  a microscopic view, chemical strands, drifting bubbles and a dedicated cell sprite
 - Age of Dinosaurs survival era: survive among living dinosaurs (stegosaurus,
   triceratops, raptor, T-Rex), tame fire, build shelter, and endure meteor
   showers that climax in an asteroid impact (craters terrain + damages)
@@ -31,7 +32,7 @@ A browser-based block-building civilization history sandbox. Mine, build, surviv
   settlement mastery goals
 - Chunk-indexed worlds with deterministic era biomes and modified-chunk
   snapshots, preserving current saves while moving toward true infinite worlds
-- Generated pixel-art sprites and terrain textures
+- Generated pixel-art sprites, terrain textures and a full landing scene
 - Local save/load plus GitHub Pages deployment
 
 ## Getting Started

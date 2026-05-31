@@ -1,6 +1,6 @@
 {
   "name": "blockscreate",
-  "version": "4.8.0",
+  "version": "4.9.0",
   "description": "A 2D pseudo-3D Minecraft-meets-Civilization history sandbox that plays across the ages.",
   "type": "module",
   "private": true,

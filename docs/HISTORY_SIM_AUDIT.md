@@ -5,8 +5,9 @@
 BlocksCreate is now a modular historical sandbox, but not yet the complete vision.
 
 - **World generation:** expandable persistent worlds. The map starts finite (`320x110`) but grows horizontally near edges while preserving edits. True chunk streaming is still next.
-- **Persistence:** edited worlds, civilization stats, objectives, discoveries, structures and powerups persist in saves.
+- **Persistence:** edited worlds, civilization stats, objectives, discoveries, structures, historical clues and powerups persist in saves.
 - **Era specificity:** eras now have manifests for historical framing, hazards, animals, clues, mastery, branches and player form.
+- **Physical clues:** First Humans can generate clue blocks such as fossil beds, meteor shards, handprints and standing stones.
 - **Progression:** portals require both CP and mandatory goals. Optional mastery goals grant benefits without blocking advancement.
 - **Historical consistency:** First Humans uses dinosaurs as fossils, clues and alternate-history echoes, not as ordinary historical coexistence.
 
@@ -18,6 +19,7 @@ BlocksCreate is now a modular historical sandbox, but not yet the complete visio
 - Added advancement gating through `game.canAdvance()`.
 - Improved HUD clarity with era story text, mastery count and explicit gate reason.
 - Documented historical/alternate-history branches for each era.
+- Added `HistoricalClueLog` so clue blocks become journal entries and branch pressure.
 
 ## Next Technical Frontier
 

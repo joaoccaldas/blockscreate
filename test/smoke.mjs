@@ -10,7 +10,7 @@ import { Inventory } from '../src/systems/Inventory.js';
 import { Civilization } from '../src/systems/Civilization.js';
 import { craft, availableRecipes, canCraft } from '../src/systems/Crafting.js';
 import { RECIPES } from '../src/core/recipes.js';
-import { isSolid, AIR, blockId, dropsOf } from '../src/core/blocks.js';
+import { isSolid, AIR, blockId, dropsOf, BLOCK_BY_NAME } from '../src/core/blocks.js';
 import { ObjectiveTracker } from '../src/systems/Objectives.js';
 import { getEra } from '../src/core/eras.js';
 import { getEraManifest } from '../src/core/eraManifests.js';
@@ -29,6 +29,9 @@ assert.ok(world.spawn.y > 0 && world.spawn.y < world.height, 'spawn inside world
 assert.ok(isSolid(world.get(world.spawn.x, world.spawn.y + 1)), 'ground beneath spawn');
 assert.ok(world.grid.includes(blockId('clay')), 'world includes clay deposits');
 assert.ok(world.grid.includes(blockId('gravel')), 'world includes gravel seams');
+assert.ok(world.grid.includes(blockId('fossil_bed')) || world.grid.includes(blockId('meteor_shard')) ||
+  world.grid.includes(blockId('standing_stone')) || world.grid.includes(blockId('charcoal_handprint')),
+'first era includes at least one historical clue');
 ok('world generates terrain + valid spawn');
 
 // --- RLE round-trip ---
@@ -124,6 +127,7 @@ const manifest = getEraManifest('stone');
 assert.strictEqual(era.name, 'First Humans');
 assert.ok(manifest.historicalClues.includes('fossil_bed'), 'first humans has fossil clue metadata');
 assert.ok(manifest.branches.some((b) => b.id === 'saurian_echo'), 'alternate-history branch is data-driven');
+assert.ok(BLOCK_BY_NAME.fossil_bed.clue === 'fossil_bed', 'clue blocks map to clue ids');
 ok('era manifests provide historical context and branches');
 
 console.log(`\nAll ${passed} smoke checks passed.`);

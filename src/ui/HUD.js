@@ -41,6 +41,7 @@ export class HUD {
         <div class="civ-row"><span>🏛️ Population</span><b id="popVal">1</b></div>
         <div class="civ-row"><span>✨ Civ Points</span><b id="cpVal">0</b></div>
         <div class="civ-row"><span>🏘️ Settlement</span><b id="settleVal">0</b></div>
+        <div class="civ-row"><span>🔎 Clues</span><b id="clueVal">0</b></div>
         <div class="civ-row"><span>⭐ Mastery</span><b id="masteryVal">0/0</b></div>
         <div class="civ-progress"><div id="advanceBar" class="advance-fill"></div></div>
         <div id="advanceLabel" class="advance-label"></div>
@@ -207,6 +208,7 @@ export class HUD {
     this.el('popVal').textContent = game.civ.population;
     this.el('cpVal').textContent = Math.floor(game.civ.cp);
     this.el('settleVal').textContent = game.civ.settlementScore();
+    this.el('clueVal').textContent = game.clues?.count?.() || 0;
     const status = game.advancementStatus?.() || {};
     this.el('masteryVal').textContent = `${status.masteryDone || 0}/${status.masteryTotal || 0}`;
     const prog = game.civ.advanceProgress();
@@ -249,14 +251,16 @@ export class HUD {
     const list = this.el('discoveryList');
     const structures = game.structures?.list?.() || [];
     const discoveries = game.discoveries?.list?.() || [];
-    const visible = structures.length || discoveries.length;
+    const clues = game.clues?.list?.() || [];
+    const visible = structures.length || discoveries.length || clues.length;
     panel.classList.toggle('hidden', !visible);
     if (!visible) return;
     const rows = [
       ...structures.slice(-3).map((s) => `<div class="obj-item"><span class="obj-ic">${s.icon}</span>${s.label}</div>`),
+      ...clues.slice(-3).map((c) => `<div class="obj-item clue"><span class="obj-ic">${c.icon}</span>${c.label}</div>`),
       ...discoveries.slice(-3).map((d) => `<div class="obj-item done"><span class="obj-ic">${d.icon}</span>${d.label}</div>`),
     ].slice(-5);
-    list.innerHTML = rows.join('') + `<div class="obj-count">${structures.length} structures · ${discoveries.length} secrets</div>`;
+    list.innerHTML = rows.join('') + `<div class="obj-count">${structures.length} structures · ${clues.length} clues · ${discoveries.length} secrets</div>`;
   }
 
   renderPowerups(game) {

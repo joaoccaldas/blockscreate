@@ -25,7 +25,7 @@ export const DISCOVERIES = [
     icon: '🕳️',
     label: 'Deep Delver',
     reward: { cp: 30, powerup: 'miners_charm' },
-    check: (g) => g.civ.deepestMine >= g.world.height - 22,
+    check: (g) => g.civ.deepestMine >= g.world.height - 22 || g.clues?.has('fossil_bed'),
   },
   {
     id: 'sky_builder',
@@ -47,6 +47,13 @@ export const DISCOVERIES = [
     label: 'Portal Architect',
     reward: { cp: 50, powerup: 'time_shard' },
     check: (g) => g.structures.has('portal_ring'),
+  },
+  {
+    id: 'saurian_echo',
+    icon: '🦴',
+    label: 'Saurian Echo',
+    reward: { cp: 40, powerup: 'time_shard' },
+    check: (g) => g.clues?.has('fossil_bed') && g.clues?.has('meteor_shard'),
   },
   {
     id: 'animal_friend',
@@ -85,4 +92,3 @@ export class DiscoveryLog {
     return [...this.unlocked];
   }
 }
-

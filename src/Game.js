@@ -12,6 +12,7 @@ import { Civilization } from './systems/Civilization.js';
 import { craft } from './systems/Crafting.js';
 import { ObjectiveTracker } from './systems/Objectives.js';
 import { DiscoveryLog } from './systems/Discoveries.js';
+import { HistoricalClueLog, clueForBlock } from './systems/HistoricalClues.js';
 import { StructureTracker } from './systems/Structures.js';
 import { PowerupManager } from './systems/Powerups.js';
 import { Camera } from './render/Camera.js';
@@ -65,6 +66,7 @@ export class Game {
     this.objectives = new ObjectiveTracker(eraId);
     this.structures = new StructureTracker();
     this.discoveries = new DiscoveryLog();
+    this.clues = new HistoricalClueLog();
     this.powerups = new PowerupManager();
     this.mobs = [];
     this._grantStarter();
@@ -86,6 +88,7 @@ export class Game {
     this.objectives = new ObjectiveTracker(this.eraId, save.objectives || []);
     this.structures = new StructureTracker(save.structures || []);
     this.discoveries = new DiscoveryLog(save.discoveries || []);
+    this.clues = new HistoricalClueLog(save.clues || []);
     this.powerups = new PowerupManager(save.powerups || []);
     this.mobs = (save.mobs || []).map((m) => Mob.load(m));
     this.animalPeaceTime = save.animalPeaceTime || 0;
@@ -502,11 +505,26 @@ export class Game {
     this.world.set(x, y, AIR);
     if (block.colors) this.particles.burst(x + 0.5, y + 0.5, block.colors.base, 10);
     this.audio?.play('break');
+    this._discoverClue(block);
     const drops = dropsOf(block.id);
     if (this.mode === MODE.SURVIVAL) {
       for (const drop of drops) this.inventory.add(drop, 1);
     }
     this.civ.onMine(block.name, y);
+  }
+
+  _discoverClue(block) {
+    const id = clueForBlock(block);
+    if (!id || !this.clues) return;
+    const clue = this.clues.discover(id);
+    if (!clue) return;
+    if (this.mode === MODE.SURVIVAL && clue.reward) {
+      this.civ.addCP(clue.reward * this.powerups.multiplier('cpMultiplier'));
+    }
+    this.audio?.play('objective');
+    this.particles.fountain(this.player.x, this.player.y - 1,
+      ['#f4d24a', '#8e6bd6', '#d9cfb7', '#fff'], 22);
+    this.hud?.bigToast(`${clue.icon} <b>${clue.label}</b><br><small>${clue.text}</small>`, 3800);
   }
 
   _tryPlace(x, y) {

@@ -62,6 +62,7 @@ export class World {
     for (let x = 0; x < this.width; x++) this.generateColumn(x, ID);
     for (let x = 0; x < this.width; x++) this.carveColumn(x, ID, getEra(this.eraId));
     this.scatterTrees(ID, 0, this.width);
+    this.scatterClues(ID, 0, this.width);
     this.findSpawn();
   }
 
@@ -122,6 +123,7 @@ export class World {
       else if (era.order >= 1 && r > 0.969 && r < 0.974 && depth > 12) this.grid[i] = ID.tin;
       else if (era.order >= 2 && r > 0.962 && r < 0.968 && depth > 18) this.grid[i] = ID.iron;
       else if (era.order >= 2 && r > 0.958 && r < 0.961 && depth > 26) this.grid[i] = ID.gold;
+      else if (era.id === 'stone' && r > 0.955 && r < 0.957 && depth > 16) this.grid[i] = ID.fossil;
     }
   }
 
@@ -155,6 +157,8 @@ export class World {
     this.spawn.x += left;
     this.scatterTrees(ID, 0, left);
     this.scatterTrees(ID, left + oldWidth, right);
+    this.scatterClues(ID, 0, left);
+    this.scatterClues(ID, left + oldWidth, right);
     return { left, right };
   }
 
@@ -191,6 +195,26 @@ export class World {
     }
     for (let x = Math.max(0, start - 2); x < Math.min(this.width, start + count + 2); x++) {
       this.recomputeColumnTop(x);
+    }
+  }
+
+  scatterClues(ID, start = 0, count = this.width) {
+    if (this.eraId !== 'stone') return;
+    const end = Math.min(this.width - 4, start + count);
+    for (let x = Math.max(4, start); x < end; x++) {
+      const gx = this.globalX(x);
+      const surf = this.heightMap[x];
+      if (hash2(gx, 31, this.seed + 1111) < 0.006 && this.get(x, surf - 1) === AIR) {
+        this.set(x, surf - 1, ID.meteor);
+      }
+      if (hash2(gx, 37, this.seed + 2222) < 0.008 && this.get(x, surf) !== AIR && this.get(x, surf - 1) === AIR) {
+        this.set(x, surf - 1, ID.standingStone);
+        if (this.inBounds(x, surf - 2)) this.set(x, surf - 2, ID.standingStone);
+      }
+      if (hash2(gx, 41, this.seed + 3333) < 0.006) {
+        const y = Math.max(4, surf - 2);
+        if (this.get(x, y) === AIR) this.set(x, y, ID.handprint);
+      }
     }
   }
 
@@ -250,6 +274,11 @@ function blockIds() {
     leaves: blockId('leaves'),
     clay: blockId('clay'),
     gravel: blockId('gravel'),
+    fossil: blockId('fossil_bed'),
+    meteor: blockId('meteor_shard'),
+    handprint: blockId('charcoal_handprint'),
+    standingStone: blockId('standing_stone'),
+    hideWall: blockId('hide_wall'),
   };
 }
 

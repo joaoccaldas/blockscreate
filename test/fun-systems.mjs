@@ -8,6 +8,7 @@ import { blockId, AIR } from '../src/core/blocks.js';
 import { StructureTracker, scan } from '../src/systems/Structures.js';
 import { DiscoveryLog } from '../src/systems/Discoveries.js';
 import { PowerupManager } from '../src/systems/Powerups.js';
+import { HistoricalClueLog } from '../src/systems/HistoricalClues.js';
 import { Civilization } from '../src/systems/Civilization.js';
 
 let passed = 0;
@@ -61,6 +62,15 @@ const found = discoveries.evaluate(fake);
 assert.ok(found.some((d) => d.id === 'first_shelter'), 'first shelter discovery');
 assert.strictEqual(discoveries.evaluate(fake).length, 0, 'discovery is one-shot');
 ok('hidden discoveries unlock once from structures');
+
+// --- Historical clues ---
+const clues = new HistoricalClueLog();
+const fossil = clues.discover('fossil_bed');
+assert.strictEqual(fossil.branch, 'saurian_echo');
+assert.ok(clues.has('fossil_bed'), 'clue is recorded');
+assert.strictEqual(clues.discover('fossil_bed'), null, 'clue is one-shot');
+assert.strictEqual(clues.branchCounts().saurian_echo, 1, 'branch pressure counted');
+ok('historical clues unlock journal entries and branch metadata');
 
 // --- Powerups ---
 const powerups = new PowerupManager();

@@ -54,6 +54,14 @@ const defs = [
   { id: 19, name: 'campfire',   label: 'Campfire',     solid: true,  hardness: 0.3, tool: 'hand',    colors: { base: '#a8521f', top: '#ff7b29', side: '#7d3c16' }, era: 'stone', light: 0.8 },
   { id: 20, name: 'clay',       label: 'Clay Deposit', solid: true,  hardness: 0.7, tool: 'shovel',  colors: { base: '#9a8d7a', top: '#afa18a', side: '#807462' }, era: 'stone', drops: 'clay' },
   { id: 21, name: 'gravel',     label: 'Gravel',       solid: true,  hardness: 0.7, tool: 'shovel',  colors: { base: '#77756f', top: '#8a8882', side: '#62605b' }, era: 'stone', drops: [{ id: 'flint', chance: 0.4 }, { id: 'gravel', chance: 1 }] },
+
+  // Historical clues / decorations
+  { id: 22, name: 'fossil_bed',         label: 'Fossil Bed',         solid: true,  hardness: 1.4, tool: 'pickaxe', colors: { base: '#8d826f', top: '#d9cfb7', side: '#6f6658' }, era: 'stone', drops: 'fossil_bed', clue: 'fossil_bed' },
+  { id: 23, name: 'meteor_shard',       label: 'Meteor Shard',       solid: true,  hardness: 2.0, tool: 'pickaxe', colors: { base: '#51485c', top: '#8e6bd6', side: '#2e2938' }, era: 'stone', drops: 'meteor_shard', clue: 'meteor_shard', light: 0.35 },
+  { id: 24, name: 'charcoal_handprint', label: 'Charcoal Handprint', solid: false, hardness: 0.2, tool: 'hand',    colors: { base: '#2c2520', top: '#3a3028', side: '#181411' }, era: 'stone', drops: 'charcoal_handprint', clue: 'charcoal_handprint' },
+  { id: 25, name: 'standing_stone',     label: 'Standing Stone',     solid: true,  hardness: 2.2, tool: 'pickaxe', colors: { base: '#6c6f68', top: '#85887f', side: '#4f524c' }, era: 'stone', drops: 'standing_stone', clue: 'migration_marker' },
+  { id: 26, name: 'hide_wall',          label: 'Hide Wall',          solid: true,  hardness: 0.5, tool: 'hand',    colors: { base: '#9a6a42', top: '#b78254', side: '#704a2c' }, era: 'stone' },
+  { id: 27, name: 'bone_pile',          label: 'Bone Pile',          solid: true,  hardness: 0.6, tool: 'hand',    colors: { base: '#cfc5a8', top: '#eee3c5', side: '#9b9077' }, era: 'stone', drops: 'bone_pile' },
 ];
 
 // fix accidental typo above without breaking the table layout

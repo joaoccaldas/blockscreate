@@ -7,6 +7,7 @@ A browser-based block-building civilization history sandbox. Mine, build, surviv
 - Block placement, mining, crafting, inventory and survival
 - Era-specific progression with mandatory and optional mastery goals
 - First Humans era with shelter, fire, tools, food, fossil clues and alternate-history hooks
+- Physical historical clue blocks such as fossils, meteor shards, handprints and standing stones
 - Structure recognition for huts, camps, workshops, watchtowers and portal rings
 - Hidden discoveries and timed powerups
 - Generated pixel-art sprites and terrain textures

@@ -24,6 +24,7 @@ export const SaveManager = {
       objectives: game.objectives ? game.objectives.serialize() : [],
       structures: game.structures ? game.structures.serialize() : [],
       discoveries: game.discoveries ? game.discoveries.serialize() : [],
+      clues: game.clues ? game.clues.serialize() : [],
       powerups: game.powerups ? game.powerups.serialize() : [],
       animalPeaceTime: game.animalPeaceTime || 0,
     };

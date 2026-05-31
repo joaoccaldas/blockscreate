@@ -38,7 +38,7 @@ export const ERAS = [
     sky: { day: ['#9bd0f5', '#e9d9b0'], night: ['#101a38', '#243a66'] },
     ground: '#8a5f38',
     starter: ['stone_pickaxe'],
-    fullyPlayable: false,
+    fullyPlayable: true,
   },
   {
     id: 'iron',
@@ -51,7 +51,7 @@ export const ERAS = [
     sky: { day: ['#a9cbe8', '#d6c79f'], night: ['#0e1730', '#2a3a5e'] },
     ground: '#6a6a6a',
     starter: ['bronze_pickaxe'],
-    fullyPlayable: false,
+    fullyPlayable: true,
   },
   {
     id: 'industrial',
@@ -64,7 +64,7 @@ export const ERAS = [
     sky: { day: ['#b8b6ac', '#d9cdb8'], night: ['#15161c', '#33303a'] },
     ground: '#555',
     starter: ['iron_pickaxe'],
-    fullyPlayable: false,
+    fullyPlayable: true,
   },
 ];
 

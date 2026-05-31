@@ -48,6 +48,12 @@ than the dinosaur era. The main remaining tuning need is feel: the cell form
 should eventually get distinct movement/visuals so it feels like swimming,
 absorbing and self-organizing rather than only mining smaller blocks.
 
+## v4.6 Cell Feel Readiness Note
+
+The cell now drifts, pulses and absorbs nearby resources. The next risk is
+balance: automatic absorption should feel generous, but not so fast that the
+origin era ends before the player understands nutrients, vents and membranes.
+
 ## Known next steps
 
 - Complete true chunk streaming (current saves now include chunk metadata and modified chunk snapshots, but rendering still uses a dense loaded window).

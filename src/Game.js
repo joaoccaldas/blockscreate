@@ -22,7 +22,7 @@ import { Particles } from './render/Particles.js';
 import { Input, isTouch } from './input/Input.js';
 import { HUD } from './ui/HUD.js';
 import { SaveManager } from './persistence/SaveManager.js';
-import { getBlock, dropsOf, isSolid, AIR } from './core/blocks.js';
+import { getBlock, dropsOf, isSolid, AIR, blockId } from './core/blocks.js';
 import { getItem, isPlaceable } from './core/items.js';
 import { getEra, nextEra } from './core/eras.js';
 import { getEraTheme, weightedPick } from './core/eraTheme.js';
@@ -123,6 +123,7 @@ export class Game {
     if (this.eraId === 'cell') {
       this.player.w = 0.55;
       this.player.h = 0.9;
+      this.player.form = 'cell';
     }
   }
 
@@ -426,9 +427,13 @@ export class Game {
 
     if (!menus) {
       const wasGround = this.player.onGround;
-      this.input.state.modifiers = { hungerDrain: this.powerups.multiplier('hungerDrain') };
+      this.input.state.modifiers = {
+        hungerDrain: this.powerups.multiplier('hungerDrain'),
+        cellStability: this.eraId === 'cell',
+      };
       this.player.update(dt, this.world, this.input.state, this.mode);
       this._expandWorldIfNeeded();
+      this._absorbCellResources(dt);
       this._footsteps(dt, wasGround);
       this._handleInteraction(dt);
     }
@@ -571,6 +576,34 @@ export class Game {
         this.audio?.play('step');
         this.particles.spawn(p.x, p.y, -Math.sign(p.vx) * 1.5, -1,
           { color: 'rgba(180,160,140,0.8)', life: 0.3, size: 0.08, gravity: 14 });
+      }
+    }
+  }
+
+  _absorbCellResources(dt) {
+    if (this.mode !== MODE.SURVIVAL || this.eraId !== 'cell') return;
+    this.cellAbsorbCooldown = Math.max(0, (this.cellAbsorbCooldown || 0) - dt);
+    if (this.cellAbsorbCooldown > 0) return;
+
+    const targets = new Map([
+      [blockId('nutrient_blob'), { item: 'nutrient_blob', cp: 1.5, color: '#b8ff85' }],
+      [blockId('mineral_vent'), { item: 'mineral_vent', cp: 2.5, color: '#9bd6e0' }],
+    ]);
+    const px = Math.round(this.player.x);
+    const py = Math.round(this.player.y - this.player.h / 2);
+    for (let y = py - 2; y <= py + 2; y++) {
+      for (let x = px - 2; x <= px + 2; x++) {
+        const def = targets.get(this.world.get(x, y));
+        if (!def || Math.hypot(x + 0.5 - this.player.x, y + 0.5 - this.player.y) > 2.1) continue;
+        this.world.set(x, y, AIR);
+        this.inventory.add(def.item, 1);
+        this.civ.addCP(def.cp * this.powerups.multiplier('cpMultiplier'));
+        this.player.eat(def.item === 'nutrient_blob' ? 8 : 3);
+        this.particles.fountain(x + 0.5, y + 0.5, [def.color, '#76f7dd', '#fff'], 12);
+        this.audio?.play('mine');
+        this.hud?.toast(def.item === 'nutrient_blob' ? 'Absorbed nutrients' : 'Absorbed vent minerals', 900);
+        this.cellAbsorbCooldown = 0.35;
+        return;
       }
     }
   }

@@ -242,6 +242,25 @@ export class Renderer {
     const px = sx - w / 2;
     const py = sy - h;
 
+    if (player.form === 'cell') {
+      const pulse = 1 + Math.sin(this.t * 5) * 0.08;
+      ctx.save();
+      ctx.globalAlpha = 0.95;
+      ctx.fillStyle = 'rgba(118,247,221,0.26)';
+      ctx.beginPath();
+      ctx.arc(sx, sy - h * 0.45, h * 0.58 * pulse, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffd6ff';
+      ctx.lineWidth = Math.max(2, T * 0.08);
+      ctx.stroke();
+      ctx.fillStyle = '#9f66c8';
+      ctx.beginPath();
+      ctx.arc(sx + w * 0.14, sy - h * 0.5, h * 0.13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
+
     // Shadow
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.beginPath();

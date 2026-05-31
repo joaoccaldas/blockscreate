@@ -28,18 +28,27 @@ export class Player {
   /** Advance physics by dt seconds against the world. */
   update(dt, world, input, mode) {
     const flying = mode === MODE.CREATIVE && input.fly;
+    const swimmingCell = world.eraId === 'cell' && !flying;
 
     // Horizontal intent
     let ax = 0;
     if (input.left) ax -= 1;
     if (input.right) ax += 1;
     if (ax !== 0) this.facing = ax;
-    this.vx = ax * C.MOVE_SPEED;
+    this.vx = ax * C.MOVE_SPEED * (swimmingCell ? 0.62 : 1);
 
     if (flying) {
       this.vy = 0;
       if (input.up) this.vy = -C.MOVE_SPEED;
       if (input.down) this.vy = C.MOVE_SPEED;
+    } else if (swimmingCell) {
+      let ay = 0;
+      if (input.up) ay -= 1;
+      if (input.down) ay += 1;
+      this.vy += ay * C.MOVE_SPEED * 8 * dt;
+      this.vy += Math.sin((world.clock || 0) * 0.9 + this.x) * dt * 2.2;
+      this.vy *= Math.max(0, 1 - dt * 5.5);
+      this.vy = Math.max(-C.MOVE_SPEED * 0.8, Math.min(C.MOVE_SPEED * 0.8, this.vy));
     } else {
       // Gravity
       this.vy += C.GRAVITY * dt;
@@ -109,7 +118,8 @@ export class Player {
   updateSurvival(dt, modifiers = {}) {
     // Hunger slowly drains; energy regenerates when fed.
     const hungerDrain = modifiers.hungerDrain ?? 1;
-    this.hunger = Math.max(0, this.hunger - dt * 0.6 * hungerDrain);
+    const cellStability = modifiers.cellStability ? 0.34 : 1;
+    this.hunger = Math.max(0, this.hunger - dt * 0.6 * hungerDrain * cellStability);
     if (this.hunger <= 0) {
       this.health = Math.max(0, this.health - dt * 2);
     } else if (this.health < 100 && this.hunger > 40) {
@@ -126,6 +136,7 @@ export class Player {
     return {
       x: this.x, y: this.y, vx: this.vx, vy: this.vy,
       health: this.health, hunger: this.hunger, energy: this.energy, facing: this.facing,
+      form: this.form || null,
     };
   }
 

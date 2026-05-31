@@ -56,6 +56,7 @@ const { Settings } = await import('../src/persistence/Settings.js');
 const { Audio } = await import('../src/systems/Audio.js');
 const { MODE } = await import('../src/core/constants.js');
 const { SaveManager } = await import('../src/persistence/SaveManager.js');
+const { blockId } = await import('../src/core/blocks.js');
 
 let passed = 0;
 const ok = (m) => { console.log(`  ✓ ${m}`); passed++; };
@@ -79,6 +80,9 @@ const gCell = newGame();
 gCell.newWorld('cell', MODE.SURVIVAL);
 if (gCell.eraId !== 'cell') throw new Error('cell era did not start');
 if (gCell.player.h >= 1.8) throw new Error('cell player form was not applied');
+gCell.world.set(Math.round(gCell.player.x) + 1, Math.round(gCell.player.y), blockId('nutrient_blob'));
+gCell.update(0.2);
+if (gCell.inventory.count('nutrient_blob') < 1) throw new Error('cell did not absorb nearby nutrients');
 gCell.inventory.add('nutrient_blob', 3);
 gCell.inventory.add('mineral_vent', 1);
 gCell.inventory.add('lipid_membrane', 4);

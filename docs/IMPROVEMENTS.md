@@ -55,3 +55,10 @@ BlocksCreate already has the right spine for "Minecraft meets Civilization": blo
 - Added science-inspired origin-of-life framing: nutrients, warm vents, membranes and proto-cell stabilization.
 - Added cell-era blocks, recipes, objectives, biome hooks and a smaller player form.
 - Updated onboarding and how-to copy so the game starts simple and gains complexity as eras unlock.
+
+## Implemented In Cell Feel Pass
+
+- Added drifting/swimming movement for First Cell.
+- Added automatic absorption of nearby nutrient blobs and mineral vents.
+- Added a pulsing cell rendering path instead of using the humanoid sprite.
+- Shifted HUD labels in First Cell from normal survival toward life/stability.

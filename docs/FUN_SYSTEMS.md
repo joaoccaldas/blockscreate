@@ -93,6 +93,11 @@ opens the broader survival/building simulation with dinosaurs, fire, shelter,
 weapons and hazards. This supports the design principle that the game grows in
 complexity as the player evolves.
 
+The cell era now also changes the feel of play: the player drifts instead of
+walking, nearby nutrients and mineral vents are absorbed automatically, and the
+HUD swaps survival labels toward life/stability. This makes the origin era feel
+like a different biological scale instead of a normal character in a tiny cave.
+
 ## Save Format
 
 The save now includes:

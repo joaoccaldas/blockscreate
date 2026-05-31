@@ -8,6 +8,7 @@ BlocksCreate is now a modular historical sandbox, but not yet the complete visio
 - **Persistence:** edited worlds, generated/modified chunk metadata, civilization stats, objectives, discoveries, structures, historical clues and powerups persist in saves.
 - **Era specificity:** eras now have manifests for historical framing, hazards, animals, clues, mastery, branches and player form.
 - **Origin era:** the progression now begins with **First Cell**, a simplified origin-of-life era about nutrients, warm vents, membranes and proto-cell stabilization.
+- **Progressive interface:** First Cell uses smaller/pulsing player visuals, drifting movement, automatic absorption and life/stability HUD labels before later eras reveal broader survival/building verbs.
 - **Physical clues:** Age of Dinosaurs can generate clue blocks such as fossil beds, meteor shards, handprints and standing stones.
 - **World events:** Age of Dinosaurs now has cold-night pressure and meteor showers that place physical meteor shards.
 - **RPG encounters:** Age of Dinosaurs can trigger predator migrations and grazer herds; Early Cities can trigger droughts and raider scouts.

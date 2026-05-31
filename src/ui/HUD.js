@@ -31,8 +31,8 @@ export class HUD {
     const s = this.settings;
     this.root.innerHTML = `
       <div id="topbar">
-        <div class="stat"><span class="stat-label">❤️</span><div class="bar"><div id="healthBar" class="bar-fill health"></div></div></div>
-        <div class="stat"><span class="stat-label">🍖</span><div class="bar"><div id="hungerBar" class="bar-fill hunger"></div></div></div>
+        <div class="stat"><span id="healthIcon" class="stat-label">❤️</span><div class="bar"><div id="healthBar" class="bar-fill health"></div></div></div>
+        <div class="stat"><span id="hungerIcon" class="stat-label">🍖</span><div class="bar"><div id="hungerBar" class="bar-fill hunger"></div></div></div>
         <div id="eraBadge" class="era-badge"></div>
       </div>
 
@@ -246,6 +246,8 @@ export class HUD {
     const survival = game.mode === MODE.SURVIVAL;
     this.el('topbar').classList.toggle('creative', !survival);
     this.el('objPanel').classList.toggle('hidden', !survival);
+    this.el('healthIcon').textContent = game.eraId === 'cell' ? '🧬' : '❤️';
+    this.el('hungerIcon').textContent = game.eraId === 'cell' ? '⚗️' : '🍖';
 
     const era = getEra(game.eraId);
     this.el('eraBadge').textContent = `${era.icon} ${era.name}${survival ? '' : ' · Creative'}`;

@@ -16,7 +16,7 @@
  *   hardness mining time in seconds with bare hands (0 = instant)
  *   tool     preferred tool kind ('pickaxe'|'axe'|'shovel'|'hand')
  *   colors   { base, top, side } for the pseudo-3D shaded look
- *   drops    item id(s) produced when mined (defaults to the block's own name)
+ *   drops    item id, weighted list, or null (defaults to the block's own name)
  *   era      earliest era this block naturally generates / is craftable in
  *   light    light emitted (0..1), used for torches/fire later
  */
@@ -36,15 +36,15 @@ const defs = [
 
   // Wood / plants
   { id: 7,  name: 'log',        label: 'Wood Log',     solid: true,  hardness: 1.1, tool: 'axe',     colors: { base: '#7b5a31', top: '#caa56a', side: '#684c29' }, era: 'stone', drops: 'log' },
-  { id: 8,  name: 'leaves',     label: 'Leaves',       solid: true,  hardness: 0.2, tool: 'hand',    colors: { base: '#3f8a37', top: '#4ea043', side: '#347430' }, era: 'stone', drops: 'stick' },
+  { id: 8,  name: 'leaves',     label: 'Leaves',       solid: true,  hardness: 0.2, tool: 'hand',    colors: { base: '#3f8a37', top: '#4ea043', side: '#347430' }, era: 'stone', drops: [{ id: 'stick', chance: 0.45 }, { id: 'fiber', chance: 0.35 }] },
   { id: 9,  name: 'planks',     label: 'Wood Planks',  solid: true,  hardness: 1.0, tool: 'axe',     colors: { base: '#b78a4e', top: '#c89a5c', side: '#9e7740' }, era: 'stone' },
 
   // Ores
   { id: 10, name: 'coal_ore',   label: 'Coal Ore',     solid: true,  hardness: 2.2, tool: 'pickaxe', colors: { base: '#5a5a5a', top: '#6a6a6a', side: '#484848' }, era: 'stone', drops: 'coal', fleck: '#1a1a1a' },
-  { id: 11, name: 'copper_ore', label: 'Copper Ore',   solid: true,  hardness: 2.6, tool: 'pickaxe', colors: { base: '#857c6e', top: '#968b7b', side: '#6f675b' }, era: 'bronze', drops: 'copper', fleck: '#c87f4a' },
-  { id: 12, name: 'tin_ore',    label: 'Tin Ore',      solid: true,  hardness: 2.6, tool: 'pickaxe', colors: { base: '#8a8a86', top: '#9b9b96', side: '#727270' }, era: 'bronze', drops: 'tin', fleck: '#d8d8d0' },
-  { id: 13, name: 'iron_ore',   label: 'Iron Ore',     solid: true,  hardness: 3.2, tool: 'pickaxe', colors: { base: '#8a7f76', top: '#9a8e84', side: '#736a62' }, era: 'iron', drops: 'iron', fleck: '#d6b8a0' },
-  { id: 14, name: 'gold_ore',   label: 'Gold Ore',     solid: true,  hardness: 3.0, tool: 'pickaxe', colors: { base: '#8a8260', top: '#9c9470', side: '#726b4f' }, era: 'iron', drops: 'gold', fleck: '#f4d24a' },
+  { id: 11, name: 'copper_ore', label: 'Copper Ore',   solid: true,  hardness: 2.6, tool: 'pickaxe', colors: { base: '#857c6e', top: '#968b7b', side: '#6f675b' }, era: 'bronze', drops: 'copper_ore', fleck: '#c87f4a' },
+  { id: 12, name: 'tin_ore',    label: 'Tin Ore',      solid: true,  hardness: 2.6, tool: 'pickaxe', colors: { base: '#8a8a86', top: '#9b9b96', side: '#727270' }, era: 'bronze', drops: 'tin_ore', fleck: '#d8d8d0' },
+  { id: 13, name: 'iron_ore',   label: 'Iron Ore',     solid: true,  hardness: 3.2, tool: 'pickaxe', colors: { base: '#8a7f76', top: '#9a8e84', side: '#736a62' }, era: 'iron', drops: 'iron_ore', fleck: '#d6b8a0' },
+  { id: 14, name: 'gold_ore',   label: 'Gold Ore',     solid: true,  hardness: 3.0, tool: 'pickaxe', colors: { base: '#8a8260', top: '#9c9470', side: '#726b4f' }, era: 'iron', drops: 'gold_ore', fleck: '#f4d24a' },
 
   // Crafted / civilization building blocks
   { id: 15, name: 'cobblestone',label: 'Cobblestone',  solid: true,  hardness: 1.8, tool: 'pickaxe', colors: { base: '#6f6f6f', top: '#808080', side: '#5c5c5c' }, era: 'stone' },
@@ -52,6 +52,8 @@ const defs = [
   { id: 17, name: 'thatch',     label: 'Thatch Roof',  solid: true,  hardness: 0.4, tool: 'hand',    colors: { base: '#c2a martyr', top: '#d4b15a', side: '#a88f3f' }, era: 'stone' },
   { id: 18, name: 'torch',      label: 'Torch',        solid: false, hardness: 0,  tool: 'hand',    colors: { base: '#ffb347', top: '#ffd27a', side: '#e08a2a' }, era: 'stone', light: 0.9 },
   { id: 19, name: 'campfire',   label: 'Campfire',     solid: true,  hardness: 0.3, tool: 'hand',    colors: { base: '#a8521f', top: '#ff7b29', side: '#7d3c16' }, era: 'stone', light: 0.8 },
+  { id: 20, name: 'clay',       label: 'Clay Deposit', solid: true,  hardness: 0.7, tool: 'shovel',  colors: { base: '#9a8d7a', top: '#afa18a', side: '#807462' }, era: 'stone', drops: 'clay' },
+  { id: 21, name: 'gravel',     label: 'Gravel',       solid: true,  hardness: 0.7, tool: 'shovel',  colors: { base: '#77756f', top: '#8a8882', side: '#62605b' }, era: 'stone', drops: [{ id: 'flint', chance: 0.4 }, { id: 'gravel', chance: 1 }] },
 ];
 
 // fix accidental typo above without breaking the table layout
@@ -81,9 +83,21 @@ export function isSolid(id) {
   return !!(b && b.solid);
 }
 
-/** Item id dropped when a block is mined. */
+/** Backward-compatible primary item dropped when a block is mined. */
 export function dropOf(id) {
+  const drops = dropsOf(id, () => 0);
+  return drops[0] || null;
+}
+
+/** All item ids dropped when a block is mined. */
+export function dropsOf(id, rng = Math.random) {
   const b = BLOCKS[id];
-  if (!b) return null;
-  return b.drops || b.name;
+  if (!b) return [];
+  if (b.drops == null) return [b.name];
+  if (typeof b.drops === 'string') return [b.drops];
+  const out = [];
+  for (const d of b.drops) {
+    if ((d.chance ?? 1) >= 1 || rng() <= d.chance) out.push(d.id);
+  }
+  return out;
 }

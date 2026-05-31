@@ -32,7 +32,10 @@ globalThis.localStorage = {
   setItem: (k, v) => { store[k] = String(v); },
   removeItem: (k) => { delete store[k]; },
 };
-globalThis.navigator = { maxTouchPoints: 0 };
+Object.defineProperty(globalThis, 'navigator', {
+  value: { maxTouchPoints: 0 },
+  configurable: true,
+});
 globalThis.window = {
   addEventListener: noop,
   removeEventListener: noop,
@@ -98,5 +101,13 @@ g2.loadSave(json);
 if (g2.world.grid.length !== g.world.grid.length) throw new Error('grid length mismatch after load');
 if (!g2.objectives.isDone('gather_wood')) throw new Error('objective state lost across save');
 ok(`save/load round-trip; era ${g2.eraId}, objectives restored`);
+
+// Era advancement builds a fresh world and installs the next era objective set.
+g2.civ.cp = 250;
+if (!g2._advanceEra()) throw new Error('advance era returned false');
+if (g2.eraId !== 'bronze') throw new Error(`expected bronze era after advance, got ${g2.eraId}`);
+if (!g2.unlocked.isUnlocked('bronze')) throw new Error('bronze was not unlocked');
+if (!g2.objectives.all.some((o) => o.id === 'smelt_bronze')) throw new Error('bronze objectives missing after advance');
+ok('HUD-era advancement enters a fresh Bronze Age world');
 
 console.log(`\nAll ${passed} integration checks passed.`);

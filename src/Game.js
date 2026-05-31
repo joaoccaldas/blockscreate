@@ -17,7 +17,7 @@ import { Particles } from './render/Particles.js';
 import { Input, isTouch } from './input/Input.js';
 import { HUD } from './ui/HUD.js';
 import { SaveManager } from './persistence/SaveManager.js';
-import { getBlock, dropOf, isSolid, AIR } from './core/blocks.js';
+import { getBlock, dropsOf, isSolid, AIR } from './core/blocks.js';
 import { getItem, isPlaceable } from './core/items.js';
 import { getEra, nextEra } from './core/eras.js';
 
@@ -112,6 +112,16 @@ export class Game {
     window.addEventListener('orientationchange', this._onResize);
   }
 
+  _teardownView() {
+    if (this._onResize) {
+      window.removeEventListener('resize', this._onResize);
+      window.removeEventListener('orientationchange', this._onResize);
+      this._onResize = null;
+    }
+    this.input?.destroy();
+    this.hud?.destroy();
+  }
+
   /** Fit the canvas to its displayed size and derive a comfortable zoom. */
   resize() {
     const rect = this.canvas.getBoundingClientRect();
@@ -136,12 +146,7 @@ export class Game {
 
   stop() {
     this.running = false;
-    if (this._onResize) {
-      window.removeEventListener('resize', this._onResize);
-      window.removeEventListener('orientationchange', this._onResize);
-    }
-    this.input?.destroy();
-    this.hud?.destroy();
+    this._teardownView();
   }
 
   // ---- handlers ----
@@ -182,6 +187,7 @@ export class Game {
       onExport: () => SaveManager.exportFile(this),
       onImport: (f) => this._import(f),
       onMainMenu: () => this.exit(),
+      onAdvanceEra: () => this._advanceEra(),
       // touch controls
       onMove: (dir, pressed) => { this.input.state[dir] = pressed; },
       onJump: (pressed) => { this.input.state.up = pressed; if (pressed) this.audio?.play('jump'); },
@@ -239,8 +245,9 @@ export class Game {
   }
 
   _craft(recipe) {
-    if (craft(recipe, this.inventory)) {
+    if (craft(recipe, this.inventory, this)) {
       this.civ.onCraft();
+      if (recipe.id === 'cook_food') this.civ.onCook();
       this.crafted.add(recipe.out.id);
       this.audio?.play('craft');
       this.hud.toast(`Crafted ${getItem(recipe.out.id)?.label || recipe.out.id}`);
@@ -248,6 +255,10 @@ export class Game {
     } else {
       this.hud.toast('Missing materials');
     }
+  }
+
+  hasStation(itemId) {
+    return this.mode === MODE.CREATIVE || this.civ.hasBuilt(itemId) || this.inventory.count(itemId) > 0;
   }
 
   exit() {
@@ -330,6 +341,20 @@ export class Game {
     }
 
     this.hud.update(this);
+  }
+
+  _advanceEra() {
+    if (this.mode !== MODE.SURVIVAL || !this.civ.canAdvance()) return false;
+    const nxt = nextEra(this.eraId);
+    if (!nxt) return false;
+    this.unlocked.unlock(nxt.id);
+    SaveManager.save(this);
+    this._teardownView();
+    this.newWorld(nxt.id, MODE.SURVIVAL);
+    this.audio?.play('unlock');
+    this.hud.bigToast(`🌀 <b>${nxt.name}</b><br><small>A new world opens.</small>`);
+    SaveManager.save(this);
+    return true;
   }
 
   _footsteps(dt, wasGround) {
@@ -424,8 +449,10 @@ export class Game {
     this.world.set(x, y, AIR);
     if (block.colors) this.particles.burst(x + 0.5, y + 0.5, block.colors.base, 10);
     this.audio?.play('break');
-    const drop = dropOf(block.id);
-    if (drop && this.mode === MODE.SURVIVAL) this.inventory.add(drop, 1);
+    const drops = dropsOf(block.id);
+    if (this.mode === MODE.SURVIVAL) {
+      for (const drop of drops) this.inventory.add(drop, 1);
+    }
     this.civ.onMine();
   }
 

@@ -39,8 +39,10 @@ export class HUD {
       <div id="civPanel" class="civ-panel">
         <div class="civ-row"><span>🏛️ Population</span><b id="popVal">1</b></div>
         <div class="civ-row"><span>✨ Civ Points</span><b id="cpVal">0</b></div>
+        <div class="civ-row"><span>🏘️ Settlement</span><b id="settleVal">0</b></div>
         <div class="civ-progress"><div id="advanceBar" class="advance-fill"></div></div>
         <div id="advanceLabel" class="advance-label"></div>
+        <button id="advanceBtn" class="advance-btn hidden">Enter Portal</button>
       </div>
 
       <div id="objPanel" class="obj-panel">
@@ -115,6 +117,7 @@ export class HUD {
       e.target.value = '';
     };
     this.el('pMenu').onclick = () => this.h.onMainMenu?.();
+    this.el('advanceBtn').onclick = () => this.h.onAdvanceEra?.();
   }
 
   _buildTouchControls() {
@@ -194,12 +197,14 @@ export class HUD {
 
     this.el('popVal').textContent = game.civ.population;
     this.el('cpVal').textContent = Math.floor(game.civ.cp);
+    this.el('settleVal').textContent = game.civ.settlementScore();
     const prog = game.civ.advanceProgress();
     this.el('advanceBar').style.width = `${prog * 100}%`;
     const nxt = nextEra(game.eraId);
     this.el('advanceLabel').textContent = nxt
       ? (game.civ.canAdvance() ? `🌀 Portal to ${nxt.name} is open!` : `Next: ${nxt.name}`)
       : 'Final era reached';
+    this.el('advanceBtn').classList.toggle('hidden', !(survival && nxt && game.civ.canAdvance()));
 
     this.el('buildIndicator').textContent = game.buildMode ? '🧱 Build' : '⛏ Mine';
     this.el('buildIndicator').classList.toggle('build-on', game.buildMode);
@@ -275,18 +280,21 @@ export class HUD {
     list.innerHTML = '';
     const recipes = availableRecipes(game.unlocked.set());
     for (const r of recipes) {
-      const ok = canCraft(r, game.inventory);
+      const ok = canCraft(r, game.inventory, game);
       const out = getItem(r.out.id);
       const ins = Object.entries(r.in)
         .map(([id, n]) => `${getItem(id)?.label || id} ×${n}`)
         .join(', ');
+      const station = r.station && !game.hasStation?.(r.station)
+        ? `<em>Needs built ${getItem(r.station)?.label || r.station}</em>`
+        : '';
       const row = document.createElement('div');
       row.className = 'craft-row' + (ok ? '' : ' disabled');
       row.innerHTML = `
         <span class="swatch" style="background:${out?.colors?.base || '#888'}"></span>
         <div class="craft-info">
           <b>${out?.label || r.out.id} ×${r.out.n}</b>
-          <small>${ins}</small>
+          <small>${ins}${station ? ` · ${station}` : ''}</small>
         </div>
         <button ${ok ? '' : 'disabled'}>Craft</button>`;
       row.querySelector('button').onclick = () => this.h.onCraft?.(r);

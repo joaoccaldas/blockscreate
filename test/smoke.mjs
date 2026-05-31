@@ -10,7 +10,8 @@ import { Inventory } from '../src/systems/Inventory.js';
 import { Civilization } from '../src/systems/Civilization.js';
 import { craft, availableRecipes, canCraft } from '../src/systems/Crafting.js';
 import { RECIPES } from '../src/core/recipes.js';
-import { isSolid, AIR } from '../src/core/blocks.js';
+import { isSolid, AIR, blockId, dropsOf } from '../src/core/blocks.js';
+import { ObjectiveTracker } from '../src/systems/Objectives.js';
 
 let passed = 0;
 function ok(name) { console.log(`  ✓ ${name}`); passed++; }
@@ -24,6 +25,8 @@ for (let i = 0; i < world.grid.length; i++) if (world.grid[i] !== AIR) solidCoun
 assert.ok(solidCount > world.grid.length * 0.3, 'world has substantial terrain');
 assert.ok(world.spawn.y > 0 && world.spawn.y < world.height, 'spawn inside world');
 assert.ok(isSolid(world.get(world.spawn.x, world.spawn.y + 1)), 'ground beneath spawn');
+assert.ok(world.grid.includes(blockId('clay')), 'world includes clay deposits');
+assert.ok(world.grid.includes(blockId('gravel')), 'world includes gravel seams');
 ok('world generates terrain + valid spawn');
 
 // --- RLE round-trip ---
@@ -64,12 +67,33 @@ assert.strictEqual(inv2.count('planks'), 4, 'planks produced');
 assert.strictEqual(inv2.count('log'), 0, 'log consumed');
 ok('crafting consumes inputs, produces outputs, respects era gate');
 
+// --- Drops and stations ---
+assert.deepStrictEqual(dropsOf(blockId('copper_ore')), ['copper_ore'], 'copper ore drops ore for smelting');
+assert.ok(dropsOf(blockId('leaves'), () => 0).includes('fiber'), 'leaves can drop fiber');
+const cook = RECIPES.find((r) => r.id === 'cook_food');
+const inv3 = new Inventory();
+inv3.add('raw_food', 1);
+assert.ok(!canCraft(cook, inv3), 'station recipe blocked without station context');
+assert.ok(canCraft(cook, inv3, { hasStation: (id) => id === 'campfire' }), 'station recipe allowed with station');
+ok('resource drops and station-gated crafting');
+
 // --- Civilization progression ---
 const civ = new Civilization('stone');
 for (let i = 0; i < 600; i++) civ.onMine(); // 0.5 CP each = 300 CP
 assert.ok(civ.cp >= 250, 'CP accrues from mining');
 assert.ok(civ.population > 1, 'population grows with CP');
 assert.ok(civ.canAdvance(), 'can advance once advanceCost met');
+civ.onBuild('campfire');
+assert.ok(civ.hasBuilt('campfire'), 'built stations are tracked');
+assert.ok(civ.light > 0, 'light infrastructure tracked');
+assert.ok(civ.settlementScore() > 0, 'settlement score grows');
 ok('civilization CP / population / advance gate');
+
+// --- Per-era objectives ---
+const bronzeObjectives = new ObjectiveTracker('bronze');
+assert.ok(bronzeObjectives.all.some((o) => o.id === 'smelt_bronze'), 'bronze has era objectives');
+const ironObjectives = new ObjectiveTracker('iron');
+assert.ok(ironObjectives.all.some((o) => o.id === 'iron_pick'), 'iron has era objectives');
+ok('per-era objective sets');
 
 console.log(`\nAll ${passed} smoke checks passed.`);

@@ -17,6 +17,21 @@ export const OBJECTIVES = {
     { id: 'cook',         icon: '🍖', label: 'Cook food at a fire',        reward: 15, check: (g) => g.crafted.has('food') },
     { id: 'advance',      icon: '🌀', label: 'Open the next era portal',   reward: 0,  check: (g) => g.civ.canAdvance() },
   ],
+  bronze: [
+    { id: 'build_fire',   icon: '🔥', label: 'Build a campfire workshop',  reward: 10, check: (g) => g.civ.hasBuilt('campfire') },
+    { id: 'mine_copper',  icon: '🟠', label: 'Mine Copper Ore',            reward: 15, check: (g) => total(g, 'copper_ore') >= 1 },
+    { id: 'mine_tin',     icon: '⚪', label: 'Mine Tin Ore',               reward: 15, check: (g) => total(g, 'tin_ore') >= 1 },
+    { id: 'smelt_bronze', icon: '⚒️', label: 'Craft Bronze Ingots',        reward: 25, check: (g) => total(g, 'bronze') >= 1 },
+    { id: 'brick_town',   icon: '🧱', label: 'Place 8 town blocks',         reward: 20, check: (g) => g.civ.totalBuilt >= 8 },
+    { id: 'advance',      icon: '🌀', label: 'Open the Iron Age portal',    reward: 0,  check: (g) => g.civ.canAdvance() },
+  ],
+  iron: [
+    { id: 'mine_iron',    icon: '⛓️', label: 'Mine Iron Ore',              reward: 20, check: (g) => total(g, 'iron_ore') >= 1 },
+    { id: 'forge_iron',   icon: '🛡️', label: 'Craft Iron Ingots',          reward: 30, check: (g) => total(g, 'iron') >= 1 },
+    { id: 'iron_pick',    icon: '⛏️', label: 'Craft an Iron Pickaxe',       reward: 35, check: (g) => g.crafted.has('iron_pickaxe') || total(g, 'iron_pickaxe') >= 1 },
+    { id: 'light_city',   icon: '🏮', label: 'Place 6 light sources',       reward: 25, check: (g) => g.civ.light >= 6 },
+    { id: 'advance',      icon: '🌀', label: 'Open the Industrial portal',  reward: 0,  check: (g) => g.civ.canAdvance() },
+  ],
 };
 
 function total(game, id) {

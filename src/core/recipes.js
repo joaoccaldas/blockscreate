@@ -19,18 +19,18 @@ export const RECIPES = [
   { id: 'torch',         era: 'stone', out: { id: 'torch', n: 4 }, in: { stick: 1, coal: 1 } },
   { id: 'campfire',      era: 'stone', out: { id: 'campfire', n: 1 }, in: { log: 1, stick: 3 } },
   { id: 'thatch',        era: 'stone', out: { id: 'thatch', n: 4 }, in: { fiber: 2 } },
-  { id: 'cook_food',     era: 'stone', out: { id: 'food', n: 1 }, in: { raw_food: 1, coal: 1 } },
+  { id: 'cook_food',     era: 'stone', out: { id: 'food', n: 1 }, in: { raw_food: 1 }, station: 'campfire' },
 
   // --- Bronze Age (defined so the system is complete; needs the era unlocked) ---
-  { id: 'copper_ingot',  era: 'bronze', out: { id: 'copper', n: 1 }, in: { copper_ore: 1, coal: 1 } },
-  { id: 'tin_ingot',     era: 'bronze', out: { id: 'tin', n: 1 }, in: { tin_ore: 1, coal: 1 } },
+  { id: 'copper_ingot',  era: 'bronze', out: { id: 'copper', n: 1 }, in: { copper_ore: 1, coal: 1 }, station: 'campfire' },
+  { id: 'tin_ingot',     era: 'bronze', out: { id: 'tin', n: 1 }, in: { tin_ore: 1, coal: 1 }, station: 'campfire' },
   { id: 'bronze_ingot',  era: 'bronze', out: { id: 'bronze', n: 2 }, in: { copper: 1, tin: 1 } },
-  { id: 'brick',         era: 'bronze', out: { id: 'brick', n: 4 }, in: { clay: 4, coal: 1 } },
+  { id: 'brick',         era: 'bronze', out: { id: 'brick', n: 4 }, in: { clay: 4, coal: 1 }, station: 'campfire' },
   { id: 'bronze_pickaxe',era: 'bronze', out: { id: 'bronze_pickaxe', n: 1 }, in: { bronze: 3, stick: 2 } },
 
   // --- Iron Age ---
-  { id: 'iron_ingot',    era: 'iron', out: { id: 'iron', n: 1 }, in: { iron_ore: 1, coal: 1 } },
-  { id: 'gold_ingot',    era: 'iron', out: { id: 'gold', n: 1 }, in: { gold_ore: 1, coal: 1 } },
+  { id: 'iron_ingot',    era: 'iron', out: { id: 'iron', n: 1 }, in: { iron_ore: 1, coal: 1 }, station: 'campfire' },
+  { id: 'gold_ingot',    era: 'iron', out: { id: 'gold', n: 1 }, in: { gold_ore: 1, coal: 1 }, station: 'campfire' },
   { id: 'iron_pickaxe',  era: 'iron', out: { id: 'iron_pickaxe', n: 1 }, in: { iron: 3, stick: 2 } },
 ];
 

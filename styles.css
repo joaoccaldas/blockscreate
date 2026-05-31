@@ -237,6 +237,18 @@ html, body {
 .civ-progress { height: 8px; background: rgba(255, 255, 255, 0.12); border-radius: 4px; overflow: hidden; margin: 4px 0 3px; }
 .advance-fill { height: 100%; background: linear-gradient(90deg, var(--gold), #fff0a8); width: 0; transition: width 0.3s; }
 .advance-label { color: var(--muted); font-size: 0.74rem; }
+.advance-btn {
+  width: 100%;
+  margin-top: 6px;
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: var(--gold);
+  color: #241900;
+  font-weight: bold;
+  cursor: pointer;
+}
+.advance-btn.hidden { display: none; }
 
 /* Objectives panel (top-right under the menu button). */
 .obj-panel {
@@ -378,6 +390,7 @@ html, body {
 .craft-row.disabled { opacity: 0.5; }
 .craft-info { flex: 1; display: flex; flex-direction: column; }
 .craft-info small { color: var(--muted); }
+.craft-info em { color: var(--gold); font-style: normal; }
 .craft-row button {
   background: var(--accent);
   border: none;

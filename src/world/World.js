@@ -71,6 +71,8 @@ export class World {
       gold: blockId('gold_ore'),
       log: blockId('log'),
       leaves: blockId('leaves'),
+      clay: blockId('clay'),
+      gravel: blockId('gravel'),
     };
     const rng = makeRng(this.seed);
     const era = getEra(this.eraId);
@@ -90,6 +92,7 @@ export class World {
           const depth = y - surf;
           if (depth <= 1) id = ID.grass;
           else if (depth <= 4) id = ID.dirt;
+          else if (depth <= 6 && hash2(x, y, this.seed + 6060) > 0.82) id = ID.gravel;
           else id = ID.stone;
         } else if (y === surf) {
           id = ID.grass;
@@ -97,6 +100,7 @@ export class World {
 
         // Beaches / water near sea level lows
         if (id === ID.grass && surf >= seaLevel) id = ID.sand;
+        if (id === ID.dirt && surf >= seaLevel - 2 && hash2(x, y, this.seed + 7070) > 0.72) id = ID.clay;
 
         this.grid[this.idx(x, y)] = id;
       }

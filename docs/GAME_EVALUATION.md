@@ -1,7 +1,7 @@
 # Game Evaluation - age features, confidence, and gaps
 
 Audit date: 2026-06-01
-Build audited: v5.13.0
+Build audited: v5.14.0
 Verification: `npm test` passes all 10 suites.
 
 Confidence legend:
@@ -28,6 +28,10 @@ The core fun loop works:
 4. Earn CP and complete objectives.
 5. Unlock the next era.
 6. Grow a visible settlement with settlers.
+
+v5.14 adds a clearer middle rhythm inside that loop: each era now has three
+visible stages (Awakening, Adapting, Evolved) driven by mandatory objectives,
+with HUD progress and a celebratory animation when the stage changes.
 
 The main gap is depth per age. The game has many good systems, but only some
 are deep enough to feel like a new genre layer rather than new content.
@@ -189,6 +193,7 @@ High confidence:
 - Saves/migration tolerate new fields and persist major systems.
 - Journal and era intro make history/discovery more legible.
 - Objectives gate progression with mandatory/mastery/portal categories.
+- Era stages now make task completion visible before the next-era portal opens.
 - Generated assets are checked for dimensions and validity.
 - CI is configured for Node 22; generated-art byte drift is advisory.
 
@@ -210,8 +215,8 @@ Low confidence / not done:
 
 ## GitHub Status
 
-As of this audit, local `main` is prepared for the v5.13 gameplay commit. The
-gameplay work through v5.13 should be pushed to GitHub with the code and docs
+As of this audit, local `main` is prepared for the v5.14 gameplay commit. The
+gameplay work through v5.14 should be pushed to GitHub with the code and docs
 together so the evaluation stays versioned with the game. GitHub Actions may
 still show red if the account-level billing lock remains; that is separate from
 local test health and Pages deploy behavior.

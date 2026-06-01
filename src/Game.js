@@ -53,6 +53,7 @@ export class Game {
     this.mobTimer = 0;
     this.structureScanTimer = 0;
     this.animalPeaceTime = 0;
+    this.eraStage = 0;
   }
 
   // ---- lifecycle ----
@@ -77,6 +78,7 @@ export class Game {
     this.events = new WorldEventLog();
     this.settlers = new SettlerManager();
     this.mobs = [];
+    this.eraStage = 0;
     this._grantStarter();
     this._setup();
   }
@@ -105,6 +107,7 @@ export class Game {
     this.mobs = (save.mobs || []).map((m) => Mob.load(m));
     this.animalPeaceTime = save.animalPeaceTime || 0;
     this.grazerBondTime = save.grazerBondTime || 0;
+    this.eraStage = save.eraStage || 0;
     this._setup();
   }
 
@@ -528,6 +531,7 @@ export class Game {
         this.audio?.play('objective');
         this.hud.toast(`${o.icon} Objective complete: ${o.label}${o.reward ? ` (+${o.reward} CP)` : ''}`, 2600);
       }
+      if (done.length) this._checkEraStage();
     }
 
     this._evaluateFunSystems(dt);
@@ -571,6 +575,28 @@ export class Game {
     // Reveal the new era full-screen, then resume (mirrors start()).
     this._introThenOnboard();
     return true;
+  }
+
+  _checkEraStage() {
+    const progress = this.objectives?.stageProgress?.();
+    if (!progress || progress.stage <= (this.eraStage || 0)) return;
+    this.eraStage = progress.stage;
+    const info = this._eraStageInfo(progress.stage);
+    this.audio?.play(progress.stage >= 3 ? 'unlock' : 'objective');
+    this.particles.fountain(this.player.x, this.player.y - 1,
+      ['#f4d24a', '#6fc04e', '#4f86ee', '#ff7b29', '#fff'], 24 + progress.stage * 8);
+    this.hud?.bigToast?.(`${info.icon} <b>${info.title}</b><br><small>${info.text}</small>`, 3000);
+  }
+
+  _eraStageInfo(stage) {
+    const era = getEra(this.eraId);
+    const name = era?.name || 'Era';
+    const labels = {
+      1: { icon: '✨', title: `${name}: Awakening`, text: 'Your actions are changing this age.' },
+      2: { icon: '⚡', title: `${name}: Adapting`, text: 'New habits are becoming a civilization.' },
+      3: { icon: '🌟', title: `${name}: Evolved`, text: 'This age is ready for its next leap.' },
+    };
+    return labels[stage] || { icon: '✨', title: `${name}: Progress`, text: 'Keep shaping history.' };
   }
 
   _expandWorldIfNeeded() {

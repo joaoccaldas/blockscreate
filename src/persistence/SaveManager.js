@@ -30,6 +30,7 @@ export const SaveManager = {
       settlers: game.settlers ? game.settlers.serialize() : null,
       animalPeaceTime: game.animalPeaceTime || 0,
       grazerBondTime: game.grazerBondTime || 0,
+      eraStage: game.eraStage || 0,
     };
   },
 
@@ -78,6 +79,7 @@ export const SaveManager = {
     save.clues = save.clues || [];
     save.powerups = save.powerups || [];
     save.grazerBondTime = save.grazerBondTime || 0;
+    save.eraStage = save.eraStage || 0;
     save.version = C.SAVE_VERSION;
     return save;
   },

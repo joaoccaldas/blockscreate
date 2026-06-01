@@ -171,6 +171,14 @@ Older saves remain tolerant because loaders default missing fields.
 
 Players now get surprise rewards for building, exploring, and experimenting. The game can recognize useful structures while still leaving building creative and open-ended. This is the right foundation for blueprints, decorative blocks, relic hunts, era-specific buildings, and shareable structure saves.
 
+## Intra-Era Evolution
+
+Each era now has three visible stages before the next portal: Awakening,
+Adapting and Evolved. Mandatory objectives fill the stage bar in the civ panel;
+crossing a stage triggers particles and a large animated toast. This gives
+players a clear sense that the current age is changing step by step instead of
+waiting silently for the final era jump.
+
 ## Chunked Exploration
 
 File: `src/world/World.js`

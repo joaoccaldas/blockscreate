@@ -144,6 +144,11 @@ ok('civilization CP / population / advance gate');
 // --- Per-era objectives ---
 const bronzeObjectives = new ObjectiveTracker('bronze');
 assert.ok(bronzeObjectives.all.some((o) => o.id === 'smelt_bronze'), 'bronze has era objectives');
+assert.strictEqual(bronzeObjectives.stageProgress().stage, 0, 'era stage starts dormant');
+bronzeObjectives.completed.add('build_fire');
+assert.strictEqual(bronzeObjectives.stageProgress().stage, 1, 'era stage advances after first task');
+for (const o of bronzeObjectives.mandatory()) bronzeObjectives.completed.add(o.id);
+assert.strictEqual(bronzeObjectives.stageProgress().stage, 3, 'era stage reaches evolved after mandatory goals');
 const ironObjectives = new ObjectiveTracker('iron');
 assert.ok(ironObjectives.all.some((o) => o.id === 'iron_pick'), 'iron has era objectives');
 const cellEra = new ObjectiveTracker('cell');

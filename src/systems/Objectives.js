@@ -98,11 +98,22 @@ export class ObjectiveTracker {
   mandatory() { return this.list.filter((o) => o.kind === 'mandatory'); }
   mastery() { return this.list.filter((o) => o.kind === 'mastery'); }
   mandatoryDone() { return this.mandatory().every((o) => this.completed.has(o.id)); }
+  stageProgress() {
+    const mandatory = this.mandatory();
+    const done = mandatory.filter((o) => this.completed.has(o.id)).length;
+    const total = Math.max(1, mandatory.length);
+    const stage = done >= total ? 3 : done >= Math.ceil(total * 0.55) ? 2 : done > 0 ? 1 : 0;
+    return { stage, done, total, label: stageLabel(stage), percent: done / total };
+  }
   masteryDone() { return this.mastery().filter((o) => this.completed.has(o.id)).length; }
   masteryTotal() { return this.mastery().length; }
   isDone(id) { return this.completed.has(id); }
   get all() { return this.list; }
   serialize() { return [...this.completed]; }
+}
+
+function stageLabel(stage) {
+  return ['Dormant', 'Awakening', 'Adapting', 'Evolved'][stage] || 'Dormant';
 }
 
 function order(kind) {

@@ -155,6 +155,7 @@ if (!g.objectives || !g.objectives.all.length) throw new Error('objectives missi
 g.inventory.add('log', 3);
 g.update(0.016);
 if (!g.objectives.isDone('gather_wood')) throw new Error('gather objective did not complete');
+if (g.eraStage < 1) throw new Error('era stage did not advance after objective completion');
 ok('objectives evaluate (gather_wood completed after collecting logs)');
 
 g.civ.cp = 9999;
@@ -174,6 +175,7 @@ g.mode = MODE.SURVIVAL;
 // Save now includes crafted + objectives, and round-trips.
 const json = SaveManager.toJSON(g);
 if (!('objectives' in json) || !('crafted' in json)) throw new Error('save missing new fields');
+if (!('eraStage' in json)) throw new Error('save missing era stage');
 for (const key of ['structures', 'discoveries', 'clues', 'powerups', 'events']) {
   if (!(key in json)) throw new Error(`save missing ${key}`);
 }
@@ -192,6 +194,7 @@ if (g2.world.getChunkSummary().generated !== g.world.getChunkSummary().generated
 if (g2.civ.defeated.raptor !== 1) throw new Error('defeated enemy stats lost across save');
 if (!g2.events.isActive('predator_migration')) throw new Error('active RPG event lost across save');
 if (!g2.objectives.isDone('gather_wood')) throw new Error('objective state lost across save');
+if (g2.eraStage !== g.eraStage) throw new Error('era stage lost across save');
 if (!g2.structures || !g2.discoveries || !g2.clues || !g2.powerups || !g2.events) throw new Error('fun systems missing after load');
 ok(`save/load round-trip; era ${g2.eraId}, objectives + fun systems restored`);
 

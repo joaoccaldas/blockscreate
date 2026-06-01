@@ -43,6 +43,8 @@ export class HUD {
         <div class="civ-row"><span>✨ Civ Points</span><b id="cpVal">0</b></div>
         <div class="civ-row"><span>🏘️ Settlement</span><b id="settleVal">0</b></div>
         <div class="civ-row"><span>🔎 Clues</span><b id="clueVal">0</b></div>
+        <div class="civ-row"><span>🧭 Era Stage</span><b id="eraStageVal">0/3</b></div>
+        <div class="civ-progress"><div id="eraStageBar" class="advance-fill"></div></div>
         <div class="civ-row"><span>⭐ Mastery</span><b id="masteryVal">0/0</b></div>
         <div id="cellPanel" class="cell-panel hidden">
           <div class="civ-row"><span>🧬 Stability</span><b id="cellStabilityVal">0%</b></div>
@@ -328,6 +330,9 @@ export class HUD {
     this.el('cpVal').textContent = Math.floor(game.civ.cp);
     this.el('settleVal').textContent = game.civ.settlementScore();
     this.el('clueVal').textContent = game.clues?.count?.() || 0;
+    const stage = game.objectives?.stageProgress?.() || { stage: 0, label: 'Dormant', percent: 0 };
+    this.el('eraStageVal').textContent = `${stage.label} ${stage.stage}/3`;
+    this.el('eraStageBar').style.width = `${Math.round((stage.percent || 0) * 100)}%`;
     this.renderCellStatus(game);
     this.renderDinoStatus(game);
     const status = game.advancementStatus?.() || {};

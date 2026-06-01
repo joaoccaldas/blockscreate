@@ -6,10 +6,10 @@ society persist.
 
 | # | Improvement | Why It Matters | How To Wire | Test |
 | --- | --- | --- | --- | --- |
-| 1 | Companion rescue | Turns grazers from transport into protective partners. | Add danger detection, retreat-to-town behavior and rescue cooldown to `Mob`. | Rescue state persists; retreat triggers near lethal danger; cooldown prevents spam. |
-| 2 | Irrigation and soil quality | Makes Bronze farming a planning puzzle. | Add water-nearby fertility score and crop growth modifiers. | Crop growth faster near irrigation, slower on poor soil. |
-| 3 | Physical siege pathing | Makes Iron walls and gates matter. | Give raiders a town/gate target and simple wall damage/retreat rules. | Raiders path to gates; gates absorb damage; defended towns survive. |
-| 4 | Recognizable builder plans | Makes settlements look authored, not random. | Expand `build_site` into plan variants: hut, shed, tower, pen. | Builders complete selected plan and consume correct stock. |
+| 1 | Intra-era evolution stages | ✅ Shipped in v5.14: makes each task feel like the age is visibly changing. | 3-stage progress from mandatory objectives, HUD bar and animated stage-up toast. | Stage thresholds work; save/load preserves current stage. |
+| 2 | Companion rescue | Turns grazers from transport into protective partners. | Add danger detection, retreat-to-town behavior and rescue cooldown to `Mob`. | Rescue state persists; retreat triggers near lethal danger; cooldown prevents spam. |
+| 3 | Irrigation and soil quality | Makes Bronze farming a planning puzzle. | Add water-nearby fertility score and crop growth modifiers. | Crop growth faster near irrigation, slower on poor soil. |
+| 4 | Physical siege pathing | Makes Iron walls and gates matter. | Give raiders a town/gate target and simple wall damage/retreat rules. | Raiders path to gates; gates absorb damage; defended towns survive. |
 | 5 | Companion cargo | ✅ Shipped in v5.13: longer, friendlier exploration loops. | Six cargo slots on tamed grazers with `V` / `📦` transfer. | Items persist; capacity enforced; transfer works. |
 | 6 | Microbe hazard | Gives First Cell gentle stakes. | Add drifting hostile microbe that drains stability on touch. | Hazard spawns, chases weakly, reduces stability, never hard-locks. |
 | 7 | Industrial factory chain | Gives late game a real production puzzle. | Add factory block converting ore/coal into parts with pollution. | Factory consumes stock, outputs parts, raises pollution. |
@@ -34,6 +34,7 @@ society persist.
 
 ## Current Pick
 
-Rideable grazers shipped in v5.12 and companion cargo shipped in v5.13. The
-next best follow-up is companion rescue/retreat behavior, because it turns the
-grazer from useful equipment into a creature that can save the run.
+Rideable grazers shipped in v5.12, companion cargo shipped in v5.13, and
+intra-era evolution stages shipped in v5.14. The next best follow-up is
+companion rescue/retreat behavior, because it turns the grazer from useful
+equipment into a creature that can save the run.

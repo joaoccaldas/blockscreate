@@ -108,6 +108,7 @@ power matters as part of an automation network, not just a pollution reducer.
 
 | System | Status | Next |
 | --- | --- | --- |
+| Intra-era progression | ✅ 3-stage era evolution with HUD progress and animated stage-up moments | richer per-era stage names/rewards |
 | Settlers / population | ✅ roles + economy; builders raise village blocks and complete planned build sites; gatherers seek + harvest trees/ore; farmers tend visible crop plots | richer pathing; recognizable house plans |
 | Journal (clues/discoveries/branches) | ✅ | per-era lore pages |
 | Save/persistence (+ chunk metadata) | ✅ | true chunk streaming |

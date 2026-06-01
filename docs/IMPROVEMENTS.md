@@ -113,3 +113,10 @@ BlocksCreate already has the right spine for "Minecraft meets Civilization": blo
 - Added desktop (`V`) and touch (`📦`) cargo transfer.
 - Stashing uses the selected stack; retrieving works from an empty selected slot.
 - Cargo persists through mob save/load and is covered by integration tests.
+
+## Implemented In Era Stage Pass
+
+- Added 3-stage intra-era progression: Awakening, Adapting and Evolved.
+- HUD now shows era-stage progress alongside Civ Points/mastery.
+- Completing enough mandatory tasks triggers a big animated stage-up moment.
+- Era stage persists in saves and is covered by objective/save tests.

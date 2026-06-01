@@ -429,6 +429,26 @@ html, body {
   max-width: min(420px, calc(100vw - 450px));
 }
 .event-bar.hidden { display: none; }
+
+/* First Cell guidance banner — bottom-center, above the hotbar. */
+.cell-hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(70px + var(--safe-b));
+  transform: translateX(-50%);
+  max-width: min(560px, 92vw);
+  text-align: center;
+  background: rgba(7, 26, 40, 0.82);
+  border: 1px solid rgba(118, 247, 221, 0.5);
+  color: #d8fff7;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+.cell-hint.hidden { display: none; }
+@media (max-width: 760px) { .cell-hint { font-size: 0.76rem; bottom: calc(132px + var(--safe-b)); } }
 .event-chip {
   background: rgba(142, 107, 214, 0.2);
   border: 1px solid rgba(217, 199, 255, 0.42);
@@ -599,6 +619,18 @@ html, body {
 .tbtn.pressed { background: rgba(111, 192, 78, 0.5); transform: scale(0.94); }
 .tbtn.build { background: rgba(79, 134, 238, 0.35); }
 .tbtn.jump { width: 70px; height: 70px; }
+.tbtn.up, .tbtn.down { background: rgba(118, 247, 221, 0.3); }
+.tbtn.small { width: 44px; height: 44px; font-size: 1.15rem; }
+
+/* Quick-access inventory/crafting, top-right under the menu button. */
+.touch-quick {
+  position: absolute;
+  top: calc(54px + env(safe-area-inset-top, 0px));
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 @keyframes pop {
   0% { transform: scale(0.6); opacity: 0; }
@@ -764,3 +796,19 @@ button:focus-visible, input:focus-visible, .era-card:focus-visible {
   transition: background 0.2s, transform 0.2s;
 }
 .onboard-dots .dot.on { background: var(--accent); transform: scale(1.25); }
+
+/* ============================================================
+   v5.2 — first-era playability, mobile controls, inventory sort
+   ============================================================ */
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.panel-head h2 { margin: 0; }
+.chip-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.chip-btn:hover { background: rgba(255, 255, 255, 0.16); }

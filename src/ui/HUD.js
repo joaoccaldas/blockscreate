@@ -14,12 +14,13 @@ import { getEra, nextEra } from '../core/eras.js';
 import { MODE } from '../core/constants.js';
 
 export class HUD {
-  constructor(root, { handlers = {}, settings, isTouch = false, mode = MODE.SURVIVAL } = {}) {
+  constructor(root, { handlers = {}, settings, isTouch = false, mode = MODE.SURVIVAL, eraId = 'cell' } = {}) {
     this.root = root;
     this.h = handlers;
     this.settings = settings;
     this.isTouch = isTouch;
     this.mode = mode;
+    this.eraId = eraId;
     this.cache = {};
     this._build();
     if (isTouch) this._buildTouchControls();
@@ -72,13 +73,17 @@ export class HUD {
       <div id="buildIndicator" class="build-indicator"></div>
       <div id="powerupBar" class="powerup-bar hidden"></div>
       <div id="eventBar" class="event-bar hidden"></div>
+      <div id="cellHint" class="cell-hint hidden"></div>
       <div id="toast" class="toast hidden"></div>
       <div id="bigToast" class="big-toast hidden"></div>
 
       <div id="hotbar" class="hotbar"></div>
 
       <div id="inventoryPanel" class="panel hidden">
-        <h2>🎒 Inventory</h2>
+        <div class="panel-head">
+          <h2>🎒 Inventory</h2>
+          <button id="invSort" class="chip-btn" title="Sort backpack">⇅ Sort</button>
+        </div>
         <p class="muted small">Tap an item to move it to your selected hotbar slot.</p>
         <div id="invGrid" class="grid"></div>
         <button class="close-btn" id="invClose">Close (E)</button>
@@ -158,6 +163,7 @@ export class HUD {
     `;
 
     this.el('invClose').onclick = () => this.h.onToggleInventory?.();
+    this.el('invSort').onclick = () => this.h.onSortInventory?.();
     this.el('craftClose').onclick = () => this.h.onToggleCrafting?.();
     this.el('pauseBtn').onclick = () => this.h.onPause?.();
     this.el('resumeBtn').onclick = () => this.h.onResume?.();
@@ -188,16 +194,29 @@ export class HUD {
   _buildTouchControls() {
     const wrap = document.createElement('div');
     wrap.id = 'touchControls';
+    // The First Cell era is a swimmer: it needs up/down, not a jump. Other eras
+    // walk and jump. Creative adds a flight toggle. We build the right set so
+    // the first era is actually playable on a phone.
+    const swim = this.eraId === 'cell';
+    const rightCol = swim
+      ? `
+        <button class="tbtn build" data-act="build" aria-label="Mine or build">⛏</button>
+        <button class="tbtn up" data-act="up" aria-label="Swim up">▲</button>
+        <button class="tbtn down" data-act="down" aria-label="Swim down">▼</button>`
+      : `
+        <button class="tbtn build" data-act="build" aria-label="Mine or build">⛏</button>
+        ${this.mode === MODE.CREATIVE ? '<button class="tbtn fly" data-act="fly" aria-label="Toggle flight">🪂</button>' : ''}
+        <button class="tbtn jump" data-act="jump" aria-label="Jump">⤴</button>`;
     wrap.innerHTML = `
+      <div class="touch-quick">
+        <button class="tbtn small" data-act="inv" aria-label="Inventory">🎒</button>
+        <button class="tbtn small" data-act="craft" aria-label="Crafting">🔨</button>
+      </div>
       <div class="touch-left">
-        <button class="tbtn" data-act="left">◀</button>
-        <button class="tbtn" data-act="right">▶</button>
+        <button class="tbtn" data-act="left" aria-label="Move left">◀</button>
+        <button class="tbtn" data-act="right" aria-label="Move right">▶</button>
       </div>
-      <div class="touch-right">
-        <button class="tbtn build" data-act="build">⛏</button>
-        <button class="tbtn fly" data-act="fly">🪂</button>
-        <button class="tbtn jump" data-act="jump">⤴</button>
-      </div>
+      <div class="touch-right">${rightCol}</div>
     `;
     this.root.appendChild(wrap);
 
@@ -212,7 +231,7 @@ export class HUD {
 
     wrap.querySelectorAll('.tbtn').forEach((btn) => {
       const act = btn.dataset.act;
-      if (act === 'left' || act === 'right') {
+      if (act === 'left' || act === 'right' || act === 'up' || act === 'down') {
         hold(btn, () => this.h.onMove?.(act, true), () => this.h.onMove?.(act, false));
       } else if (act === 'jump') {
         hold(btn, () => this.h.onJump?.(true), () => this.h.onJump?.(false));
@@ -220,11 +239,12 @@ export class HUD {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleBuild?.(); });
       } else if (act === 'fly') {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onFly?.(); });
+      } else if (act === 'inv') {
+        btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleInventory?.(); });
+      } else if (act === 'craft') {
+        btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleCrafting?.(); });
       }
     });
-
-    // Hide fly button outside creative mode.
-    if (this.mode !== MODE.CREATIVE) wrap.querySelector('.fly').style.display = 'none';
   }
 
   // ---- transient messages ----
@@ -295,14 +315,25 @@ export class HUD {
   renderCellStatus(game) {
     const panel = this.el('cellPanel');
     const status = game.cellStatus;
-    panel.classList.toggle('hidden', game.eraId !== 'cell' || !status);
-    if (game.eraId !== 'cell' || !status) return;
+    const isCell = game.eraId === 'cell' && status;
+    panel.classList.toggle('hidden', !isCell);
+    const hint = this.el('cellHint');
+    hint.classList.toggle('hidden', !isCell);
+    if (!isCell) return;
     this.el('cellStabilityVal').textContent = `${status.stability}%`;
     this.el('cellStabilityBar').style.width = `${status.stability}%`;
     const distance = status.distance == null ? '' : ` · ${Math.ceil(status.distance)} tiles`;
     this.el('cellGradient').textContent = status.ready
       ? 'ready to evolve'
       : `sense: ${status.gradient}${distance}`;
+
+    // Persistent plain-language guidance so the first era is intuitive.
+    const move = this.isTouch ? 'Use ◀ ▶ ▲ ▼ to swim' : 'Swim with WASD / arrows';
+    hint.innerHTML = status.ready
+      ? '✨ Cell stable! Open the menu objective or press <b>Enter Portal</b> to evolve →'
+      : status.gradient && status.gradient !== 'quiet chemistry'
+        ? `🫧 ${move} into the glowing <b>${status.gradient}</b>${distance} to absorb it`
+        : `🫧 ${move} and explore to find glowing nutrients &amp; warm vents`;
   }
 
   renderDinoStatus(game) {
@@ -488,13 +519,23 @@ export class HUD {
    * skips. `touch` swaps in touch-specific wording.
    */
   showOnboarding(done, touch = false) {
-    const steps = [
-      { icon: '🫧', title: 'Welcome to BlocksCreate', body: 'Begin at the origin of life. Gather nutrients, form a membrane, and evolve through time.' },
-      { icon: '⛏️', title: 'Mine the world', body: touch ? 'Tap a nearby block to mine it. Hold to keep mining.' : 'Hold left-click on a nearby block to mine it.' },
-      { icon: '🧱', title: 'Build & place', body: touch ? 'Tap the ⛏/🧱 button to switch to Build, then tap to place the selected block.' : 'Right-click to place the selected block (or press Q to toggle Build/Mine).' },
-      { icon: '🎒', title: 'Inventory & crafting', body: touch ? 'Use the ☰ menu for Inventory and Crafting.' : 'Press E for Inventory and C for Crafting. Numbers 1–9 pick a hotbar slot.' },
-      { icon: '🎯', title: 'Complete objectives', body: 'Finish the objectives (top-right) to earn ✨ Civ Points and open the portal to the next era. Each era unlocks richer tools and systems.' },
-    ];
+    // The First Cell era plays differently (swim + absorb, no tools yet), so it
+    // gets its own intro; later eras get the mine/build/craft tutorial.
+    const steps = this.eraId === 'cell'
+      ? [
+        { icon: '🫧', title: 'You are the first life', body: 'You begin as a tiny cell in a warm primordial sea. Survive, grow, and evolve into the ages that follow.' },
+        { icon: '🏊', title: 'Swim around', body: touch ? 'Use the ◀ ▶ ▲ ▼ buttons to swim in any direction.' : 'Swim with WASD or the arrow keys — up and down too. You float, you don\'t fall.' },
+        { icon: '✨', title: 'Absorb to grow', body: 'Swim into glowing green nutrients and warm mineral vents to absorb them. The banner shows where the nearest one is.' },
+        { icon: '🧬', title: 'Become a true cell', body: touch ? 'Open ☰ → Crafting to form a Lipid Membrane and stabilize a Proto-Cell.' : 'Press C to craft a Lipid Membrane, then a Proto-Cell, to stabilize.' },
+        { icon: '🦖', title: 'Evolve forward', body: 'Finish the objectives (top-right) to fill Civ Points, then evolve into the Age of Dinosaurs — and beyond.' },
+      ]
+      : [
+        { icon: '🌎', title: 'A new age', body: 'You\'ve evolved into a new era with new tools, blocks, and dangers. Gather, build, and grow your civilization.' },
+        { icon: '⛏️', title: 'Mine the world', body: touch ? 'Tap a nearby block to mine it. Hold to keep mining. Some blocks need a matching tool.' : 'Hold left-click on a nearby block to mine it. Some blocks need a matching/stronger tool.' },
+        { icon: '🧱', title: 'Build & place', body: touch ? 'Tap the ⛏/🧱 button to switch to Build, then tap next to a block to place.' : 'Right-click to place the selected block (or press Q to toggle Build/Mine). Place next to existing blocks.' },
+        { icon: '🎒', title: 'Inventory & crafting', body: touch ? 'Use the ☰ menu for Inventory and Crafting.' : 'Press E for Inventory and C for Crafting. Numbers 1–9 pick a hotbar slot.' },
+        { icon: '🎯', title: 'Complete objectives', body: 'Finish the objectives (top-right) to earn ✨ Civ Points and open the portal to the next era.' },
+      ];
     let i = 0;
     const screen = this.el('onboarding');
     const dots = this.el('onboardDots');

@@ -137,6 +137,7 @@ export class Game {
       settings: this.settings,
       isTouch,
       mode: this.mode,
+      eraId: this.eraId,
     });
     this.invOpen = false;
     this.craftOpen = false;
@@ -230,6 +231,11 @@ export class Game {
         const sel = this.inventory.selected;
         this.inventory.slots[i] = this.inventory.slots[sel];
         this.inventory.slots[sel] = s;
+        this.hud.renderInventory(this);
+      },
+      onSortInventory: () => {
+        this.inventory.sortBackpack();
+        this.audio?.play('ui');
         this.hud.renderInventory(this);
       },
       onPause: () => this._onPause(),
@@ -386,10 +392,15 @@ export class Game {
   /** Show first-run coach-marks once, then remember it in settings. */
   _maybeOnboard() {
     if (this.mode !== MODE.SURVIVAL) return;
-    if (this.settings?.get('seenTutorial')) return;
+    // Show the coach-marks once per era family: the First Cell plays very
+    // differently (swim + absorb) from the build/mine eras, so each gets one.
+    const key = this.eraId === 'cell' ? 'cell' : 'land';
+    const seen = (this.settings?.get('seenTutorial') || '').toString().split(',');
+    if (seen.includes(key)) return;
     this.paused = true; // freeze the world behind the coach-marks
     this.hud.showOnboarding(() => {
-      this.settings?.set('seenTutorial', true);
+      const next = seen.filter(Boolean).concat(key).join(',');
+      this.settings?.set('seenTutorial', next);
       this.paused = false;
     }, isTouch);
   }

@@ -78,6 +78,32 @@ export class Inventory {
     return true;
   }
 
+  /**
+   * Sort the backpack (slots after the hotbar) by item id, merging stacks.
+   * The hotbar (first HOTBAR_SIZE slots) is left untouched so muscle memory
+   * survives. Returns this for chaining.
+   */
+  sortBackpack() {
+    const start = HOTBAR_SIZE;
+    const items = {};
+    for (let i = start; i < this.slots.length; i++) {
+      const s = this.slots[i];
+      if (s) items[s.id] = (items[s.id] || 0) + s.n;
+      this.slots[i] = null;
+    }
+    let i = start;
+    for (const id of Object.keys(items).sort()) {
+      let n = items[id];
+      const max = getItem(id)?.stack ?? 99;
+      while (n > 0 && i < this.slots.length) {
+        const take = Math.min(max, n);
+        this.slots[i++] = { id, n: take };
+        n -= take;
+      }
+    }
+    return this;
+  }
+
   serialize() {
     return { slots: this.slots, selected: this.selected };
   }

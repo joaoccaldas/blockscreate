@@ -31,11 +31,21 @@ A grounded read of the current build (v5.0). Each section: **where we stand**,
 
 ## Inventory
 - **Stand:** 36 slots + 9 hotbar, stacking, labeled cells, tap-to-hotbar,
-  scroll/number selection.
-- **Gap:** no **drag-to-rearrange**, no **stack split**, no **trash/drop**, no
-  sort. Picking only swaps with the active hotbar slot.
+  scroll/number selection, and a **Sort button** that merges + orders the
+  backpack (hotbar untouched). On mobile, quick 🎒/🔨 buttons open
+  inventory/crafting in one tap.
+- **Gap:** no **drag-to-rearrange**, no **stack split**, no **trash/drop**.
 - **Next:** drag-and-drop between slots, shift-click quick-move, split on
-  right-click, and a sort button.
+  right-click.
+
+## First era + mobile playability (addressed)
+- **Stand:** the First Cell now has its own onboarding (swim + absorb, shown
+  once per era family), a persistent guidance banner pointing to the nearest
+  glowing resource, and **era-aware touch controls** — swim ▲/▼ buttons in the
+  cell era, jump elsewhere, plus quick inventory/craft buttons — so era 1 is
+  fully playable on a phone.
+- **Next:** a brief on-canvas arrow toward the nearest resource; haptic feedback
+  on absorb (where supported).
 
 ## Tasks / objectives
 - **Stand:** per-era mandatory + mastery + portal objectives, sticky, saved,

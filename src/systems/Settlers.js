@@ -37,7 +37,8 @@ export class Settler {
 
   /**
    * @param {object} home  { x, y } town center the settler loiters around.
-   * @returns {boolean} true if it produced a "work" tick this frame.
+   * @returns {boolean} true if it produced a "work" tick this frame (the
+   *   manager turns that into role-specific output).
    */
   update(dt, world, home) {
     this.timer -= dt;
@@ -109,6 +110,10 @@ export class SettlerManager {
     this.settlers = [];
     this.home = saved?.home || null;
     this.spawnTimer = 0;
+    // Town stockpile: resources settlers gather/produce, deposited over time.
+    // Pure economic record (not the player's inventory) so a living town
+    // visibly accumulates goods even while the player is elsewhere.
+    this.stock = saved?.stock || { food: 0, wood: 0, ore: 0 };
     if (saved?.settlers) this.settlers = saved.settlers.map((d) => Settler.load(d));
   }
 
@@ -124,12 +129,34 @@ export class SettlerManager {
 
   count() { return this.settlers.length; }
 
+  /** Tally of settlers per role, for the HUD. */
+  roleCounts() {
+    const out = {};
+    for (const s of this.settlers) out[s.role] = (out[s.role] || 0) + 1;
+    return out;
+  }
+
   /**
-   * Advance settlers; spawn/retire toward capacity near home. Returns total
-   * "work" ticks produced this frame (caller converts to CP).
+   * Choose the role a new settler should take, balancing the town's needs:
+   * always keep food coming, gather materials, then builders, then guards.
+   */
+  _neededRole() {
+    const c = this.roleCounts();
+    const n = this.settlers.length + 1;
+    if ((c.farmer || 0) < Math.ceil(n * 0.35)) return 'farmer';
+    if ((c.gatherer || 0) < Math.ceil(n * 0.35)) return 'gatherer';
+    if ((c.builder || 0) < Math.ceil(n * 0.2)) return 'builder';
+    return 'guard';
+  }
+
+  /**
+   * Advance settlers; spawn/retire toward capacity near home, and turn each
+   * settler's work tick into role-specific output.
+   *
+   * @returns {{cp:number, produced:object, guards:number}} this frame's output.
    */
   update(dt, world, civ) {
-    if (!this.home) return 0;
+    if (!this.home) return { cp: 0, produced: {}, guards: 0 };
     const cap = this.capacity(civ);
 
     this.spawnTimer -= dt;
@@ -139,21 +166,35 @@ export class SettlerManager {
       else if (this.settlers.length > cap) this.settlers.pop();
     }
 
-    let work = 0;
+    let cp = 0;
+    let guards = 0;
+    const produced = {};
     for (const s of this.settlers) {
-      if (s.update(dt, world, this.home)) work++;
+      if (s.role === 'guard') guards++;
+      if (!s.update(dt, world, this.home)) continue;
+      // Each role converts a work tick into something distinct + a little CP.
+      switch (s.role) {
+        case 'farmer':   this.stock.food += 1; produced.food = (produced.food || 0) + 1; cp += 0.4; break;
+        case 'gatherer': {
+          const kind = Math.random() < 0.6 ? 'wood' : 'ore';
+          this.stock[kind] += 1; produced[kind] = (produced[kind] || 0) + 1; cp += 0.5; break;
+        }
+        case 'builder':  cp += 1.0; produced.build = (produced.build || 0) + 1; break;
+        case 'guard':    cp += 0.3; break;
+        default:         cp += 0.5; break;
+      }
     }
-    return work;
+    return { cp, produced, guards };
   }
 
   _spawn(world) {
     const hx = this.home.x + Math.round((Math.random() - 0.5) * 8);
     const x = Math.max(1, Math.min(world.width - 2, hx));
     const surf = world.heightMap[x] ?? Math.floor(world.height / 2);
-    this.settlers.push(new Settler(x + 0.5, surf, Math.random() < 0.3 ? 'builder' : 'villager'));
+    this.settlers.push(new Settler(x + 0.5, surf, this._neededRole()));
   }
 
   serialize() {
-    return { home: this.home, settlers: this.settlers.map((s) => s.serialize()) };
+    return { home: this.home, stock: this.stock, settlers: this.settlers.map((s) => s.serialize()) };
   }
 }

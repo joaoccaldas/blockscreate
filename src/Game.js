@@ -1086,6 +1086,10 @@ export class Game {
 
   _hasDinoDefense(radius = 7) {
     if (this.structures?.has('defended_camp') || this.structures?.has('watchtower')) return true;
+    // Guards in the settlement help defend it: 2+ guards count as defense when
+    // you're near the town center.
+    if ((this.townGuards || 0) >= 2 && this.settlers?.home &&
+        Math.abs(this.player.x - this.settlers.home.x) < 16) return true;
     const px = Math.floor(this.player.x);
     const py = Math.floor(this.player.y);
     let defense = 0;
@@ -1165,8 +1169,15 @@ export class Game {
       this.settlers.setHome(Math.round(this.player.x), Math.round(this.player.y));
       this.hud?.toast('🏘️ Your settlement attracts its first villagers', 2600);
     }
-    const work = this.settlers.update(dt, this.world, this.civ);
-    if (work > 0) this.civ.addCP(work * 0.6 * (this.powerups?.multiplier('cpMultiplier') || 1));
+    const out = this.settlers.update(dt, this.world, this.civ);
+    if (out.cp > 0) this.civ.addCP(out.cp * (this.powerups?.multiplier('cpMultiplier') || 1));
+    // Farmers feed the town: a fed settlement slowly tops up the player's
+    // hunger near home, so growing a food economy has a survival payoff.
+    if (out.produced.food && this.player.hunger < 100 &&
+        Math.abs(this.player.x - this.settlers.home.x) < 14) {
+      this.player.eat(out.produced.food * 0.5);
+    }
+    this.townGuards = out.guards; // used to deter raids near the settlement
   }
 
   _spawnMobs(dt) {

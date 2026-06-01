@@ -35,17 +35,25 @@ poorCiv.population = 9; poorCiv.housing = 0;
 assert.ok(sm2.capacity(poorCiv) <= 1, 'low housing caps settlers even with high population');
 ok('housing gates settler capacity');
 
-// Work ticks are produced over time (drive CP).
-let work = 0;
-for (let i = 0; i < 200; i++) work += sm.update(0.1, world, civ);
-assert.ok(work > 0, 'settlers produce work ticks');
-ok(`settlers produce work over time (${work} ticks)`);
+// Work produces CP and role-specific output over time.
+let totalCp = 0;
+for (let i = 0; i < 400; i++) totalCp += sm.update(0.1, world, civ).cp;
+assert.ok(totalCp > 0, 'settlers produce CP via work');
+ok(`settlers produce CP over time (${totalCp.toFixed(1)} CP)`);
 
-// Save round-trip preserves home + settlers.
+// Roles are assigned to balance the town, and produce a stockpile.
+const roles = sm.roleCounts();
+assert.ok(Object.keys(roles).length >= 1, 'settlers have roles');
+const st = sm.stock;
+assert.ok((st.food + st.wood + st.ore) > 0, 'town stockpile accumulates from work');
+ok(`roles balanced (${JSON.stringify(roles)}); stock food ${Math.floor(st.food)} wood ${Math.floor(st.wood)} ore ${Math.floor(st.ore)}`);
+
+// Save round-trip preserves home + settlers + stock.
 const data = sm.serialize();
 const restored = new SettlerManager(data);
 assert.strictEqual(restored.count(), sm.count(), 'settler count survives save');
 assert.deepStrictEqual(restored.home, sm.home, 'home survives save');
-ok('settlers + home round-trip through save');
+assert.deepStrictEqual(restored.stock, sm.stock, 'town stockpile survives save');
+ok('settlers + home + stock round-trip through save');
 
 console.log(`\nAll ${pass} settler checks passed.`);

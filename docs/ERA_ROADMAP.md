@@ -100,7 +100,7 @@ up the "tradeoffs of progress" theme for any future modern era.
 
 | System | Status | Next |
 | --- | --- | --- |
-| Settlers / population | ✅ basic AI + CP | give roles real jobs (gather, build, farm) |
+| Settlers / population | ✅ roles + town economy (farm/gather/build/guard), stockpile, guards aid defense, farmers feed town | per-role on-screen actions (visibly harvest/build) |
 | Journal (clues/discoveries/branches) | ✅ | per-era lore pages |
 | Save/persistence (+ chunk metadata) | ✅ | true chunk streaming |
 | Audio | ✅ SFX + ambient | per-era music themes |

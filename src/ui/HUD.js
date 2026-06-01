@@ -306,9 +306,16 @@ export class HUD {
     this.el('eraStory').textContent = era.manifest?.subtitle || era.blurb;
 
     const settlers = game.settlers?.count?.() || 0;
-    this.el('popVal').textContent = settlers > 0
+    const popEl = this.el('popVal');
+    popEl.textContent = settlers > 0
       ? `${game.civ.population} (${settlers} 🧍)`
       : game.civ.population;
+    if (settlers > 0 && game.settlers.roleCounts) {
+      const r = game.settlers.roleCounts();
+      const st = game.settlers.stock || {};
+      popEl.title = `Workers — 🌾${r.farmer || 0} ⛏️${r.gatherer || 0} 🔨${r.builder || 0} 🛡️${r.guard || 0}\n` +
+        `Town stock — food ${Math.floor(st.food || 0)}, wood ${Math.floor(st.wood || 0)}, ore ${Math.floor(st.ore || 0)}`;
+    }
     this.el('cpVal').textContent = Math.floor(game.civ.cp);
     this.el('settleVal').textContent = game.civ.settlementScore();
     this.el('clueVal').textContent = game.clues?.count?.() || 0;

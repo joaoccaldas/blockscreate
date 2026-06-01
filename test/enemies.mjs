@@ -75,8 +75,10 @@ ok('mob.hurt tracks health and death');
 const companion = new Mob('stego', 20, groundY);
 companion.tamed = true;
 companion.command = 'stay';
+companion.mounted = true;
 const loaded = Mob.load(companion.serialize());
 assert.strictEqual(loaded.command, 'stay', 'companion command persists through mob save');
+assert.strictEqual(loaded.mounted, true, 'companion mounted state persists through mob save');
 ok('tamed mob command persists');
 
 console.log(`\nAll ${passed} enemy/theme checks passed.`);

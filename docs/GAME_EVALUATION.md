@@ -1,7 +1,7 @@
 # Game Evaluation - age features, confidence, and gaps
 
 Audit date: 2026-06-01
-Build audited: v5.11.0
+Build audited: v5.12.0
 Verification: `npm test` passes all 10 suites.
 
 Confidence legend:
@@ -73,6 +73,8 @@ What works:
   that follows the player and counts as dinosaur/town defense.
 - Companions are now commandable: follow, stay, or guard town. Guarding grazers
   move toward the settlement and can defend it from raids.
+- Companions are now rideable: mounting near a tamed grazer boosts travel speed,
+  reduces travel hunger drain, updates HUD/touch controls, and persists in saves.
 - Alpha raptors now create a rare stronger predator challenge and drop a trophy
   item, giving the age a better "come prepared" test.
 - Asteroid/meteor events can physically change terrain and create clue blocks.
@@ -80,14 +82,14 @@ What works:
 What does not work yet:
 
 - Predator and event balance still needs real playtest tuning.
-- Companions are commandable guards/followers, not rideable mounts yet.
+- Mounted companions are fast travel helpers, not full combat mounts yet.
 - Dinosaur systems are fun, but not yet story-resolving; alpha raptors are a
   first boss-like step, not a finale.
 
 Best next improvement:
 
-- Make companions rideable so dinosaur bonding becomes an exploration playstyle,
-  not only a defensive bonus.
+- Add companion utility such as pack storage or retreat/rescue behavior so the
+  grazer becomes a long-term survival partner.
 
 ## Bronze Age / Early Cities
 
@@ -206,15 +208,15 @@ Low confidence / not done:
 
 ## GitHub Status
 
-As of this audit, local `main` is prepared for the v5.11 gameplay commit. The
-gameplay work through v5.11 should be pushed to GitHub with the code and docs
+As of this audit, local `main` is prepared for the v5.12 gameplay commit. The
+gameplay work through v5.12 should be pushed to GitHub with the code and docs
 together so the evaluation stays versioned with the game. GitHub Actions may
 still show red if the account-level billing lock remains; that is separate from
 local test health and Pages deploy behavior.
 
 ## Priority Order
 
-1. Rideable companions: deepens the strongest dinosaur system.
+1. Companion utility: pack storage / rescue behavior / light leveling.
 2. Irrigation and field quality: makes Bronze farming strategic.
 3. Physical siege pathing/damage: makes Iron architecture matter.
 4. Second Industrial production chain: turns windmills into factory strategy.

@@ -99,3 +99,10 @@ BlocksCreate already has the right spine for "Minecraft meets Civilization": blo
 - Added desktop (`R`) and touch (`🌿`) command controls plus HUD command status.
 - Persisted companion command state in saves.
 - Made guard-town companions count as real settlement defense near home.
+
+## Implemented In Companion Mount Pass
+
+- Added mount/dismount for tamed grazer companions (`X` on keyboard, `🐾` on touch).
+- Mounted grazers boost player travel speed and reduce travel hunger drain.
+- Mounted state syncs the grazer to the player and persists through save/load.
+- Tests cover command persistence, mount persistence, speed boost and touch wiring.

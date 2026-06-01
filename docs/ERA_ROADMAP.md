@@ -42,11 +42,12 @@ The "Minecraft survival" core with a prehistoric twist.
 | **Settlers** (visible villagers) | ✅ (new) |
 | Tameable grazer companions | ✅ |
 | Companion commands: follow / stay / guard town | ✅ |
+| Rideable grazer companions for faster exploration | ✅ |
 | Alpha raptor challenge event + trophy drop | ✅ |
 
-**Next & why:** make companions rideable and give them light utility. Commands
-make grazers feel like allies; mounting would make exploration and returning to
-town faster and more memorable.
+**Next & why:** add companion utility beyond travel: pack storage, rescue/retreat
+behavior, or gentle companion leveling. Mounting makes the bond useful; utility
+would make the bond strategically meaningful.
 
 ---
 

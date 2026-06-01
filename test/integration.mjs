@@ -126,12 +126,21 @@ g.settlers.setHome(Math.round(g.player.x), Math.round(g.player.y));
 grazer.x = g.settlers.home.x + 1;
 grazer.y = g.settlers.home.y;
 if (!g._hasTownDefense()) throw new Error('guarding companion did not count as town defense near home');
+grazer.x = g.player.x + 0.8;
+grazer.y = g.player.y;
+if (g._toggleMountCompanion() !== true) throw new Error('nearby companion did not mount');
+const roadSpeed = g._onRoad() ? 1.22 : 1;
+g.input.state.modifiers = { moveSpeed: roadSpeed * (g._mountedCompanion() ? 1.48 : 1), hungerDrain: 1 };
+if (!(g.input.state.modifiers.moveSpeed > roadSpeed)) throw new Error('mounted companion did not boost travel speed');
+g._syncMountedCompanion();
+if (!grazer.mounted || Math.abs(grazer.x - g.player.x) > 1) throw new Error('mounted companion did not sync with player');
 const grazerSave = SaveManager.toJSON(g);
 const grazerLoad = newGame();
 grazerLoad.loadSave(grazerSave);
 if (!grazerLoad.mobs.some((m) => m.tamed)) throw new Error('tamed grazer did not persist');
-if (grazerLoad.mobs.find((m) => m.tamed)?.command !== 'guard') throw new Error('companion command did not persist');
-ok('grazer bond creates a commandable persistent companion');
+if (grazerLoad.mobs.find((m) => m.tamed)?.command !== 'follow') throw new Error('mounted companion command did not persist');
+if (!grazerLoad.mobs.find((m) => m.tamed)?.mounted) throw new Error('mounted companion did not persist');
+ok('grazer bond creates a rideable commandable companion');
 
 // Objectives wired and evaluating.
 if (!g.objectives || !g.objectives.all.length) throw new Error('objectives missing');

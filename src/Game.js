@@ -237,6 +237,7 @@ export class Game {
       onToggleJournal: () => this._toggleJournal(),
       onToggleBuild: () => { this.buildMode = !this.buildMode; },
       onCompanionCommand: () => this._cycleCompanionCommand(),
+      onToggleMount: () => this._toggleMountCompanion(),
       onPause: () => this._onPause(),
     };
   }
@@ -282,6 +283,7 @@ export class Game {
       onFly: () => { this.input.state.fly = !this.input.state.fly; },
       onToggleBuild: () => { this.buildMode = !this.buildMode; this.audio?.play('ui'); },
       onCompanionCommand: () => this._cycleCompanionCommand(),
+      onToggleMount: () => this._toggleMountCompanion(),
     };
   }
 
@@ -478,11 +480,12 @@ export class Game {
     if (!menus) {
       const wasGround = this.player.onGround;
       this.input.state.modifiers = {
-        hungerDrain: this.powerups.multiplier('hungerDrain'),
+        hungerDrain: this.powerups.multiplier('hungerDrain') * (this._mountedCompanion() ? 0.72 : 1),
         cellStability: this.eraId === 'cell',
-        moveSpeed: this._onRoad() ? 1.22 : 1,
+        moveSpeed: (this._onRoad() ? 1.22 : 1) * (this._mountedCompanion() ? 1.48 : 1),
       };
       this.player.update(dt, this.world, this.input.state, this.mode);
+      this._syncMountedCompanion();
       this._expandWorldIfNeeded();
       this._absorbCellResources(dt);
       this._updateCellStatus(dt);
@@ -491,6 +494,7 @@ export class Game {
     }
 
     for (const m of this.mobs) {
+      if (m.mounted) { this._syncMountedCompanion(m); continue; }
       const target = this.mode === MODE.SURVIVAL ? this._mobTargetContext(m) : null;
       const hit = m.update(dt, this.world, target);
       if (hit && this.player.alive) this._damagePlayer(hit.damage, `a ${m.type}`);
@@ -1157,6 +1161,44 @@ export class Game {
     return next;
   }
 
+  _toggleMountCompanion() {
+    const mounted = this._mountedCompanion();
+    if (mounted) {
+      mounted.mounted = false;
+      mounted.command = 'follow';
+      mounted.x = this.player.x - this.player.facing * 1.1;
+      mounted.y = this.player.y;
+      this.audio?.play('ui');
+      this.hud?.toast('🌿 Dismounted companion', 1500);
+      return false;
+    }
+    const companion = this._nearestCompanion(3);
+    if (!companion) {
+      this.hud?.toast('Stand near your grazer to mount', 1400);
+      return null;
+    }
+    for (const m of this.mobs || []) m.mounted = false;
+    companion.mounted = true;
+    companion.command = 'follow';
+    this._syncMountedCompanion(companion);
+    this.audio?.play('objective');
+    this.hud?.toast('🌿 Mounted grazer: faster travel', 1800);
+    return true;
+  }
+
+  _mountedCompanion() {
+    return (this.mobs || []).find((m) => m.tamed && m.mounted) || null;
+  }
+
+  _syncMountedCompanion(companion = this._mountedCompanion()) {
+    if (!companion || !this.player) return;
+    companion.x = this.player.x - this.player.facing * 0.2;
+    companion.y = this.player.y;
+    companion.vx = this.player.vx;
+    companion.vy = this.player.vy;
+    companion.facing = this.player.facing || companion.facing;
+  }
+
   _nearestCompanion(radius = 6) {
     let best = null;
     for (const m of this.mobs || []) {
@@ -1200,6 +1242,7 @@ export class Game {
     const alphaDistance = this._nearestMobDistance('alpha_raptor');
     const companion = this.mobs.find((m) => m.tamed);
     const command = companion?.command || null;
+    const mounted = !!this._mountedCompanion();
     if (fear) {
       this.player.hunger = Math.max(0, this.player.hunger - dt * 0.16);
       if (!this.reduceMotion && Math.random() < dt * 0.6) this.hud?.shake?.();
@@ -1212,9 +1255,10 @@ export class Game {
       grazerBond: Math.min(100, Math.round(((this.grazerBondTime || 0) / 10) * 100)),
       companion: !!companion,
       command,
+      mounted,
       warning: alphaDistance != null && alphaDistance < 13 ? 'alpha raptor challenge' :
         fear ? 'T-Rex fear zone' : packPressure >= 2 ? 'raptor pack nearby' :
-        companion ? `grazer: ${command || 'follow'}` : defended ? 'defenses steady' : '',
+        mounted ? 'mounted grazer' : companion ? `grazer: ${command || 'follow'}` : defended ? 'defenses steady' : '',
     };
   }
 

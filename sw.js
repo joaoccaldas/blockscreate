@@ -50,6 +50,7 @@ const ASSETS = [
   './src/persistence/Settings.js',
   // Art
   './assets/generated/textures/blocks.png',
+  './assets/generated/textures/blocks_extra.png',
   './assets/generated/effects/effects.png',
   './assets/generated/landing/origin-to-dinos.png',
   './assets/generated/sprites/player.png',

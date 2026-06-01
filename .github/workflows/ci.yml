@@ -28,12 +28,13 @@ jobs:
             node --check "$f"
           done
 
-      - name: Regenerate enemy sprites and verify no drift
+      - name: Regenerate generated art and verify no drift
         run: |
           node tools/gen-sprites.mjs
-          if ! git diff --quiet -- assets/generated/sprites; then
-            echo "::error::Enemy sprites are stale. Run 'node tools/gen-sprites.mjs' and commit."
-            git --no-pager diff --stat -- assets/generated/sprites
+          node tools/gen-textures.mjs
+          if ! git diff --quiet -- assets/generated/sprites assets/generated/textures/blocks_extra.png; then
+            echo "::error::Generated art is stale. Run 'node tools/gen-sprites.mjs && node tools/gen-textures.mjs' and commit."
+            git --no-pager diff --stat -- assets/generated/sprites assets/generated/textures
             exit 1
           fi
 

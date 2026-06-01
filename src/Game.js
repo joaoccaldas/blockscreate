@@ -16,6 +16,7 @@ import { HistoricalClueLog, clueForBlock } from './systems/HistoricalClues.js';
 import { StructureTracker } from './systems/Structures.js';
 import { PowerupManager } from './systems/Powerups.js';
 import { WorldEventLog } from './systems/WorldEvents.js';
+import { SimulationAnomalyLog } from './systems/SimulationAnomalies.js';
 import { SettlerManager } from './systems/Settlers.js';
 import { Camera } from './render/Camera.js';
 import { Renderer } from './render/Renderer.js';
@@ -76,6 +77,7 @@ export class Game {
     this.clues = new HistoricalClueLog();
     this.powerups = new PowerupManager();
     this.events = new WorldEventLog();
+    this.anomalies = new SimulationAnomalyLog();
     this.settlers = new SettlerManager();
     this.mobs = [];
     this.eraStage = 0;
@@ -103,6 +105,7 @@ export class Game {
     this.clues = new HistoricalClueLog(save.clues || []);
     this.powerups = new PowerupManager(save.powerups || []);
     this.events = new WorldEventLog(save.events || {});
+    this.anomalies = new SimulationAnomalyLog(save.anomalies || {});
     this.settlers = new SettlerManager(save.settlers || null);
     this.mobs = (save.mobs || []).map((m) => Mob.load(m));
     this.animalPeaceTime = save.animalPeaceTime || 0;
@@ -535,6 +538,7 @@ export class Game {
     }
 
     this._evaluateFunSystems(dt);
+    this._updateSimulationAnomalies(dt);
 
     // Era advancement.
     if (this.mode === MODE.SURVIVAL && this.canAdvance()) {
@@ -1144,6 +1148,21 @@ export class Game {
       this.particles.fountain(this.player.x, this.player.y - 1,
         ['#f4d24a', '#6fc04e', '#4f86ee', '#ff7b29', '#fff'], 28);
       this.hud?.bigToast(`${d.icon} <b>Hidden discovery</b><br><small>${d.label}${suffix}</small>`, 3400);
+    }
+  }
+
+  _updateSimulationAnomalies(dt) {
+    if (!this.anomalies || !this.clues) return;
+    const found = this.anomalies.update(dt, this);
+    for (const a of found) {
+      const clue = this.clues.discover(a.clue);
+      if (clue?.reward && this.mode === MODE.SURVIVAL) {
+        this.civ.addCP(clue.reward * this.powerups.multiplier('cpMultiplier'));
+      }
+      this.audio?.play('unlock');
+      this.particles.fountain(this.player.x, this.player.y - 1,
+        ['#f4d24a', '#8e6bd6', '#7be4ff', '#fff'], 34);
+      this.hud?.bigToast(`${a.icon} <b>${a.label}</b><br><small>${a.text}</small>`, 4200);
     }
   }
 

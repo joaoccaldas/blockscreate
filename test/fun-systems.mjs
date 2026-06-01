@@ -10,6 +10,7 @@ import { DiscoveryLog } from '../src/systems/Discoveries.js';
 import { PowerupManager } from '../src/systems/Powerups.js';
 import { HistoricalClueLog } from '../src/systems/HistoricalClues.js';
 import { WorldEventLog } from '../src/systems/WorldEvents.js';
+import { SimulationAnomalyLog } from '../src/systems/SimulationAnomalies.js';
 import { Civilization } from '../src/systems/Civilization.js';
 
 let passed = 0;
@@ -85,6 +86,36 @@ assert.ok(clues.has('fossil_bed'), 'clue is recorded');
 assert.strictEqual(clues.discover('fossil_bed'), null, 'clue is one-shot');
 assert.strictEqual(clues.branchCounts().saurian_echo, 1, 'branch pressure counted');
 ok('historical clues unlock journal entries and branch metadata');
+
+// --- Simulation anomalies ---
+const anomalies = new SimulationAnomalyLog();
+const anomalyGame = {
+  mode: 'survival',
+  eraStage: 1,
+  events: new WorldEventLog(),
+  clues: new HistoricalClueLog(),
+  mobs: [],
+};
+const firstAnomaly = anomalies.update(1, anomalyGame);
+assert.strictEqual(firstAnomaly[0]?.id, 'checksum_echo', 'stage progress should trigger the first anomaly');
+assert.strictEqual(anomalies.update(1, anomalyGame).length, 0, 'anomaly cooldown prevents spam');
+anomalies.cooldown = 0;
+assert.strictEqual(anomalies.update(1, anomalyGame).length, 0, 'same anomaly is one-shot');
+anomalyGame.clues.discover(firstAnomaly[0].clue);
+anomalyGame.events.seen.add('meteor_shower');
+const secondAnomaly = anomalies.update(20, anomalyGame);
+assert.strictEqual(secondAnomaly[0]?.id, 'duplicate_sun', 'meteor events unlock a later anomaly');
+anomalyGame.clues.discover(secondAnomaly[0].clue);
+const observerDiscoveries = new DiscoveryLog();
+const observerFound = observerDiscoveries.evaluate({
+  structures: { has: () => false },
+  civ: { hasBuilt: () => false },
+  inventory: { count: () => 0 },
+  world,
+  clues: anomalyGame.clues,
+});
+assert.ok(observerFound.some((d) => d.id === 'observer_pattern'), 'two observer clues unlock a hidden pattern');
+ok('simulation anomalies are gated, one-shot, and feed the journal mystery');
 
 // --- Powerups ---
 const powerups = new PowerupManager();

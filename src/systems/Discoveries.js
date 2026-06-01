@@ -104,6 +104,13 @@ export const DISCOVERIES = [
     reward: { cp: 35, powerup: 'fossil_charm' },
     check: (g) => g.eraId === 'stone' && g.structures?.has('defended_camp'),
   },
+  {
+    id: 'observer_pattern',
+    icon: '∴',
+    label: 'Observer Pattern',
+    reward: { cp: 45, powerup: 'time_shard' },
+    check: (g) => (g.clues?.branchCounts?.().observer || 0) >= 2,
+  },
 ];
 
 export class DiscoveryLog {

@@ -176,7 +176,7 @@ g.mode = MODE.SURVIVAL;
 const json = SaveManager.toJSON(g);
 if (!('objectives' in json) || !('crafted' in json)) throw new Error('save missing new fields');
 if (!('eraStage' in json)) throw new Error('save missing era stage');
-for (const key of ['structures', 'discoveries', 'clues', 'powerups', 'events']) {
+for (const key of ['structures', 'discoveries', 'clues', 'powerups', 'events', 'anomalies']) {
   if (!(key in json)) throw new Error(`save missing ${key}`);
 }
 if (!json.world.chunks?.generated?.length) throw new Error('save missing generated chunk metadata');
@@ -184,9 +184,11 @@ g.civ.onDefeat('raptor');
 g.events.cooldowns.predator_migration = 12;
 g.events.durations.predator_migration = 8;
 g.events.active.add('predator_migration');
+g.anomalies.seen.add('checksum_echo');
 const jsonWithRpg = SaveManager.toJSON(g);
 if (jsonWithRpg.civ.defeated.raptor !== 1) throw new Error('save missing defeated enemy stats');
 if (!jsonWithRpg.events.durations.predator_migration) throw new Error('save missing event durations');
+if (!jsonWithRpg.anomalies.seen.includes('checksum_echo')) throw new Error('save missing anomaly state');
 const g2 = newGame();
 g2.loadSave(jsonWithRpg);
 if (g2.world.grid.length !== g.world.grid.length) throw new Error('grid length mismatch after load');
@@ -195,7 +197,8 @@ if (g2.civ.defeated.raptor !== 1) throw new Error('defeated enemy stats lost acr
 if (!g2.events.isActive('predator_migration')) throw new Error('active RPG event lost across save');
 if (!g2.objectives.isDone('gather_wood')) throw new Error('objective state lost across save');
 if (g2.eraStage !== g.eraStage) throw new Error('era stage lost across save');
-if (!g2.structures || !g2.discoveries || !g2.clues || !g2.powerups || !g2.events) throw new Error('fun systems missing after load');
+if (!g2.anomalies.has('checksum_echo')) throw new Error('anomaly state lost across save');
+if (!g2.structures || !g2.discoveries || !g2.clues || !g2.powerups || !g2.events || !g2.anomalies) throw new Error('fun systems missing after load');
 ok(`save/load round-trip; era ${g2.eraId}, objectives + fun systems restored`);
 
 // Era advancement builds a fresh world and installs the next era objective set.

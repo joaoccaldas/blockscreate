@@ -41,6 +41,42 @@ export const CLUES = {
     branch: 'accurate_line',
     reward: 14,
   },
+  checksum_echo: {
+    id: 'checksum_echo',
+    icon: '∴',
+    label: 'Checksum Echo',
+    era: 'hidden',
+    text: 'A number-pattern under the soil. It does not explain itself.',
+    branch: 'observer',
+    reward: 18,
+  },
+  duplicate_sun: {
+    id: 'duplicate_sun',
+    icon: '☉',
+    label: 'Duplicate Sun',
+    era: 'hidden',
+    text: 'The sky briefly rendered two answers to one question.',
+    branch: 'observer',
+    reward: 22,
+  },
+  memory_leak: {
+    id: 'memory_leak',
+    icon: '⌁',
+    label: 'Memory Leak',
+    era: 'hidden',
+    text: 'A memory attached to motion, not to you.',
+    branch: 'observer',
+    reward: 20,
+  },
+  observer_signal: {
+    id: 'observer_signal',
+    icon: '◌',
+    label: 'Observer Signal',
+    era: 'hidden',
+    text: 'Progress was measured before anyone built a measuring tool.',
+    branch: 'observer',
+    reward: 30,
+  },
 };
 
 export class HistoricalClueLog {
@@ -73,4 +109,3 @@ export class HistoricalClueLog {
 export function clueForBlock(block) {
   return block?.clue || null;
 }
-

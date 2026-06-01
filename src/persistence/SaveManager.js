@@ -27,6 +27,7 @@ export const SaveManager = {
       clues: game.clues ? game.clues.serialize() : [],
       powerups: game.powerups ? game.powerups.serialize() : [],
       events: game.events ? game.events.serialize() : {},
+      anomalies: game.anomalies ? game.anomalies.serialize() : {},
       settlers: game.settlers ? game.settlers.serialize() : null,
       animalPeaceTime: game.animalPeaceTime || 0,
       grazerBondTime: game.grazerBondTime || 0,
@@ -78,6 +79,8 @@ export const SaveManager = {
     save.discoveries = save.discoveries || [];
     save.clues = save.clues || [];
     save.powerups = save.powerups || [];
+    save.events = save.events || {};
+    save.anomalies = save.anomalies || {};
     save.grazerBondTime = save.grazerBondTime || 0;
     save.eraStage = save.eraStage || 0;
     save.version = C.SAVE_VERSION;

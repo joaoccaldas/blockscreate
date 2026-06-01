@@ -20,6 +20,7 @@ BlocksCreate is now a modular historical sandbox, but not yet the complete visio
 - **Storage, trade, defense and automation:** granaries raise storage, markets and caravan posts convert surplus into CP/trade beads, gates/guards/companions deter raids, roads speed travel, siege raids test defenses, and Auto Miners produce ore while windmills reduce pollution.
 - **Era biomes:** chunks now have deterministic era biomes, starting with fern valleys, fossil basins, meteor scars and ash fields for the Age of Dinosaurs.
 - **Progression:** portals require both CP and mandatory goals. Optional mastery goals grant benefits without blocking advancement, and intra-era stages make partial progress visible before the final portal opens.
+- **Hidden meaning layer:** rare, achievement-gated simulation anomalies now appear as strange one-shot world lapses and observer-branch journal clues. They are intentionally cryptic so players sense a larger pattern without being told the premise.
 - **Historical consistency:** First Cell is science-inspired abstraction, Age of Dinosaurs is explicitly alternate-history survival fantasy, and later eras use historical sandbox framing.
 
 ## What Improved In This Pass

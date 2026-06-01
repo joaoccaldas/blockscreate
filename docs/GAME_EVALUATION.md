@@ -1,7 +1,7 @@
 # Game Evaluation - age features, confidence, and gaps
 
 Audit date: 2026-06-01
-Build audited: v5.15.0
+Build audited: v5.16.0
 Verification: `npm test` passes all 10 suites.
 
 Confidence legend:
@@ -34,7 +34,8 @@ visible stages (Awakening, Adapting, Evolved) driven by mandatory objectives,
 with HUD progress and a celebratory animation when the stage changes. v5.15
 adds a hidden meaning layer: rare world anomalies reveal observer-branch clues
 when the player reaches stage progress, meteor events, companion bonding and
-deeper clue pressure.
+deeper clue pressure. v5.16 adds living hints that wait for quiet time, nudge
+the next objective, and seed the idea that odd artifacts can matter.
 
 The main gap is depth per age. The game has many good systems, but only some
 are deep enough to feel like a new genre layer rather than new content.
@@ -218,8 +219,8 @@ Low confidence / not done:
 
 ## GitHub Status
 
-As of this audit, local `main` is prepared for the v5.15 gameplay commit. The
-gameplay work through v5.15 should be pushed to GitHub with the code and docs
+As of this audit, local `main` is prepared for the v5.16 gameplay commit. The
+gameplay work through v5.16 should be pushed to GitHub with the code and docs
 together so the evaluation stays versioned with the game. GitHub Actions may
 still show red if the account-level billing lock remains; that is separate from
 local test health and Pages deploy behavior.

@@ -17,6 +17,7 @@ import { StructureTracker } from './systems/Structures.js';
 import { PowerupManager } from './systems/Powerups.js';
 import { WorldEventLog } from './systems/WorldEvents.js';
 import { SimulationAnomalyLog } from './systems/SimulationAnomalies.js';
+import { GuidanceHints } from './systems/GuidanceHints.js';
 import { SettlerManager } from './systems/Settlers.js';
 import { Camera } from './render/Camera.js';
 import { Renderer } from './render/Renderer.js';
@@ -78,6 +79,7 @@ export class Game {
     this.powerups = new PowerupManager();
     this.events = new WorldEventLog();
     this.anomalies = new SimulationAnomalyLog();
+    this.guidance = new GuidanceHints();
     this.settlers = new SettlerManager();
     this.mobs = [];
     this.eraStage = 0;
@@ -106,6 +108,7 @@ export class Game {
     this.powerups = new PowerupManager(save.powerups || []);
     this.events = new WorldEventLog(save.events || {});
     this.anomalies = new SimulationAnomalyLog(save.anomalies || {});
+    this.guidance = new GuidanceHints(save.guidance || {});
     this.settlers = new SettlerManager(save.settlers || null);
     this.mobs = (save.mobs || []).map((m) => Mob.load(m));
     this.animalPeaceTime = save.animalPeaceTime || 0;
@@ -539,6 +542,7 @@ export class Game {
 
     this._evaluateFunSystems(dt);
     this._updateSimulationAnomalies(dt);
+    this._updateGuidanceHints(dt);
 
     // Era advancement.
     if (this.mode === MODE.SURVIVAL && this.canAdvance()) {
@@ -1164,6 +1168,13 @@ export class Game {
         ['#f4d24a', '#8e6bd6', '#7be4ff', '#fff'], 34);
       this.hud?.bigToast(`${a.icon} <b>${a.label}</b><br><small>${a.text}</small>`, 4200);
     }
+  }
+
+  _updateGuidanceHints(dt) {
+    if (!this.guidance || !this.hud) return;
+    const hint = this.guidance.update(dt, this);
+    if (!hint) return;
+    this.hud.toast(`${hint.icon} ${hint.text}`, 4200);
   }
 
   _trackAnimalFriendship(dt) {

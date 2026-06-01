@@ -21,6 +21,7 @@ BlocksCreate is now a modular historical sandbox, but not yet the complete visio
 - **Era biomes:** chunks now have deterministic era biomes, starting with fern valleys, fossil basins, meteor scars and ash fields for the Age of Dinosaurs.
 - **Progression:** portals require both CP and mandatory goals. Optional mastery goals grant benefits without blocking advancement, and intra-era stages make partial progress visible before the final portal opens.
 - **Hidden meaning layer:** rare, achievement-gated simulation anomalies now appear as strange one-shot world lapses and observer-branch journal clues. They are intentionally cryptic so players sense a larger pattern without being told the premise.
+- **Living guidance:** if players spend too long without progress, gentle HUD hints point to the next objective or suggest that unusual blocks, scars and fragments may hide journal-worthy discoveries.
 - **Historical consistency:** First Cell is science-inspired abstraction, Age of Dinosaurs is explicitly alternate-history survival fantasy, and later eras use historical sandbox framing.
 
 ## What Improved In This Pass

@@ -11,6 +11,7 @@ import { PowerupManager } from '../src/systems/Powerups.js';
 import { HistoricalClueLog } from '../src/systems/HistoricalClues.js';
 import { WorldEventLog } from '../src/systems/WorldEvents.js';
 import { SimulationAnomalyLog } from '../src/systems/SimulationAnomalies.js';
+import { GuidanceHints } from '../src/systems/GuidanceHints.js';
 import { Civilization } from '../src/systems/Civilization.js';
 
 let passed = 0;
@@ -116,6 +117,35 @@ const observerFound = observerDiscoveries.evaluate({
 });
 assert.ok(observerFound.some((d) => d.id === 'observer_pattern'), 'two observer clues unlock a hidden pattern');
 ok('simulation anomalies are gated, one-shot, and feed the journal mystery');
+
+// --- Guidance hints ---
+const guidance = new GuidanceHints({ cooldown: 0 });
+const guidanceGame = {
+  mode: 'survival',
+  eraId: 'stone',
+  eraStage: 0,
+  objectives: {
+    completed: new Set(),
+    active: () => [{ id: 'gather_wood', icon: '🪵', label: 'Forage: collect 3 Wood' }],
+  },
+  clues: new HistoricalClueLog(),
+  discoveries: { list: () => [] },
+  structures: { list: () => [] },
+};
+assert.strictEqual(guidance.update(10, guidanceGame), null, 'guidance waits before nudging');
+const firstHint = guidance.update(20, guidanceGame);
+assert.ok(firstHint?.text.includes('tree trunks'), 'first guidance points to the active task');
+assert.strictEqual(guidance.update(10, guidanceGame), null, 'guidance cooldown prevents spam');
+guidance.cooldown = 0;
+guidanceGame.objectives.completed.add('gather_wood');
+assert.strictEqual(guidance.update(1, guidanceGame), null, 'meaningful progress resets quiet timer');
+guidanceGame.eraStage = 1;
+assert.strictEqual(guidance.update(1, guidanceGame), null, 'stage progress also resets quiet timer');
+const clueHint = guidance.update(50, guidanceGame);
+assert.ok(clueHint?.text.includes('Odd blocks'), 'later guidance seeds artifact curiosity');
+const restoredGuidance = new GuidanceHints(guidance.serialize());
+assert.ok(restoredGuidance.seen.has(clueHint.id), 'guidance state persists');
+ok('guidance hints nudge tasks and artifact curiosity without spamming');
 
 // --- Powerups ---
 const powerups = new PowerupManager();

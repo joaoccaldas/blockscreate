@@ -92,3 +92,10 @@ BlocksCreate already has the right spine for "Minecraft meets Civilization": blo
 - Added player-planned build sites that settlers complete using town wood.
 - Added Iron siege raids that bypass scout deterrence and test town defenses.
 - Added windmills that offset Industrial pollution from automation.
+
+## Implemented In Companion Command Pass
+
+- Added follow / stay / guard-town commands for tamed grazer companions.
+- Added desktop (`R`) and touch (`🌿`) command controls plus HUD command status.
+- Persisted companion command state in saves.
+- Made guard-town companions count as real settlement defense near home.

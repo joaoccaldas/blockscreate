@@ -233,6 +233,7 @@ export class HUD {
       <div class="touch-quick">
         <button class="tbtn small" data-act="inv" aria-label="Inventory">🎒</button>
         <button class="tbtn small" data-act="craft" aria-label="Crafting">🔨</button>
+        ${this.eraId === 'stone' ? '<button class="tbtn small" data-act="companion" aria-label="Companion command">🌿</button>' : ''}
       </div>
       <div class="touch-left">
         <button class="tbtn" data-act="left" aria-label="Move left">◀</button>
@@ -265,6 +266,8 @@ export class HUD {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleInventory?.(); });
       } else if (act === 'craft') {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleCrafting?.(); });
+      } else if (act === 'companion') {
+        btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onCompanionCommand?.(); });
       }
     });
   }
@@ -376,7 +379,8 @@ export class HUD {
     this.el('grazerBondVal').textContent = `${status.grazerBond || 0}%`;
     this.el('grazerBondBar').style.width = `${status.grazerBond || 0}%`;
     const pack = status.packPressure >= 2 ? ` · pack x${status.packPressure}` : '';
-    this.el('dinoWarning').textContent = `${status.warning || 'listen for movement'}${pack}`;
+    const cmd = status.command ? ` · R/🌿: ${status.command}` : '';
+    this.el('dinoWarning').textContent = `${status.warning || 'listen for movement'}${pack}${cmd}`;
   }
 
   renderObjectives(game) {

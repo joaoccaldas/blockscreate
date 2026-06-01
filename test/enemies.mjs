@@ -72,4 +72,11 @@ assert.ok(!boar.hurt(4), 'boar survives a single hit');
 assert.ok(boar.hurt(100), 'boar dies from a big hit');
 ok('mob.hurt tracks health and death');
 
+const companion = new Mob('stego', 20, groundY);
+companion.tamed = true;
+companion.command = 'stay';
+const loaded = Mob.load(companion.serialize());
+assert.strictEqual(loaded.command, 'stay', 'companion command persists through mob save');
+ok('tamed mob command persists');
+
 console.log(`\nAll ${passed} enemy/theme checks passed.`);

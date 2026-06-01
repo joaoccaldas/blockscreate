@@ -13,7 +13,7 @@ BlocksCreate is now a modular historical sandbox, but not yet the complete visio
 - **Physical clues:** Age of Dinosaurs can generate clue blocks such as fossil beds, meteor shards, handprints and standing stones.
 - **World events:** Age of Dinosaurs now has cold-night pressure and meteor showers that place physical meteor shards.
 - **RPG encounters:** Age of Dinosaurs can trigger predator migrations, alpha raptors and grazer herds; Early Cities can trigger droughts and raider scouts; Iron can trigger siege raids.
-- **Dinosaur behavior:** raptors gain pack pressure, T-Rex creates fear zones, grazers can form a bond, full bond tames a persistent companion, and defended camps reduce survival pressure.
+- **Dinosaur behavior:** raptors gain pack pressure, T-Rex creates fear zones, grazers can form a bond, full bond tames a persistent companion, commands let that companion follow/stay/guard town, and defended camps reduce survival pressure.
 - **RPG progression:** primitive weapons, defeated-enemy stats, relic powerups and optional mastery goals make runs branch more meaningfully.
 - **Living settlements:** housing-supported settlers now appear on screen with roles. Farmers tend visible wheat crops into food, gatherers physically harvest nearby trees/ore into a town stockpile, builders spend wood to raise village blocks or complete planned build sites, and guards contribute to defense.
 - **Bronze farming:** farm plots, wheat seeds, crop growth stages, wheat harvests and bread recipes turn the first-town era into a sustainable food economy instead of only hunting/abstract food.

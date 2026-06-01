@@ -41,11 +41,12 @@ The "Minecraft survival" core with a prehistoric twist.
 | Fossil/clue blocks + timeline branches (Journal) | ✅ |
 | **Settlers** (visible villagers) | ✅ (new) |
 | Tameable grazer companions | ✅ |
+| Companion commands: follow / stay / guard town | ✅ |
 | Alpha raptor challenge event + trophy drop | ✅ |
 
-**Next & why:** make companion play deeper: rideable grazers, commands, and
-simple camp defense behaviors would turn the dinosaur age from "survive beside
-animals" into "survive with animals."
+**Next & why:** make companions rideable and give them light utility. Commands
+make grazers feel like allies; mounting would make exploration and returning to
+town faster and more memorable.
 
 ---
 

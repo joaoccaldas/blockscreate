@@ -120,11 +120,18 @@ g.grazerBondTime = 10;
 g._trackAnimalFriendship(0.016);
 if (!grazer.tamed) throw new Error('grazer did not become a companion at full bond');
 if (!g._hasDinoDefense()) throw new Error('tamed grazer did not count as dinosaur defense');
+if (g._cycleCompanionCommand() !== 'stay') throw new Error('companion command did not cycle to stay');
+if (g._cycleCompanionCommand() !== 'guard') throw new Error('companion command did not cycle to guard');
+g.settlers.setHome(Math.round(g.player.x), Math.round(g.player.y));
+grazer.x = g.settlers.home.x + 1;
+grazer.y = g.settlers.home.y;
+if (!g._hasTownDefense()) throw new Error('guarding companion did not count as town defense near home');
 const grazerSave = SaveManager.toJSON(g);
 const grazerLoad = newGame();
 grazerLoad.loadSave(grazerSave);
 if (!grazerLoad.mobs.some((m) => m.tamed)) throw new Error('tamed grazer did not persist');
-ok('grazer bond creates a persistent defensive companion');
+if (grazerLoad.mobs.find((m) => m.tamed)?.command !== 'guard') throw new Error('companion command did not persist');
+ok('grazer bond creates a commandable persistent companion');
 
 // Objectives wired and evaluating.
 if (!g.objectives || !g.objectives.all.length) throw new Error('objectives missing');

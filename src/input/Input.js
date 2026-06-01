@@ -62,6 +62,7 @@ export class Input {
       if (k === 'c') this.handlers.onToggleCrafting?.();
       if (k === 'f') this.state.fly = !this.state.fly;
       if (k === 'q') this.handlers.onToggleBuild?.();
+      if (k === 'r') this.handlers.onCompanionCommand?.();
       if (k === 'p' || k === 'Escape') this.handlers.onPause?.();
     });
 

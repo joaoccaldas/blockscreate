@@ -236,6 +236,7 @@ export class Game {
       onToggleCrafting: () => this._toggleCrafting(),
       onToggleJournal: () => this._toggleJournal(),
       onToggleBuild: () => { this.buildMode = !this.buildMode; },
+      onCompanionCommand: () => this._cycleCompanionCommand(),
       onPause: () => this._onPause(),
     };
   }
@@ -280,6 +281,7 @@ export class Game {
       onJump: (pressed) => { this.input.state.up = pressed; if (pressed) this.audio?.play('jump'); },
       onFly: () => { this.input.state.fly = !this.input.state.fly; },
       onToggleBuild: () => { this.buildMode = !this.buildMode; this.audio?.play('ui'); },
+      onCompanionCommand: () => this._cycleCompanionCommand(),
     };
   }
 
@@ -488,8 +490,8 @@ export class Game {
       this._handleInteraction(dt);
     }
 
-    const target = this.mode === MODE.SURVIVAL ? this._mobTargetContext() : null;
     for (const m of this.mobs) {
+      const target = this.mode === MODE.SURVIVAL ? this._mobTargetContext(m) : null;
       const hit = m.update(dt, this.world, target);
       if (hit && this.player.alive) this._damagePlayer(hit.damage, `a ${m.type}`);
     }
@@ -1131,6 +1133,7 @@ export class Game {
 
   _tameGrazer(grazer) {
     grazer.tamed = true;
+    grazer.command = 'follow';
     grazer.health = Math.max(grazer.health, grazer.def.hp || grazer.health);
     this.civ.addCP(18 * (this.powerups?.multiplier('cpMultiplier') || 1));
     this.powerups?.grant?.('grazer_bond');
@@ -1139,7 +1142,39 @@ export class Game {
     this.hud?.bigToast(`🌿 <b>Grazer companion</b><br><small>Your bond turned a ${grazer.type} into a town guardian.</small>`, 3200);
   }
 
-  _mobTargetContext() {
+  _cycleCompanionCommand() {
+    const companion = this._nearestCompanion();
+    if (!companion) {
+      this.hud?.toast('No grazer companion nearby', 1400);
+      return null;
+    }
+    const order = ['follow', 'stay', 'guard'];
+    const next = order[(order.indexOf(companion.command || 'follow') + 1) % order.length];
+    companion.command = next;
+    this.audio?.play('ui');
+    const label = next === 'follow' ? 'Follow me' : next === 'stay' ? 'Stay here' : 'Guard town';
+    this.hud?.toast(`🌿 Companion: ${label}`, 1800);
+    return next;
+  }
+
+  _nearestCompanion(radius = 6) {
+    let best = null;
+    for (const m of this.mobs || []) {
+      if (!m.tamed) continue;
+      const d = Math.hypot(m.x - this.player.x, m.y - this.player.y);
+      if (d <= radius && (!best || d < best.d)) best = { mob: m, d };
+    }
+    return best?.mob || null;
+  }
+
+  _mobTargetContext(mob = null) {
+    if (mob?.tamed) {
+      if ((mob.command || 'follow') === 'stay') return null;
+      if (mob.command === 'guard' && this.settlers?.home) {
+        return { x: this.settlers.home.x, y: this.settlers.home.y, alive: true };
+      }
+      return this.player;
+    }
     if (this.eraId !== 'stone') return this.player;
     const packPressure = this.mobs.filter((m) => (m.type === 'raptor' || m.type === 'alpha_raptor') &&
       Math.hypot(m.x - this.player.x, m.y - this.player.y) < 10).length;
@@ -1163,6 +1198,8 @@ export class Game {
     const defended = this._hasDinoDefense();
     const fear = rexDistance != null && rexDistance < 13 && !defended;
     const alphaDistance = this._nearestMobDistance('alpha_raptor');
+    const companion = this.mobs.find((m) => m.tamed);
+    const command = companion?.command || null;
     if (fear) {
       this.player.hunger = Math.max(0, this.player.hunger - dt * 0.16);
       if (!this.reduceMotion && Math.random() < dt * 0.6) this.hud?.shake?.();
@@ -1173,10 +1210,11 @@ export class Game {
       alphaDistance,
       defended,
       grazerBond: Math.min(100, Math.round(((this.grazerBondTime || 0) / 10) * 100)),
-      companion: this.mobs.some((m) => m.tamed),
+      companion: !!companion,
+      command,
       warning: alphaDistance != null && alphaDistance < 13 ? 'alpha raptor challenge' :
         fear ? 'T-Rex fear zone' : packPressure >= 2 ? 'raptor pack nearby' :
-        this.mobs.some((m) => m.tamed) ? 'grazer companion nearby' : defended ? 'defenses steady' : '',
+        companion ? `grazer: ${command || 'follow'}` : defended ? 'defenses steady' : '',
     };
   }
 
@@ -1193,6 +1231,8 @@ export class Game {
   _hasDinoDefense(radius = 7) {
     if (this.structures?.has('defended_camp') || this.structures?.has('watchtower')) return true;
     if (this.mobs?.some((m) => m.tamed && Math.hypot(m.x - this.player.x, m.y - this.player.y) < 10)) return true;
+    if (this.settlers?.home && this.mobs?.some((m) => m.tamed && m.command === 'guard' &&
+        Math.hypot(m.x - this.settlers.home.x, m.y - this.settlers.home.y) < 10)) return true;
     // Guards in the settlement help defend it: 2+ guards count as defense when
     // you're near the town center.
     if ((this.townGuards || 0) >= 2 && this.settlers?.home &&
@@ -1341,7 +1381,17 @@ export class Game {
   _hasTownDefense() {
     const blockDefense = (this.civ?.defense || 0) + (this.civ?.light || 0) * 0.4;
     const guards = (this.townGuards || 0) * 1.5;
-    const grazer = this.mobs?.some((m) => m.tamed) ? 3 : 0;
+    let grazer = 0;
+    for (const m of this.mobs || []) {
+      if (!m.tamed) continue;
+      if (m.command === 'guard' && this.settlers?.home) {
+        if (Math.hypot(m.x - this.settlers.home.x, m.y - this.settlers.home.y) < 10) {
+          grazer = Math.max(grazer, 4);
+          continue;
+        }
+      }
+      if (Math.hypot(m.x - this.player.x, m.y - this.player.y) < 10) grazer = Math.max(grazer, 3);
+    }
     return blockDefense + guards + grazer >= 4;
   }
 

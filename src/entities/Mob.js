@@ -53,6 +53,7 @@ export class Mob {
     this.hitFlash = 0; // seconds of "just got hit" tint
     this.attackCd = 0; // contact-attack cooldown
     this.tamed = false;
+    this.command = 'follow'; // tamed companion command: follow, stay, guard
   }
 
   /**
@@ -63,8 +64,9 @@ export class Mob {
     if (this.hitFlash > 0) this.hitFlash -= dt;
     if (this.attackCd > 0) this.attackCd -= dt;
 
-    if (this.tamed && target) {
-      this._follow(dt, target);
+    if (this.tamed) {
+      if (target) this._follow(dt, target);
+      else this.vx *= 0.5;
     } else if (this.hostile && target) {
       this._think(dt, target);
     } else {
@@ -168,13 +170,14 @@ export class Mob {
   }
 
   serialize() {
-    return { type: this.type, x: this.x, y: this.y, health: this.health, tamed: this.tamed };
+    return { type: this.type, x: this.x, y: this.y, health: this.health, tamed: this.tamed, command: this.command };
   }
 
   static load(d) {
     const m = new Mob(d.type, d.x, d.y);
     m.health = d.health;
     m.tamed = !!d.tamed;
+    m.command = d.command || (m.tamed ? 'follow' : 'follow');
     return m;
   }
 }

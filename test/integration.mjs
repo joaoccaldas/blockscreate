@@ -134,13 +134,21 @@ g.input.state.modifiers = { moveSpeed: roadSpeed * (g._mountedCompanion() ? 1.48
 if (!(g.input.state.modifiers.moveSpeed > roadSpeed)) throw new Error('mounted companion did not boost travel speed');
 g._syncMountedCompanion();
 if (!grazer.mounted || Math.abs(grazer.x - g.player.x) > 1) throw new Error('mounted companion did not sync with player');
+g.inventory.add('log', 4);
+g.inventory.selected = g.inventory.slots.findIndex((s) => s?.id === 'log');
+if (g._toggleCompanionCargo() !== true) throw new Error('selected stack did not stash into companion cargo');
+if (!grazer.cargo?.some((s) => s.id === 'log' && s.n >= 4)) throw new Error('companion cargo missing stashed logs');
+const emptySlot = g.inventory.slots.findIndex((s) => !s);
+g.inventory.selected = emptySlot >= 0 ? emptySlot : 0;
+if (g._toggleCompanionCargo() !== true) throw new Error('cargo did not retrieve into an empty selected slot');
+if ((grazer.cargo || []).some((s) => s.id === 'log')) throw new Error('retrieved logs still in companion cargo');
 const grazerSave = SaveManager.toJSON(g);
 const grazerLoad = newGame();
 grazerLoad.loadSave(grazerSave);
 if (!grazerLoad.mobs.some((m) => m.tamed)) throw new Error('tamed grazer did not persist');
 if (grazerLoad.mobs.find((m) => m.tamed)?.command !== 'follow') throw new Error('mounted companion command did not persist');
 if (!grazerLoad.mobs.find((m) => m.tamed)?.mounted) throw new Error('mounted companion did not persist');
-ok('grazer bond creates a rideable commandable companion');
+ok('grazer bond creates a rideable commandable cargo companion');
 
 // Objectives wired and evaluating.
 if (!g.objectives || !g.objectives.all.length) throw new Error('objectives missing');

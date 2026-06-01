@@ -76,9 +76,11 @@ const companion = new Mob('stego', 20, groundY);
 companion.tamed = true;
 companion.command = 'stay';
 companion.mounted = true;
+companion.cargo = [{ id: 'log', n: 3 }];
 const loaded = Mob.load(companion.serialize());
 assert.strictEqual(loaded.command, 'stay', 'companion command persists through mob save');
 assert.strictEqual(loaded.mounted, true, 'companion mounted state persists through mob save');
+assert.deepStrictEqual(loaded.cargo, [{ id: 'log', n: 3 }], 'companion cargo persists through mob save');
 ok('tamed mob command persists');
 
 console.log(`\nAll ${passed} enemy/theme checks passed.`);

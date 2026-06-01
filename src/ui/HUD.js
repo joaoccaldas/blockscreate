@@ -235,6 +235,7 @@ export class HUD {
         <button class="tbtn small" data-act="craft" aria-label="Crafting">🔨</button>
         ${this.eraId === 'stone' ? '<button class="tbtn small" data-act="companion" aria-label="Companion command">🌿</button>' : ''}
         ${this.eraId === 'stone' ? '<button class="tbtn small" data-act="mount" aria-label="Mount companion">🐾</button>' : ''}
+        ${this.eraId === 'stone' ? '<button class="tbtn small" data-act="cargo" aria-label="Companion cargo">📦</button>' : ''}
       </div>
       <div class="touch-left">
         <button class="tbtn" data-act="left" aria-label="Move left">◀</button>
@@ -271,6 +272,8 @@ export class HUD {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onCompanionCommand?.(); });
       } else if (act === 'mount') {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleMount?.(); });
+      } else if (act === 'cargo') {
+        btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onCompanionCargo?.(); });
       }
     });
   }
@@ -384,7 +387,8 @@ export class HUD {
     const pack = status.packPressure >= 2 ? ` · pack x${status.packPressure}` : '';
     const cmd = status.command ? ` · R/🌿: ${status.command}` : '';
     const mount = status.companion ? ` · X/🐾 ${status.mounted ? 'dismount' : 'mount'}` : '';
-    this.el('dinoWarning').textContent = `${status.warning || 'listen for movement'}${pack}${cmd}${mount}`;
+    const cargo = status.cargo ? ` · V/📦 ${status.cargo.used}/${status.cargo.capacity}` : '';
+    this.el('dinoWarning').textContent = `${status.warning || 'listen for movement'}${pack}${cmd}${mount}${cargo}`;
   }
 
   renderObjectives(game) {

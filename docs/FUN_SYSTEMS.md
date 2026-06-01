@@ -148,6 +148,7 @@ Age of Dinosaurs now reacts more like a survival ecosystem:
 - full Grazer Bond tames a stego/trike into a persistent defensive companion,
 - companion commands switch that grazer between follow, stay and guard town,
 - mounted grazers boost travel speed and reduce hunger drain while exploring,
+- companion cargo lets the grazer carry extra stacks during long trips,
 - defended camps are recognized from fire, torches and protective blocks.
 
 This makes the second era a real jump from cell-scale learning into land

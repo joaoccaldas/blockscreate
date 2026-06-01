@@ -238,6 +238,7 @@ export class Game {
       onToggleBuild: () => { this.buildMode = !this.buildMode; },
       onCompanionCommand: () => this._cycleCompanionCommand(),
       onToggleMount: () => this._toggleMountCompanion(),
+      onCompanionCargo: () => this._toggleCompanionCargo(),
       onPause: () => this._onPause(),
     };
   }
@@ -284,6 +285,7 @@ export class Game {
       onToggleBuild: () => { this.buildMode = !this.buildMode; this.audio?.play('ui'); },
       onCompanionCommand: () => this._cycleCompanionCommand(),
       onToggleMount: () => this._toggleMountCompanion(),
+      onCompanionCargo: () => this._toggleCompanionCargo(),
     };
   }
 
@@ -1186,6 +1188,71 @@ export class Game {
     return true;
   }
 
+  _toggleCompanionCargo() {
+    const companion = this._mountedCompanion() || this._nearestCompanion(4);
+    if (!companion) {
+      this.hud?.toast('Stand near your grazer cargo', 1400);
+      return null;
+    }
+    companion.cargo = companion.cargo || [];
+    const selected = this.inventory.selectedItem();
+    if (selected) {
+      const n = selected.n;
+      const leftover = this._cargoAdd(companion, selected.id, n);
+      const moved = n - leftover;
+      if (!moved) {
+        this.hud?.toast('Grazer cargo is full', 1400);
+        return false;
+      }
+      this.inventory.consumeSelected(moved);
+      this.audio?.play('ui');
+      this.hud?.toast(`📦 Stashed ${moved} ${getItem(selected.id)?.label || selected.id}`, 1600);
+      return true;
+    }
+    const first = companion.cargo.find((s) => s && s.n > 0);
+    if (!first) {
+      this.hud?.toast('Grazer cargo is empty', 1200);
+      return false;
+    }
+    const leftover = this.inventory.add(first.id, first.n);
+    const moved = first.n - leftover;
+    if (!moved) {
+      this.hud?.toast('Inventory is full', 1400);
+      return false;
+    }
+    first.n = leftover;
+    companion.cargo = companion.cargo.filter((s) => s && s.n > 0);
+    this.audio?.play('ui');
+    this.hud?.toast(`📦 Retrieved ${moved} ${getItem(first.id)?.label || first.id}`, 1600);
+    return true;
+  }
+
+  _cargoAdd(companion, id, n) {
+    companion.cargo = companion.cargo || [];
+    const max = getItem(id)?.stack ?? 99;
+    for (const s of companion.cargo) {
+      if (s.id !== id || s.n >= max) continue;
+      const take = Math.min(max - s.n, n);
+      s.n += take;
+      n -= take;
+      if (n <= 0) return 0;
+    }
+    while (n > 0 && companion.cargo.length < 6) {
+      const take = Math.min(max, n);
+      companion.cargo.push({ id, n: take });
+      n -= take;
+    }
+    return n;
+  }
+
+  _companionCargoSummary() {
+    const c = this._mountedCompanion() || this._nearestCompanion(6) || (this.mobs || []).find((m) => m.tamed);
+    if (!c) return null;
+    const used = (c.cargo || []).filter((s) => s && s.n > 0).length;
+    const total = (c.cargo || []).reduce((sum, s) => sum + (s?.n || 0), 0);
+    return { used, capacity: 6, total };
+  }
+
   _mountedCompanion() {
     return (this.mobs || []).find((m) => m.tamed && m.mounted) || null;
   }
@@ -1243,6 +1310,7 @@ export class Game {
     const companion = this.mobs.find((m) => m.tamed);
     const command = companion?.command || null;
     const mounted = !!this._mountedCompanion();
+    const cargo = this._companionCargoSummary();
     if (fear) {
       this.player.hunger = Math.max(0, this.player.hunger - dt * 0.16);
       if (!this.reduceMotion && Math.random() < dt * 0.6) this.hud?.shake?.();
@@ -1256,6 +1324,7 @@ export class Game {
       companion: !!companion,
       command,
       mounted,
+      cargo,
       warning: alphaDistance != null && alphaDistance < 13 ? 'alpha raptor challenge' :
         fear ? 'T-Rex fear zone' : packPressure >= 2 ? 'raptor pack nearby' :
         mounted ? 'mounted grazer' : companion ? `grazer: ${command || 'follow'}` : defended ? 'defenses steady' : '',

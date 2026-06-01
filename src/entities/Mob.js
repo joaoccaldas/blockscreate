@@ -55,6 +55,7 @@ export class Mob {
     this.tamed = false;
     this.command = 'follow'; // tamed companion command: follow, stay, guard
     this.mounted = false;
+    this.cargo = [];
   }
 
   /**
@@ -174,7 +175,11 @@ export class Mob {
   }
 
   serialize() {
-    return { type: this.type, x: this.x, y: this.y, health: this.health, tamed: this.tamed, command: this.command, mounted: this.mounted };
+    return {
+      type: this.type, x: this.x, y: this.y, health: this.health,
+      tamed: this.tamed, command: this.command, mounted: this.mounted,
+      cargo: this.cargo || [],
+    };
   }
 
   static load(d) {
@@ -183,6 +188,7 @@ export class Mob {
     m.tamed = !!d.tamed;
     m.command = d.command || (m.tamed ? 'follow' : 'follow');
     m.mounted = !!d.mounted;
+    m.cargo = Array.isArray(d.cargo) ? d.cargo : [];
     return m;
   }
 }

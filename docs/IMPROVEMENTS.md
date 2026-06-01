@@ -106,3 +106,10 @@ BlocksCreate already has the right spine for "Minecraft meets Civilization": blo
 - Mounted grazers boost player travel speed and reduce travel hunger drain.
 - Mounted state syncs the grazer to the player and persists through save/load.
 - Tests cover command persistence, mount persistence, speed boost and touch wiring.
+
+## Implemented In Companion Cargo Pass
+
+- Added six-slot cargo storage to tamed grazers.
+- Added desktop (`V`) and touch (`📦`) cargo transfer.
+- Stashing uses the selected stack; retrieving works from an empty selected slot.
+- Cargo persists through mob save/load and is covered by integration tests.

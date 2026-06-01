@@ -43,11 +43,12 @@ The "Minecraft survival" core with a prehistoric twist.
 | Tameable grazer companions | ✅ |
 | Companion commands: follow / stay / guard town | ✅ |
 | Rideable grazer companions for faster exploration | ✅ |
+| Companion cargo for longer exploration runs | ✅ |
 | Alpha raptor challenge event + trophy drop | ✅ |
 
-**Next & why:** add companion utility beyond travel: pack storage, rescue/retreat
-behavior, or gentle companion leveling. Mounting makes the bond useful; utility
-would make the bond strategically meaningful.
+**Next & why:** add rescue/retreat behavior or gentle companion leveling. Cargo
+and mounting make the bond useful; progression would make one companion feel
+like a long-term partner.
 
 ---
 

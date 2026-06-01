@@ -58,6 +58,7 @@ export class Game {
 
   newWorld(eraId, mode) {
     this.dead = false;
+    this.showIntro = true; // fresh era entry → show the era-reveal on start
     this.mode = mode;
     this.eraId = eraId;
     this.clock = C.DAY_LENGTH * 0.3;
@@ -196,7 +197,21 @@ export class Game {
     this.camera.snap(this.player);
     this.last = performance.now();
     requestAnimationFrame(this._frame);
-    this._maybeOnboard();
+    this._introThenOnboard();
+  }
+
+  /** On a fresh era, reveal the era first, then run any first-time coach-marks. */
+  _introThenOnboard() {
+    if (this.showIntro && this.mode === MODE.SURVIVAL) {
+      this.showIntro = false;
+      this.paused = true;
+      this.hud.showEraIntro(getEra(this.eraId), () => {
+        this.paused = false;
+        this._maybeOnboard();
+      });
+    } else {
+      this._maybeOnboard();
+    }
   }
 
   stop() {
@@ -214,6 +229,7 @@ export class Game {
       },
       onToggleInventory: () => this._toggleInventory(),
       onToggleCrafting: () => this._toggleCrafting(),
+      onToggleJournal: () => this._toggleJournal(),
       onToggleBuild: () => { this.buildMode = !this.buildMode; },
       onPause: () => this._onPause(),
     };
@@ -224,6 +240,7 @@ export class Game {
       onHotbar: (i) => { this.inventory.selected = i; },
       onToggleInventory: () => this._toggleInventory(),
       onToggleCrafting: () => this._toggleCrafting(),
+      onToggleJournal: () => this._toggleJournal(),
       onCraft: (r) => this._craft(r),
       onPickSlot: (i) => {
         const s = this.inventory.slots[i];
@@ -307,10 +324,24 @@ export class Game {
     this.audio?.play('ui');
   }
 
-  _closeMenus() {
-    this.invOpen = this.craftOpen = false;
+  _toggleJournal() {
+    this.journalOpen = !this.journalOpen;
+    this.invOpen = false;
+    this.craftOpen = false;
+    if (this.journalOpen) this.hud.renderJournal(this);
+    this.hud.showJournal(this.journalOpen);
     this.hud.showInventory(false);
     this.hud.showCrafting(false);
+    this.hud.showPause(false);
+    this.paused = this.journalOpen; // pause behind the journal, like other menus
+    this.audio?.play('ui');
+  }
+
+  _closeMenus() {
+    this.invOpen = this.craftOpen = this.journalOpen = false;
+    this.hud.showInventory(false);
+    this.hud.showCrafting(false);
+    this.hud.showJournal(false);
   }
 
   _craft(recipe) {
@@ -516,10 +547,11 @@ export class Game {
     this.unlocked.unlock(nxt.id);
     SaveManager.save(this);
     this._teardownView();
-    this.newWorld(nxt.id, MODE.SURVIVAL);
+    this.newWorld(nxt.id, MODE.SURVIVAL); // sets showIntro + rebuilds HUD/input
     this.audio?.play('unlock');
-    this.hud.bigToast(`🌀 <b>${nxt.name}</b><br><small>A new world opens.</small>`);
     SaveManager.save(this);
+    // Reveal the new era full-screen, then resume (mirrors start()).
+    this._introThenOnboard();
     return true;
   }
 

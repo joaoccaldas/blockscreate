@@ -1,7 +1,16 @@
 # Game Evaluation — systems, depth, and what's next
 
-A grounded read of the current build (v5.0). Each section: **where we stand**,
+A grounded read of the current build (v5.3). Each section: **where we stand**,
 **the gap**, and **the next step**.
+
+## Tier-2 UI (shipped v5.3)
+- **Journal** (pause → 📖, or mobile quick menu): browsable catalog of clues,
+  recognized structures and hidden discoveries — locked entries shown as hints —
+  plus the **timeline branch** the player is leaning toward (from
+  `clues.branchCounts()`). Finally delivers the "uncover history" promise.
+- **Era Intro**: a full-screen reveal on entering/advancing an era (icon, title,
+  focus loop, hazards) so progression lands as a moment, not a toast.
+- **Next:** add per-era journal lore pages and an end-of-era summary.
 
 ## Landing page
 - **Stand:** hero art (cell→dinos), tagline, era-journey strip, feature

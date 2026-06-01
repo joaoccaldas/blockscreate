@@ -130,6 +130,9 @@ export class DiscoveryLog {
     return DISCOVERIES.filter((d) => this.unlocked.has(d.id));
   }
 
+  all() { return DISCOVERIES; }
+  has(id) { return this.unlocked.has(id); }
+
   serialize() {
     return [...this.unlocked];
   }

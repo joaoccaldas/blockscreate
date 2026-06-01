@@ -14,22 +14,24 @@ const {MODE}=await import('../src/core/constants.js');
 let pass=0;const ok=(m)=>{console.log('  ✓ '+m);pass++;};
 const settings=new Settings();
 const mk=()=>new Game({canvas:makeEl(),hudRoot:makeEl(),sprites:{},progress:new Progress(),settings,audio:new Audio({sound:false,music:false}),onExit:()=>{}});
-// Onboarding gates on settings.seenTutorial
+// Era intro shows on a fresh era, then chains into onboarding.
 const g=mk();g.newWorld('stone',MODE.SURVIVAL);
+let introShown=false;g.hud.showEraIntro=(era,done)=>{introShown=true;done();};// auto-advance the reveal
 let onboardShown=false;g.hud.showOnboarding=(done)=>{onboardShown=true;g._onboardDone=done;};
 g.start();
-if(!onboardShown)throw new Error('onboarding not shown on first run');
+if(!introShown)throw new Error('era intro not shown on fresh era');
+if(!onboardShown)throw new Error('onboarding not shown after intro');
 if(!g.paused)throw new Error('game should pause during onboarding');
 g._onboardDone();// finish
 if(!settings.get('seenTutorial'))throw new Error('seenTutorial not persisted');
 if(g.paused)throw new Error('game should resume after onboarding');
-ok('onboarding shows once, pauses, persists, resumes');
-// Second run: no onboarding
-const g2=mk();g2.newWorld('stone',MODE.SURVIVAL);let shown2=false;g2.hud.showOnboarding=()=>{shown2=true;};g2.start();
+ok('era intro → onboarding shows once, pauses, persists, resumes');
+// Second run: intro still shows (per fresh era) but onboarding does not repeat.
+const g2=mk();g2.newWorld('stone',MODE.SURVIVAL);g2.hud.showEraIntro=(era,done)=>done();let shown2=false;g2.hud.showOnboarding=()=>{shown2=true;};g2.start();
 if(shown2)throw new Error('onboarding shown again after seen');
 ok('onboarding does not repeat once seen');
 // Death -> death screen with cause + stats
-const g3=mk();g3.newWorld('stone',MODE.SURVIVAL);g3.start();
+const g3=mk();g3.newWorld('stone',MODE.SURVIVAL);g3.hud.showEraIntro=(era,done)=>done();g3.start();
 let death=null;g3.hud.showDeath=(info)=>{death=info;};
 g3._damagePlayer(999,'a T-Rex');
 g3.update(0.016);
@@ -42,7 +44,7 @@ g3._respawn();
 if(g3.dead||!g3.player.alive||g3.player.health!==100)throw new Error('respawn did not revive');
 ok('respawn revives player and clears death state');
 // Confirm dialog invokes onYes
-const g4=mk();g4.newWorld('stone',MODE.SURVIVAL);g4.start();
+const g4=mk();g4.newWorld('stone',MODE.SURVIVAL);g4.hud.showEraIntro=(era,done)=>done();g4.start();
 let captured=null;g4.hud.confirm=(t,b,onYes)=>{captured=onYes;};
 let exited=false;g4.exit=()=>{exited=true;};
 g4._hudHandlers().onMainMenu();

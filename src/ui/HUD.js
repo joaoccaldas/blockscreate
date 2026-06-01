@@ -102,6 +102,7 @@ export class HUD {
             <button id="resumeBtn" class="btn primary">▶ Resume</button>
             <button id="pInv" class="btn">🎒 Inventory</button>
             <button id="pCraft" class="btn">🔨 Crafting</button>
+            <button id="pJournal" class="btn">📖 Journal</button>
           </div>
           <div class="settings-block">
             <label class="toggle"><span>🔊 Sound effects</span>
@@ -120,6 +121,25 @@ export class HUD {
           </div>
           <button id="pMenu" class="btn danger">🏠 Main Menu</button>
           <input id="importInput" type="file" accept="application/json" hidden />
+        </div>
+      </div>
+
+      <div id="journalPanel" class="panel hidden">
+        <div class="panel-head">
+          <h2>📖 Journal</h2>
+          <span id="journalBranch" class="muted small"></span>
+        </div>
+        <div id="journalBody"></div>
+        <button class="close-btn" id="journalClose">Close</button>
+      </div>
+
+      <div id="eraIntro" class="overlay hidden">
+        <div class="overlay-card era-intro-card">
+          <div id="eraIntroIcon" class="era-intro-icon"></div>
+          <h2 id="eraIntroTitle"></h2>
+          <p id="eraIntroSub" class="muted"></p>
+          <div id="eraIntroBody" class="era-intro-body"></div>
+          <button id="eraIntroGo" class="btn primary">Begin →</button>
         </div>
       </div>
 
@@ -169,6 +189,8 @@ export class HUD {
     this.el('resumeBtn').onclick = () => this.h.onResume?.();
     this.el('pInv').onclick = () => this.h.onToggleInventory?.();
     this.el('pCraft').onclick = () => this.h.onToggleCrafting?.();
+    this.el('pJournal').onclick = () => this.h.onToggleJournal?.();
+    this.el('journalClose').onclick = () => this.h.onToggleJournal?.();
 
     this.el('setSound').onchange = (e) => this.h.onSetSound?.(e.target.checked);
     this.el('setMusic').onchange = (e) => this.h.onSetMusic?.(e.target.checked);
@@ -488,6 +510,55 @@ export class HUD {
   showInventory(show) { this.el('inventoryPanel').classList.toggle('hidden', !show); }
   showCrafting(show) { this.el('craftPanel').classList.toggle('hidden', !show); }
   showPause(show) { this.el('pauseMenu').classList.toggle('hidden', !show); }
+  showJournal(show) { this.el('journalPanel').classList.toggle('hidden', !show); }
+
+  /**
+   * The Journal gives the clue/discovery/structure data a browsable home and
+   * surfaces which alternate-history branch the player is leaning toward — the
+   * "uncover history" promise the landing page makes.
+   */
+  renderJournal(game) {
+    const clues = game.clues?.all?.() || [];
+    const discos = game.discoveries?.all?.() || [];
+    const structs = game.structures?.all?.() || [];
+
+    const branchName = {
+      saurian_echo: 'Saurian Echo', firekeepers: 'Firekeepers',
+      accurate_line: 'Survivors', merchant_city: 'Merchant City',
+      fortress_city: 'Fortress City', road_empire: 'Road Empire', city_state: 'City-State',
+    };
+    const counts = game.clues?.branchCounts?.() || {};
+    const lead = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+    this.el('journalBranch').textContent = lead
+      ? `Timeline leaning: ${branchName[lead[0]] || lead[0]}`
+      : 'Timeline: undecided';
+
+    const section = (title, total, found, rows) =>
+      `<div class="jr-section"><div class="jr-head">${title} <span class="muted">${found}/${total}</span></div>${rows}</div>`;
+
+    const clueRows = clues.length ? clues.map((c) => {
+      const got = game.clues.has(c.id);
+      return `<div class="jr-row ${got ? '' : 'locked'}"><span class="jr-ic">${got ? c.icon : '❔'}</span>
+        <div><b>${got ? c.label : '???'}</b><small>${got ? c.text : 'Undiscovered — explore and mine to reveal.'}</small></div></div>`;
+    }).join('') : '<p class="muted small">No clues defined for this era.</p>';
+
+    const discoRows = discos.map((d) => {
+      const got = game.discoveries.has(d.id);
+      return `<div class="jr-row ${got ? '' : 'locked'}"><span class="jr-ic">${got ? d.icon : '🔒'}</span>
+        <div><b>${got ? d.label : 'Hidden discovery'}</b><small>${got ? 'Unlocked' : 'Keep experimenting to find this.'}</small></div></div>`;
+    }).join('');
+
+    const structRows = structs.map((s) => {
+      const got = game.structures.has(s.id);
+      return `<div class="jr-row ${got ? '' : 'locked'}"><span class="jr-ic">${got ? s.icon : '⬚'}</span>
+        <div><b>${got ? s.label : '???'}</b><small>${got ? 'Recognized' : 'Build this structure to recognize it.'}</small></div></div>`;
+    }).join('');
+
+    this.el('journalBody').innerHTML =
+      section('🔎 Clues', clues.length, game.clues?.count?.() || 0, clueRows) +
+      section('🏛️ Structures', structs.length, structs.filter((s) => game.structures.has(s.id)).length, structRows) +
+      section('✨ Discoveries', discos.length, discos.filter((d) => game.discoveries.has(d.id)).length, discoRows);
+  }
 
   /** Reusable confirm dialog for destructive actions. onYes runs on Confirm. */
   confirm(title, body, onYes) {
@@ -518,6 +589,26 @@ export class HUD {
    * First-run coach-marks. `done` is called once when the player finishes or
    * skips. `touch` swaps in touch-specific wording.
    */
+  /**
+   * Full-screen era reveal shown on entering an era (and on advancement). Makes
+   * the core progression beat land instead of a tiny toast: name, story, and
+   * what this age is about. `done` resumes play.
+   */
+  showEraIntro(era, done) {
+    const m = era.manifest || {};
+    this.el('eraIntroIcon').textContent = era.icon || '🌀';
+    this.el('eraIntroTitle').textContent = m.title || era.name;
+    this.el('eraIntroSub').textContent = m.subtitle || era.blurb || '';
+    const loop = (m.coreLoop || []).slice(0, 4).join(' · ');
+    const hazards = (m.hazards || []).slice(0, 3).join(', ');
+    this.el('eraIntroBody').innerHTML =
+      (loop ? `<div class="ei-line"><span>🎯 Focus</span><b>${loop}</b></div>` : '') +
+      (hazards ? `<div class="ei-line"><span>⚠️ Watch for</span><b>${hazards}</b></div>` : '');
+    const screen = this.el('eraIntro');
+    screen.classList.remove('hidden');
+    this.el('eraIntroGo').onclick = () => { screen.classList.add('hidden'); done?.(); };
+  }
+
   showOnboarding(done, touch = false) {
     // The First Cell era plays differently (swim + absorb, no tools yet), so it
     // gets its own intro; later eras get the mine/build/craft tutorial.

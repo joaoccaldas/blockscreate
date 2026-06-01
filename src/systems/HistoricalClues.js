@@ -61,6 +61,7 @@ export class HistoricalClueLog {
   has(id) { return this.found.has(id); }
   count() { return this.found.size; }
   list() { return Object.values(CLUES).filter((c) => this.found.has(c.id)); }
+  all() { return Object.values(CLUES); }
   branchCounts() {
     const out = {};
     for (const c of this.list()) out[c.branch] = (out[c.branch] || 0) + 1;

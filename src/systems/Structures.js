@@ -79,6 +79,7 @@ export class StructureTracker {
 
   has(id) { return this.discovered.has(id); }
   list() { return STRUCTURES.filter((s) => this.discovered.has(s.id)); }
+  all() { return STRUCTURES; }
   serialize() { return [...this.discovered]; }
 }
 

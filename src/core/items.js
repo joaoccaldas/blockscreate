@@ -40,6 +40,7 @@ const materials = [
   ['food', 'Cooked Food', '#d6692f'],
   ['raw_food', 'Raw Meat', '#cf5d6a'],
   ['wheat', 'Wheat', '#e3c14e'],
+  ['wheat_seeds', 'Wheat Seeds', '#b9d76a'],
   ['clay', 'Clay', '#9a8d7a'],
 ];
 for (const [id, label, color] of materials) {

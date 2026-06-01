@@ -168,6 +168,17 @@ if (!g2.unlocked.isUnlocked('bronze')) throw new Error('bronze was not unlocked'
 if (!g2.objectives.all.some((o) => o.id === 'smelt_bronze')) throw new Error('bronze objectives missing after advance');
 ok('HUD-era advancement enters a fresh Bronze Age world');
 
+// Bronze farming: seed planting uses the normal placement path and persists as
+// real world blocks for growth/farmer tending.
+const fx = Math.round(g2.player.x) + 2;
+const fy = g2.world.heightMap[fx] - 1;
+g2.world.set(fx, fy, blockId('farm_plot'));
+g2.inventory.add('wheat_seeds', 1);
+g2.inventory.selected = g2.inventory.slots.findIndex((s) => s?.id === 'wheat_seeds');
+if (!g2._tryPlace(fx, fy)) throw new Error('could not plant wheat seeds on a farm plot');
+if (g2.world.get(fx, fy - 1) !== blockId('wheat_seedling')) throw new Error('planting did not create a wheat seedling');
+ok('Bronze farming plants wheat through the normal build path');
+
 // Asteroid event: a meteor impact carves a crater and hurts a nearby player.
 const g3 = newGame();
 g3.newWorld('stone', MODE.SURVIVAL);

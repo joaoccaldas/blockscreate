@@ -15,7 +15,8 @@ BlocksCreate is now a modular historical sandbox, but not yet the complete visio
 - **RPG encounters:** Age of Dinosaurs can trigger predator migrations and grazer herds; Early Cities can trigger droughts and raider scouts.
 - **Dinosaur behavior:** raptors gain pack pressure, T-Rex creates fear zones, grazers can form a bond, and defended camps reduce survival pressure.
 - **RPG progression:** primitive weapons, defeated-enemy stats, relic powerups and optional mastery goals make runs branch more meaningfully.
-- **Living settlements:** housing-supported settlers now appear on screen with roles. Farmers produce food, gatherers physically harvest nearby trees/ore into a town stockpile, builders spend wood to raise village blocks, and guards contribute to defense.
+- **Living settlements:** housing-supported settlers now appear on screen with roles. Farmers tend visible wheat crops into food, gatherers physically harvest nearby trees/ore into a town stockpile, builders spend wood to raise village blocks, and guards contribute to defense.
+- **Bronze farming:** farm plots, wheat seeds, crop growth stages, wheat harvests and bread recipes turn the first-town era into a sustainable food economy instead of only hunting/abstract food.
 - **Era biomes:** chunks now have deterministic era biomes, starting with fern valleys, fossil basins, meteor scars and ash fields for the Age of Dinosaurs.
 - **Progression:** portals require both CP and mandatory goals. Optional mastery goals grant benefits without blocking advancement.
 - **Historical consistency:** First Cell is science-inspired abstraction, Age of Dinosaurs is explicitly alternate-history survival fantasy, and later eras use historical sandbox framing.

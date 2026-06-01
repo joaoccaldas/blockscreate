@@ -33,7 +33,7 @@ export class Settler {
     this.timer = Math.random() * 3;
     this.workTimer = 2 + Math.random() * 4;
     this.tone = 0.85 + Math.random() * 0.3; // slight per-villager color variance
-    this.target = null; // { x, y } resource a gatherer is walking to harvest
+    this.target = null; // { x, y } resource/crop a settler is walking to work
   }
 
   /**
@@ -124,7 +124,7 @@ export class SettlerManager {
     // Town stockpile: resources settlers gather/produce, deposited over time.
     // Pure economic record (not the player's inventory) so a living town
     // visibly accumulates goods even while the player is elsewhere.
-    this.stock = saved?.stock || { food: 0, wood: 0, ore: 0 };
+    this.stock = { food: 0, wood: 0, ore: 0, wheat: 0, ...(saved?.stock || {}) };
     if (saved?.settlers) this.settlers = saved.settlers.map((d) => Settler.load(d));
   }
 
@@ -185,6 +185,14 @@ export class SettlerManager {
     for (const s of this.settlers) {
       if (s.role === 'guard') guards++;
 
+      // Farmers seek nearby crop plots; ripe crops are harvested, young crops
+      // are tended forward one growth stage. Abstract food only fills gaps.
+      if (s.role === 'farmer' && world) {
+        if (!s.target || !this._isCropTarget(world, s.target)) {
+          s.target = this._findCrop(world, s);
+        }
+      }
+
       // Gatherers physically seek + chop a nearby resource: acquire a target,
       // walk to it (Settler.update steers), and harvest it on arrival. This
       // happens regardless of the work-tick so the action reads on-screen.
@@ -195,6 +203,19 @@ export class SettlerManager {
       }
 
       const tick = s.update(dt, world, this.home);
+
+      if (s.role === 'farmer' && s.atTarget() && world) {
+        const got = this._tendCrop(world, s.target);
+        s.target = null;
+        if (got) {
+          this.stock.food = (this.stock.food || 0) + got.food;
+          this.stock.wheat = (this.stock.wheat || 0) + got.wheat;
+          produced.food = (produced.food || 0) + got.food;
+          if (got.wheat) produced.wheat = (produced.wheat || 0) + got.wheat;
+          cp += got.cp;
+        }
+        continue;
+      }
 
       if (s.role === 'gatherer' && s.atTarget() && world) {
         const got = this._harvest(world, s.target);
@@ -210,7 +231,7 @@ export class SettlerManager {
       if (!tick) continue;
       // Non-gather roles convert a work tick into role-specific output + CP.
       switch (s.role) {
-        case 'farmer':   this.stock.food += 1; produced.food = (produced.food || 0) + 1; cp += 0.4; break;
+        case 'farmer':   this.stock.food += 1; produced.food = (produced.food || 0) + 1; cp += 0.25; break;
         case 'gatherer': break; // handled above by physical harvesting
         case 'builder': {
           cp += 1.0; produced.build = (produced.build || 0) + 1;
@@ -234,6 +255,64 @@ export class SettlerManager {
     const x = Math.max(1, Math.min(world.width - 2, hx));
     const surf = world.heightMap[x] ?? Math.floor(world.height / 2);
     this.settlers.push(new Settler(x + 0.5, surf, this._neededRole()));
+  }
+
+  _cropIds() {
+    if (!this._crops) {
+      this._crops = {
+        plot: blockId('farm_plot'),
+        seedling: blockId('wheat_seedling'),
+        green: blockId('wheat_green'),
+        ripe: blockId('wheat_ripe'),
+      };
+    }
+    return this._crops;
+  }
+
+  _isCropTarget(world, target) {
+    if (!target) return false;
+    const ids = this._cropIds();
+    const id = world.get(target.x, target.y);
+    return id === ids.seedling || id === ids.green || id === ids.ripe;
+  }
+
+  _findCrop(world, s) {
+    const ids = this._cropIds();
+    const cx = Math.round(s.x);
+    const cy = Math.round(s.y);
+    let best = null;
+    let bestD = Infinity;
+    const R = 10;
+    for (let y = cy - R; y <= cy + R; y++) {
+      for (let x = cx - R; x <= cx + R; x++) {
+        if (Math.abs(x - this.home.x) > 14) continue;
+        const id = world.get(x, y);
+        if (id !== ids.seedling && id !== ids.green && id !== ids.ripe) continue;
+        const priority = id === ids.ripe ? -6 : 0;
+        const d = Math.abs(x - s.x) + Math.abs(y - s.y) + priority;
+        if (d < bestD) { bestD = d; best = { x, y, id, kind: 'crop' }; }
+      }
+    }
+    return best;
+  }
+
+  _tendCrop(world, target) {
+    if (!target) return null;
+    const ids = this._cropIds();
+    const id = world.get(target.x, target.y);
+    if (id === ids.seedling) {
+      world.set(target.x, target.y, ids.green);
+      return { food: 0, wheat: 0, cp: 0.35 };
+    }
+    if (id === ids.green) {
+      world.set(target.x, target.y, ids.ripe);
+      return { food: 0, wheat: 0, cp: 0.45 };
+    }
+    if (id === ids.ripe) {
+      world.set(target.x, target.y, AIR);
+      return { food: 2, wheat: 1, cp: 0.9 };
+    }
+    return null;
   }
 
   /**

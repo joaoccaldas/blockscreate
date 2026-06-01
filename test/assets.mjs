@@ -22,7 +22,7 @@ const checks = [
   ['assets/generated/sprites/chicken.png', 32, 32],
   ['assets/generated/sprites/goat.png', 32, 32],
   ['assets/generated/textures/blocks.png', 128, 128],
-  ['assets/generated/textures/blocks_extra.png', 128, 128],
+  ['assets/generated/textures/blocks_extra.png', 128, 160],
   ['assets/generated/effects/effects.png', 128, 64],
   ['assets/generated/landing/origin-to-dinos.png', 960, 540],
   ['assets/generated/sprites/cell.png', 32, 32],

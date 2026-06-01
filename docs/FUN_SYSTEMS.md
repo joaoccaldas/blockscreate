@@ -84,6 +84,21 @@ The dinosaur era now has optional weapon and predator mastery:
 Early Cities starts to shift the game from survival toward planning with food
 storage, town lighting and city-planner rewards.
 
+## Bronze Farming
+
+Files: `src/core/blocks.js`, `src/core/recipes.js`, `src/systems/Settlers.js`
+
+Bronze Age now has a physical sustain loop:
+
+- craft and place `farm_plot` blocks,
+- plant `wheat_seeds`,
+- wheat grows through seedling, green and ripe block stages,
+- drought slows natural crop growth and nearby water helps it,
+- farmer settlers seek crop blocks, tend young wheat and harvest ripe wheat,
+- harvested crops add food to the town stockpile and support food mastery.
+
+This gives the first-town era a distinct civilization verb: food surplus.
+
 ## Progressive UI And Feature Complexity
 
 BlocksCreate now starts with a deliberately small **First Cell** era. The player

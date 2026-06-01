@@ -71,6 +71,12 @@ const defs = [
   { id: 29, name: 'nutrient_blob',       label: 'Nutrient Blob',      solid: true,  hardness: 0.15, tool: 'hand',   colors: { base: '#73e06a', top: '#b8ff85', side: '#3aa84d' }, era: 'cell', drops: 'nutrient_blob', light: 0.15 },
   { id: 30, name: 'mineral_vent',        label: 'Mineral Vent',       solid: true,  hardness: 0.35, tool: 'hand',   colors: { base: '#506a76', top: '#9bd6e0', side: '#35424a' }, era: 'cell', drops: 'mineral_vent', light: 0.25 },
   { id: 31, name: 'lipid_membrane',      label: 'Lipid Membrane',     solid: true,  hardness: 0.2,  tool: 'hand',   colors: { base: '#e8a8ff', top: '#ffd6ff', side: '#9f66c8' }, era: 'cell', drops: 'lipid_membrane' },
+
+  // Bronze Age farming
+  { id: 32, name: 'farm_plot',      label: 'Farm Plot',      solid: true,  hardness: 0.45, tool: 'shovel', colors: { base: '#5f3d24', top: '#7a5230', side: '#3f2818' }, era: 'bronze', drops: 'farm_plot' },
+  { id: 33, name: 'wheat_seedling', label: 'Wheat Seedling', solid: false, hardness: 0.15, tool: 'hand',   colors: { base: '#6ea647', top: '#9ed36a', side: '#4f7f35' }, era: 'bronze', drops: 'wheat_seeds' },
+  { id: 34, name: 'wheat_green',    label: 'Green Wheat',    solid: false, hardness: 0.15, tool: 'hand',   colors: { base: '#94b84f', top: '#bfd46a', side: '#6e8a3d' }, era: 'bronze', drops: 'wheat_seeds' },
+  { id: 35, name: 'wheat_ripe',     label: 'Ripe Wheat',     solid: false, hardness: 0.15, tool: 'hand',   colors: { base: '#d9b84a', top: '#f0d76b', side: '#a88931' }, era: 'bronze', drops: [{ id: 'wheat', chance: 1 }, { id: 'wheat_seeds', chance: 1 }] },
 ];
 
 // fix accidental typo above without breaking the table layout

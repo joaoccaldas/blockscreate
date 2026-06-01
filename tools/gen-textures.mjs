@@ -188,6 +188,42 @@ const TILES = {
       p.set(ox + x + 10, oy + y - 1, bone);
     }
   },
+  farm_plot(p, ox, oy) {
+    speckle(p, ox, oy, [95, 61, 36], 47, 0.18);
+    bevel(p, ox, oy, [122, 82, 48, 255], [63, 40, 24, 255]);
+    // Tilled rows.
+    for (let y = 5; y < T; y += 7) {
+      for (let x = 2; x < T - 2; x++) p.set(ox + x, oy + y, [56, 36, 22, 255]);
+      for (let x = 2; x < T - 2; x += 5) p.set(ox + x, oy + y - 1, [135, 91, 52, 255]);
+    }
+  },
+  wheat_seedling(p, ox, oy) {
+    speckle(p, ox, oy, [72, 54, 34], 53, 0.16);
+    for (let i = 0; i < 5; i++) {
+      const x = 5 + i * 5;
+      p.rect(ox + x, oy + 18, 2, 9, [110, 166, 71, 255]);
+      p.set(ox + x + 1, oy + 17, [158, 211, 106, 255]);
+    }
+  },
+  wheat_green(p, ox, oy) {
+    speckle(p, ox, oy, [72, 54, 34], 59, 0.16);
+    for (let i = 0; i < 7; i++) {
+      const x = 3 + i * 4;
+      const h = 12 + (i % 3) * 3;
+      p.rect(ox + x, oy + 26 - h, 2, h, [148, 184, 79, 255]);
+      p.set(ox + x + 1, oy + 25 - h, [191, 212, 106, 255]);
+    }
+  },
+  wheat_ripe(p, ox, oy) {
+    speckle(p, ox, oy, [72, 54, 34], 61, 0.16);
+    for (let i = 0; i < 8; i++) {
+      const x = 2 + i * 4;
+      const h = 15 + (i % 2) * 3;
+      p.rect(ox + x, oy + 27 - h, 2, h, [217, 184, 74, 255]);
+      p.rect(ox + x - 1, oy + 25 - h, 4, 4, [240, 215, 107, 255]);
+      p.set(ox + x, oy + 25 - h, [255, 236, 150, 255]);
+    }
+  },
 };
 
 // Stable atlas order — append-only to avoid shifting existing coords.
@@ -195,7 +231,8 @@ export const TEXTURE_ORDER = [
   'bedrock', 'gold_ore', 'thatch', 'primordial_mud',
   'nutrient_blob', 'mineral_vent', 'lipid_membrane', 'fossil_bed',
   'meteor_shard', 'charcoal_handprint', 'standing_stone', 'hide_wall',
-  'bone_pile',
+  'bone_pile', 'farm_plot', 'wheat_seedling', 'wheat_green',
+  'wheat_ripe',
 ];
 
 export const TEXTURE_LAYOUT = {};

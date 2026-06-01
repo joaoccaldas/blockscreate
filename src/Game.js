@@ -115,6 +115,7 @@ export class Game {
       ['primordial_mud', 'nutrient_blob', 'mineral_vent', 'lipid_membrane',
         'grass', 'dirt', 'stone', 'cobblestone', 'sand', 'water', 'log', 'planks', 'leaves',
         'thatch', 'brick', 'torch', 'campfire', 'clay', 'gravel',
+        'farm_plot', 'wheat_seeds', 'wheat_seedling', 'wheat_green', 'wheat_ripe',
         'coal_ore', 'copper_ore', 'tin_ore', 'iron_ore', 'gold_ore']
         .forEach((id) => this.inventory.add(id, 99));
     } else if (this.eraId !== 'cell') {
@@ -497,6 +498,7 @@ export class Game {
     this._trackAnimalFriendship(dt);
     this._ambientWeather(dt);
     this._updateMeteors(dt);
+    this._updateCrops(dt);
     this.particles.update(dt);
 
     this.clock = (this.clock + dt) % C.DAY_LENGTH;
@@ -967,6 +969,7 @@ export class Game {
       }
       return false;
     }
+    if (sel.id === 'wheat_seeds') return this._tryPlantWheat(x, y);
     if (!isPlaceable(sel.id)) return false;
     if (this.world.get(x, y) !== AIR) return false;
     if (this._overlapsPlayer(x, y)) return false;
@@ -989,6 +992,71 @@ export class Game {
     this._evaluateStructures({ x, y });
     if (this.mode === MODE.SURVIVAL) this.inventory.consumeSelected(1);
     return true;
+  }
+
+  _tryPlantWheat(x, y) {
+    const plot = blockId('farm_plot');
+    const seedling = blockId('wheat_seedling');
+    let cropX = x;
+    let cropY = y;
+    if (this.world.get(x, y) === plot && this.world.get(x, y - 1) === AIR) {
+      cropY = y - 1;
+    } else if (this.world.get(x, y) === AIR && this.world.get(x, y + 1) === plot) {
+      cropY = y;
+    } else {
+      this.hud.toast('Plant seeds on a Farm Plot', 1400);
+      return false;
+    }
+    if (this._overlapsPlayer(cropX, cropY)) return false;
+    this.world.set(cropX, cropY, seedling);
+    this.audio?.play('place');
+    this.particles.burst(cropX + 0.5, cropY + 0.5, '#9ed36a', 6, { gravity: 5, life: 0.35 });
+    this.civ.onBuild('wheat_seedling', cropX, cropY);
+    if (this.mode === MODE.SURVIVAL) this.inventory.consumeSelected(1);
+    this.hud.toast('Planted wheat');
+    return true;
+  }
+
+  _updateCrops(dt) {
+    if (!this.world || this.world.eraId === 'cell') return;
+    this._cropTimer = (this._cropTimer || 0) + dt;
+    if (this._cropTimer < 4) return;
+    this._cropTimer = 0;
+
+    const ids = {
+      plot: blockId('farm_plot'),
+      seedling: blockId('wheat_seedling'),
+      green: blockId('wheat_green'),
+      ripe: blockId('wheat_ripe'),
+    };
+    const centers = [{ x: Math.round(this.player.x), y: Math.round(this.player.y) }];
+    if (this.settlers?.home) centers.push(this.settlers.home);
+    const drought = this.events?.isActive('drought');
+    for (const c of centers) {
+      for (let y = Math.round(c.y) - 12; y <= Math.round(c.y) + 6; y++) {
+        for (let x = Math.round(c.x) - 16; x <= Math.round(c.x) + 16; x++) {
+          const id = this.world.get(x, y);
+          if (id !== ids.seedling && id !== ids.green) continue;
+          if (this.world.get(x, y + 1) !== ids.plot) continue;
+          const nearWater = this._nearBlock(x, y, blockId('water'), 3);
+          const chance = (id === ids.seedling ? 0.45 : 0.32) * (nearWater ? 1.45 : 1) * (drought ? 0.35 : 1);
+          if (Math.random() > chance) continue;
+          this.world.set(x, y, id === ids.seedling ? ids.green : ids.ripe);
+          if (!this.reduceMotion && Math.random() < 0.5) {
+            this.particles.burst(x + 0.5, y + 0.5, '#d9b84a', 3, { gravity: 3, life: 0.4 });
+          }
+        }
+      }
+    }
+  }
+
+  _nearBlock(cx, cy, wanted, radius = 3) {
+    for (let y = cy - radius; y <= cy + radius; y++) {
+      for (let x = cx - radius; x <= cx + radius; x++) {
+        if (Math.hypot(x - cx, y - cy) <= radius && this.world.get(x, y) === wanted) return true;
+      }
+    }
+    return false;
   }
 
   _evaluateStructures(origin = null) {

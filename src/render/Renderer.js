@@ -29,7 +29,8 @@ const EXTRA_ATLAS = {
   bedrock: [0, 0], gold_ore: [1, 0], thatch: [2, 0], primordial_mud: [3, 0],
   nutrient_blob: [0, 1], mineral_vent: [1, 1], lipid_membrane: [2, 1], fossil_bed: [3, 1],
   meteor_shard: [0, 2], charcoal_handprint: [1, 2], standing_stone: [2, 2], hide_wall: [3, 2],
-  bone_pile: [0, 3],
+  bone_pile: [0, 3], farm_plot: [1, 3], wheat_seedling: [2, 3], wheat_green: [3, 3],
+  wheat_ripe: [0, 4],
 };
 
 // Per-era terrain tint: a subtle multiply over natural blocks so the same

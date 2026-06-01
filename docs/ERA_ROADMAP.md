@@ -56,12 +56,14 @@ Where "civilization" should start to dominate over raw survival.
 | Brick + town blocks, settlement scoring | ✅ |
 | Workshop structure recognition | ✅ |
 | Settlers + housing-gated population | ✅ |
+| Farming plots (plant → grow → harvest) | ✅ |
+| Farmers tend visible crops into town food | ✅ |
 | Trade / market between settlements | ⬜ |
-| Farming (wheat → food chain) | 🚧 (food exists; no growth) |
+| Irrigation / crop rotation / spoilage | ⬜ |
 
-**Next & why:** add **farming plots** (plant → grow → harvest). Sustainable food
-is what lets a town outgrow hunting, the real Bronze-Age leap, and it gives
-settlers something to tend.
+**Next & why:** add **trade and storage buildings** so food surplus can become
+strategic: granaries raise stock caps, markets exchange surplus, and droughts
+start to matter beyond a temporary hunger penalty.
 
 ---
 
@@ -100,7 +102,7 @@ up the "tradeoffs of progress" theme for any future modern era.
 
 | System | Status | Next |
 | --- | --- | --- |
-| Settlers / population | ✅ roles + economy; builders raise village blocks; **gatherers seek + harvest trees/ore** | farmers tend visible crop plots; richer pathing |
+| Settlers / population | ✅ roles + economy; builders raise village blocks; gatherers seek + harvest trees/ore; **farmers tend visible crop plots** | richer pathing; planned building sites |
 | Journal (clues/discoveries/branches) | ✅ | per-era lore pages |
 | Save/persistence (+ chunk metadata) | ✅ | true chunk streaming |
 | Audio | ✅ SFX + ambient | per-era music themes |

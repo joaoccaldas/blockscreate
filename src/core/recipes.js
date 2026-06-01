@@ -32,6 +32,9 @@ export const RECIPES = [
   { id: 'tin_ingot',     era: 'bronze', out: { id: 'tin', n: 1 }, in: { tin_ore: 1, coal: 1 }, station: 'campfire' },
   { id: 'bronze_ingot',  era: 'bronze', out: { id: 'bronze', n: 2 }, in: { copper: 1, tin: 1 } },
   { id: 'brick',         era: 'bronze', out: { id: 'brick', n: 4 }, in: { clay: 4, coal: 1 }, station: 'campfire' },
+  { id: 'farm_plot',     era: 'bronze', out: { id: 'farm_plot', n: 4 }, in: { dirt: 2, clay: 1 } },
+  { id: 'wheat_seeds',   era: 'bronze', out: { id: 'wheat_seeds', n: 2 }, in: { fiber: 1 } },
+  { id: 'bake_bread',    era: 'bronze', out: { id: 'food', n: 2 }, in: { wheat: 3 }, station: 'campfire' },
   { id: 'bronze_pickaxe',era: 'bronze', out: { id: 'bronze_pickaxe', n: 1 }, in: { bronze: 3, stick: 2 } },
 
   // --- Iron Age ---

@@ -19,9 +19,9 @@ BlocksCreate already has the right spine for "Minecraft meets Civilization": blo
 13. **Unit tests for new rules** - regression tests should cover station requirements, drops, settlement scoring, and era travel.
 14. **Better biome/readability pass** - terrain should visibly communicate beaches, clay banks, gravel seams, and ore depth.
 15. **Tool durability or repair** - tools should become meaningful inventory decisions instead of permanent speed multipliers.
-16. **NPC worker loop** - population should eventually gather, farm, or build in small ways so Civ Points imply a living settlement.
+16. **NPC worker loop** - population should eventually gather, farm, or build in small ways so Civ Points imply a living settlement. ✅ roles, gathering, building, and crop tending shipped.
 17. **Threat/season pressure** - add light winter/night danger to make shelters and food stores matter.
-18. **Food chain expansion** - add farming, wheat growth, and cooking recipes to support longer sessions.
+18. **Food chain expansion** - add farming, wheat growth, and cooking recipes to support longer sessions. ✅ farm plots, wheat stages, seeds, harvests and bread shipped.
 19. **Production buildings** - kiln, furnace, workshop, granary, and forge should unlock recipe tiers.
 20. **Town center/claim radius** - define a settlement core so placed blocks count when they form a coherent village.
 21. **Improved inventory UX** - sort, quick-move, split stacks, and item labels would reduce friction.

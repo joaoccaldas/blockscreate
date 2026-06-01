@@ -1,7 +1,7 @@
 # Game Evaluation - age features, confidence, and gaps
 
 Audit date: 2026-06-01
-Build audited: v5.7.0 (`a5a7821`)
+Build audited: v5.8.0
 Verification: `npm test` passes all 10 suites.
 
 Confidence legend:
@@ -94,22 +94,24 @@ What works:
 - Settlers are now a real mini-economy:
   farmers produce food, gatherers physically seek and harvest trees/ore, builders
   spend stockpiled wood to place village blocks, and guards add defense.
+- Farming is now physical: players craft farm plots, plant wheat seeds, crops
+  grow through visible stages, ripe wheat can be harvested, and farmers tend
+  crop blocks into town food stock.
 - Housing gates supported population, so building matters.
 - HUD exposes role counts and town stockpile.
 
 What does not work yet:
 
-- Farming is not yet physical. Food exists, but crops do not have plant -> grow
-  -> harvest gameplay.
 - Trade/markets are only roadmap concepts.
 - Builders place useful village blocks, but they do not yet path to a planned
   construction site or build recognizable houses.
+- Farming balance is intentionally simple: no irrigation network, spoilage,
+  crop rotation, seed quality, or storage cap yet.
 
 Best next improvement:
 
-- Add farming plots with growth and settler tending. This is the missing
-  sustain loop that makes Bronze feel like a food-producing town instead of a
-  survival camp with villagers.
+- Add granaries and markets. Food surplus now exists, so the next Bronze step is
+  making storage and exchange meaningful.
 
 ## Iron Age / Iron Kingdoms
 
@@ -186,15 +188,14 @@ Low confidence / not done:
 ## GitHub Status
 
 As of this audit, local `main` is fast-forwarded to `origin/main` at `a5a7821`.
-The gameplay work through v5.7 is on GitHub. This audit is stored as a follow-up
+The gameplay work through v5.8 is on GitHub. This audit is stored as a follow-up
 documentation commit so the evaluation itself is versioned with the game.
 
 ## Priority Order
 
-1. Bronze farming plots: completes the food economy and gives farmers visible
-   work.
-2. Dinosaur taming: turns bonding into a reward and makes the dinosaur age more
+1. Dinosaur taming: turns bonding into a reward and makes the dinosaur age more
    memorable.
+2. Bronze granaries/markets: turns food surplus into settlement strategy.
 3. Iron walls/gates: makes defense strategic instead of decorative.
 4. Industrial automation block: gives the final age a real identity.
 5. Better pathing: makes settlers/enemies feel intentional.

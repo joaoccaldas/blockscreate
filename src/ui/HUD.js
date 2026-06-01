@@ -314,7 +314,7 @@ export class HUD {
       const r = game.settlers.roleCounts();
       const st = game.settlers.stock || {};
       popEl.title = `Workers — 🌾${r.farmer || 0} ⛏️${r.gatherer || 0} 🔨${r.builder || 0} 🛡️${r.guard || 0}\n` +
-        `Town stock — food ${Math.floor(st.food || 0)}, wood ${Math.floor(st.wood || 0)}, ore ${Math.floor(st.ore || 0)}`;
+        `Town stock — food ${Math.floor(st.food || 0)}, wheat ${Math.floor(st.wheat || 0)}, wood ${Math.floor(st.wood || 0)}, ore ${Math.floor(st.ore || 0)}`;
     }
     this.el('cpVal').textContent = Math.floor(game.civ.cp);
     this.el('settleVal').textContent = game.civ.settlementScore();

@@ -51,7 +51,7 @@ ok(`roles balanced (${JSON.stringify(roles)}); stock food ${Math.floor(st.food)}
 // Builders visibly grow the village: place planks near home, but bounded
 // (capped footprint + height) so they don't build infinite pillars.
 import { Settler } from '../src/systems/Settlers.js';
-import { blockId } from '../src/core/blocks.js';
+import { AIR, blockId } from '../src/core/blocks.js';
 const plank = blockId('planks');
 const builder = new Settler(sm.home.x + 0.5, world.heightMap[sm.home.x], 'builder');
 sm.stock.wood = 999;
@@ -87,5 +87,28 @@ let gotWood = false;
 for (let i = 0; i < 800; i++) { if (gsm.update(0.05, gw, bigCiv).produced.wood) { gotWood = true; break; } }
 assert.ok(gotWood, 'gatherer harvested wood from the world');
 ok('gatherers seek + harvest resources into town stock');
+
+// Farmers physically tend and harvest crop blocks into the town stock.
+const fw = new World({ seed: 31, eraId: 'bronze', width: 60, height: 40 });
+fw.generate();
+const fsm = new SettlerManager();
+const fhx = 30, fhy = fw.heightMap[30];
+fsm.setHome(fhx, fhy);
+const plot = blockId('farm_plot');
+const seedling = blockId('wheat_seedling');
+const plotY = fw.heightMap[fhx + 2] - 1;
+const cropY = plotY - 1;
+fw.set(fhx + 2, plotY, plot);
+fw.set(fhx + 2, cropY, seedling);
+fsm.settlers.push(new Settler(fhx + 0.5, fhy, 'farmer'));
+let harvestedCrop = false;
+for (let i = 0; i < 1000; i++) {
+  if (fsm.update(0.05, fw, bigCiv).produced.food) { harvestedCrop = true; break; }
+}
+assert.ok(harvestedCrop, 'farmer harvested a crop into food stock');
+assert.strictEqual(fw.get(fhx + 2, cropY), AIR, 'ripe crop is cleared after harvest');
+assert.ok(fsm.stock.food >= 2, 'crop harvest adds food to town stock');
+assert.ok(fsm.stock.wheat >= 1, 'crop harvest records wheat surplus');
+ok('farmers tend and harvest visible crops');
 
 console.log(`\nAll ${pass} settler checks passed.`);

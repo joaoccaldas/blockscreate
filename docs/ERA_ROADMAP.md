@@ -100,7 +100,7 @@ up the "tradeoffs of progress" theme for any future modern era.
 
 | System | Status | Next |
 | --- | --- | --- |
-| Settlers / population | ✅ roles + economy + **builders visibly raise village blocks** near home | gatherers physically harvest; pathing to targets |
+| Settlers / population | ✅ roles + economy; builders raise village blocks; **gatherers seek + harvest trees/ore** | farmers tend visible crop plots; richer pathing |
 | Journal (clues/discoveries/branches) | ✅ | per-era lore pages |
 | Save/persistence (+ chunk metadata) | ✅ | true chunk streaming |
 | Audio | ✅ SFX + ambient | per-era music themes |

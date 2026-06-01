@@ -72,4 +72,20 @@ assert.deepStrictEqual(restored.home, sm.home, 'home survives save');
 assert.deepStrictEqual(restored.stock, sm.stock, 'town stockpile survives save');
 ok('settlers + home + stock round-trip through save');
 
+// Gatherers physically seek and harvest a nearby resource block, depositing
+// to the town stock (visible "settlers work the world" loop).
+const gw = new World({ seed: 21, eraId: 'stone', width: 60, height: 40 });
+gw.generate();
+const gsm = new SettlerManager();
+const ghx = 30, ghy = gw.heightMap[30];
+gsm.setHome(ghx, ghy);
+const logId = blockId('log');
+gw.set(ghx + 3, gw.heightMap[ghx + 3] - 1, logId);
+gsm.settlers.push(new Settler(ghx + 0.5, ghy, 'gatherer'));
+const bigCiv = { population: 12, housing: 10 }; // keep capacity above our gatherer
+let gotWood = false;
+for (let i = 0; i < 800; i++) { if (gsm.update(0.05, gw, bigCiv).produced.wood) { gotWood = true; break; } }
+assert.ok(gotWood, 'gatherer harvested wood from the world');
+ok('gatherers seek + harvest resources into town stock');
+
 console.log(`\nAll ${pass} settler checks passed.`);

@@ -33,6 +33,7 @@ export class Settler {
     this.timer = Math.random() * 3;
     this.workTimer = 2 + Math.random() * 4;
     this.tone = 0.85 + Math.random() * 0.3; // slight per-villager color variance
+    this.target = null; // { x, y } resource a gatherer is walking to harvest
   }
 
   /**
@@ -42,7 +43,12 @@ export class Settler {
    */
   update(dt, world, home) {
     this.timer -= dt;
-    if (this.timer <= 0) {
+    if (this.target) {
+      // Walk toward the target resource; the manager harvests it on arrival.
+      const dir = Math.sign(this.target.x + 0.5 - this.x);
+      this.vx = dir * 2.2;
+      if (dir !== 0) this.facing = dir;
+    } else if (this.timer <= 0) {
       this.timer = 1.2 + Math.random() * 2.5;
       // Wander, but gently steer back toward home so the town stays cohesive.
       const pull = home ? Math.sign(home.x - this.x) : 0;
@@ -80,6 +86,11 @@ export class Settler {
     return this.collides(world, this.x, this.y + 0.05);
   }
 
+  /** Is the settler adjacent enough to its target to harvest it? */
+  atTarget() {
+    return this.target && Math.abs(this.target.x + 0.5 - this.x) < 1.2;
+  }
+
   collides(world, x, y) {
     const minX = Math.floor(x - this.w / 2);
     const maxX = Math.floor(x + this.w / 2);
@@ -97,7 +108,7 @@ export class Settler {
 
   static load(d) {
     const s = new Settler(d.x, d.y, d.role);
-    return s;
+    return s; // transient target is recomputed in-world; not persisted
   }
 }
 
@@ -173,14 +184,34 @@ export class SettlerManager {
     const produced = {};
     for (const s of this.settlers) {
       if (s.role === 'guard') guards++;
-      if (!s.update(dt, world, this.home)) continue;
-      // Each role converts a work tick into something distinct + a little CP.
+
+      // Gatherers physically seek + chop a nearby resource: acquire a target,
+      // walk to it (Settler.update steers), and harvest it on arrival. This
+      // happens regardless of the work-tick so the action reads on-screen.
+      if (s.role === 'gatherer' && world) {
+        if (!s.target || world.get(s.target.x, s.target.y) !== s.target.id) {
+          s.target = this._findResource(world, s);
+        }
+      }
+
+      const tick = s.update(dt, world, this.home);
+
+      if (s.role === 'gatherer' && s.atTarget() && world) {
+        const got = this._harvest(world, s.target);
+        s.target = null;
+        if (got) {
+          this.stock[got] = (this.stock[got] || 0) + 1;
+          produced[got] = (produced[got] || 0) + 1;
+          cp += 0.5;
+        }
+        continue;
+      }
+
+      if (!tick) continue;
+      // Non-gather roles convert a work tick into role-specific output + CP.
       switch (s.role) {
         case 'farmer':   this.stock.food += 1; produced.food = (produced.food || 0) + 1; cp += 0.4; break;
-        case 'gatherer': {
-          const kind = Math.random() < 0.6 ? 'wood' : 'ore';
-          this.stock[kind] += 1; produced[kind] = (produced[kind] || 0) + 1; cp += 0.5; break;
-        }
+        case 'gatherer': break; // handled above by physical harvesting
         case 'builder': {
           cp += 1.0; produced.build = (produced.build || 0) + 1;
           // Builders visibly grow the village: when the town has spare wood,
@@ -203,6 +234,43 @@ export class SettlerManager {
     const x = Math.max(1, Math.min(world.width - 2, hx));
     const surf = world.heightMap[x] ?? Math.floor(world.height / 2);
     this.settlers.push(new Settler(x + 0.5, surf, this._neededRole()));
+  }
+
+  /**
+   * Find the nearest harvestable resource within the town radius for a
+   * gatherer to walk to. Wood (logs/leaves) and ore are the targets.
+   */
+  _findResource(world, s) {
+    if (!this._resIds) {
+      this._resIds = {
+        [blockId('log')]: 'wood', [blockId('leaves')]: 'wood',
+        [blockId('coal_ore')]: 'ore', [blockId('copper_ore')]: 'ore',
+        [blockId('tin_ore')]: 'ore', [blockId('iron_ore')]: 'ore',
+      };
+    }
+    const cx = Math.round(s.x);
+    const cy = Math.round(s.y);
+    let best = null;
+    let bestD = Infinity;
+    const R = 9;
+    for (let y = cy - R; y <= cy + R; y++) {
+      for (let x = cx - R; x <= cx + R; x++) {
+        if (Math.abs(x - this.home.x) > 13) continue; // stay near town
+        const id = world.get(x, y);
+        const kind = this._resIds[id];
+        if (!kind) continue;
+        const d = Math.abs(x - s.x) + Math.abs(y - s.y);
+        if (d < bestD) { bestD = d; best = { x, y, id, kind }; }
+      }
+    }
+    return best;
+  }
+
+  /** Remove the target block and return the resource kind it yields. */
+  _harvest(world, target) {
+    if (!target || world.get(target.x, target.y) !== target.id) return null;
+    world.set(target.x, target.y, AIR);
+    return target.kind;
   }
 
   /**

@@ -114,6 +114,62 @@ html, body {
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75);
 }
 
+/* Left-side scrim so hero text stays legible over the art. */
+.landing-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(6, 9, 20, 0.82) 0%, rgba(6, 9, 20, 0.5) 38%, rgba(6, 9, 20, 0) 68%);
+  z-index: 0;
+}
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.72rem;
+  color: var(--accent);
+  margin: 0 0 0.4rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+/* Era journey strip. */
+.era-journey {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.55rem;
+  padding: 0;
+  margin: 0 0 1.6rem;
+}
+.era-journey li { display: flex; flex-direction: column; align-items: center; }
+.era-journey .ej-icon {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+}
+.era-journey .ej-name { font-size: 0.62rem; color: #cdd6f5; letter-spacing: 0.4px; }
+.era-journey .ej-arrow {
+  color: var(--accent);
+  font-weight: bold;
+  opacity: 0.7;
+  align-self: flex-start;
+  margin-top: 0.35rem;
+}
+
+/* Feature highlights under the CTA. */
+.landing-feats {
+  list-style: none;
+  padding: 0;
+  margin: 1.4rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.landing-feats li {
+  font-size: 0.9rem;
+  color: #e7ecff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+.landing-feats span { display: inline-block; width: 1.6rem; }
+
 .btn {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
@@ -570,6 +626,9 @@ html, body {
   .menu-buttons {
     margin: 0 auto;
   }
+  .era-journey { justify-content: center; }
+  .landing-feats { align-items: center; }
+  .landing-feats li { font-size: 0.82rem; }
   #hud { font-size: 12px; }
   .civ-panel { width: 165px; }
   .era-story { display: none; }

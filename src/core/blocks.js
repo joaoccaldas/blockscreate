@@ -19,6 +19,9 @@
  *   drops    item id, weighted list, or null (defaults to the block's own name)
  *   era      earliest era this block naturally generates / is craftable in
  *   light    light emitted (0..1), used for torches/fire later
+ *   minTier  minimum matching-tool tier required to harvest a drop (0 = hands).
+ *            Mining with a weaker/wrong tool is refused; see Game._canMine.
+ *   falls    true if the block obeys gravity (sand/gravel) when unsupported.
  */
 
 export const AIR = 0;
@@ -29,8 +32,8 @@ const defs = [
   // Natural terrain
   { id: 1,  name: 'grass',      label: 'Grass',        solid: true,  hardness: 0.6, tool: 'shovel',  colors: { base: '#5a9e3f', top: '#6fc04e', side: '#4a8233' }, era: 'stone' },
   { id: 2,  name: 'dirt',       label: 'Dirt',         solid: true,  hardness: 0.5, tool: 'shovel',  colors: { base: '#7a5230', top: '#8a5f38', side: '#653f23' }, era: 'stone' },
-  { id: 3,  name: 'stone',      label: 'Stone',        solid: true,  hardness: 1.6, tool: 'pickaxe', colors: { base: '#7d7d7d', top: '#8c8c8c', side: '#6a6a6a' }, era: 'stone', drops: 'cobblestone' },
-  { id: 4,  name: 'sand',       label: 'Sand',         solid: true,  hardness: 0.5, tool: 'shovel',  colors: { base: '#dccb8a', top: '#e8d99c', side: '#c6b673' }, era: 'stone' },
+  { id: 3,  name: 'stone',      label: 'Stone',        solid: true,  hardness: 1.6, tool: 'pickaxe', minTier: 1, colors: { base: '#7d7d7d', top: '#8c8c8c', side: '#6a6a6a' }, era: 'stone', drops: 'cobblestone' },
+  { id: 4,  name: 'sand',       label: 'Sand',         solid: true,  hardness: 0.5, tool: 'shovel',  falls: true, colors: { base: '#dccb8a', top: '#e8d99c', side: '#c6b673' }, era: 'stone' },
   { id: 5,  name: 'water',      label: 'Water',        solid: false, hardness: 0,  tool: 'hand',    colors: { base: '#3b6fd4', top: '#4f86ee', side: '#2f5bb0' }, era: 'stone', liquid: true },
   { id: 6,  name: 'bedrock',    label: 'Bedrock',      solid: true,  hardness: Infinity, tool: 'pickaxe', colors: { base: '#3a3a3a', top: '#454545', side: '#2c2c2c' }, era: 'stone' },
 
@@ -40,20 +43,20 @@ const defs = [
   { id: 9,  name: 'planks',     label: 'Wood Planks',  solid: true,  hardness: 1.0, tool: 'axe',     colors: { base: '#b78a4e', top: '#c89a5c', side: '#9e7740' }, era: 'stone' },
 
   // Ores
-  { id: 10, name: 'coal_ore',   label: 'Coal Ore',     solid: true,  hardness: 2.2, tool: 'pickaxe', colors: { base: '#5a5a5a', top: '#6a6a6a', side: '#484848' }, era: 'stone', drops: 'coal', fleck: '#1a1a1a' },
-  { id: 11, name: 'copper_ore', label: 'Copper Ore',   solid: true,  hardness: 2.6, tool: 'pickaxe', colors: { base: '#857c6e', top: '#968b7b', side: '#6f675b' }, era: 'bronze', drops: 'copper_ore', fleck: '#c87f4a' },
-  { id: 12, name: 'tin_ore',    label: 'Tin Ore',      solid: true,  hardness: 2.6, tool: 'pickaxe', colors: { base: '#8a8a86', top: '#9b9b96', side: '#727270' }, era: 'bronze', drops: 'tin_ore', fleck: '#d8d8d0' },
-  { id: 13, name: 'iron_ore',   label: 'Iron Ore',     solid: true,  hardness: 3.2, tool: 'pickaxe', colors: { base: '#8a7f76', top: '#9a8e84', side: '#736a62' }, era: 'iron', drops: 'iron_ore', fleck: '#d6b8a0' },
-  { id: 14, name: 'gold_ore',   label: 'Gold Ore',     solid: true,  hardness: 3.0, tool: 'pickaxe', colors: { base: '#8a8260', top: '#9c9470', side: '#726b4f' }, era: 'iron', drops: 'gold_ore', fleck: '#f4d24a' },
+  { id: 10, name: 'coal_ore',   label: 'Coal Ore',     solid: true,  hardness: 2.2, tool: 'pickaxe', minTier: 1, colors: { base: '#5a5a5a', top: '#6a6a6a', side: '#484848' }, era: 'stone', drops: 'coal', fleck: '#1a1a1a' },
+  { id: 11, name: 'copper_ore', label: 'Copper Ore',   solid: true,  hardness: 2.6, tool: 'pickaxe', minTier: 1, colors: { base: '#857c6e', top: '#968b7b', side: '#6f675b' }, era: 'bronze', drops: 'copper_ore', fleck: '#c87f4a' },
+  { id: 12, name: 'tin_ore',    label: 'Tin Ore',      solid: true,  hardness: 2.6, tool: 'pickaxe', minTier: 1, colors: { base: '#8a8a86', top: '#9b9b96', side: '#727270' }, era: 'bronze', drops: 'tin_ore', fleck: '#d8d8d0' },
+  { id: 13, name: 'iron_ore',   label: 'Iron Ore',     solid: true,  hardness: 3.2, tool: 'pickaxe', minTier: 2, colors: { base: '#8a7f76', top: '#9a8e84', side: '#736a62' }, era: 'iron', drops: 'iron_ore', fleck: '#d6b8a0' },
+  { id: 14, name: 'gold_ore',   label: 'Gold Ore',     solid: true,  hardness: 3.0, tool: 'pickaxe', minTier: 2, colors: { base: '#8a8260', top: '#9c9470', side: '#726b4f' }, era: 'iron', drops: 'gold_ore', fleck: '#f4d24a' },
 
   // Crafted / civilization building blocks
-  { id: 15, name: 'cobblestone',label: 'Cobblestone',  solid: true,  hardness: 1.8, tool: 'pickaxe', colors: { base: '#6f6f6f', top: '#808080', side: '#5c5c5c' }, era: 'stone' },
+  { id: 15, name: 'cobblestone',label: 'Cobblestone',  solid: true,  hardness: 1.8, tool: 'pickaxe', minTier: 1, colors: { base: '#6f6f6f', top: '#808080', side: '#5c5c5c' }, era: 'stone' },
   { id: 16, name: 'brick',      label: 'Bricks',       solid: true,  hardness: 2.0, tool: 'pickaxe', colors: { base: '#9e4b3a', top: '#b25946', side: '#853d30' }, era: 'bronze' },
   { id: 17, name: 'thatch',     label: 'Thatch Roof',  solid: true,  hardness: 0.4, tool: 'hand',    colors: { base: '#c2a martyr', top: '#d4b15a', side: '#a88f3f' }, era: 'stone' },
   { id: 18, name: 'torch',      label: 'Torch',        solid: false, hardness: 0,  tool: 'hand',    colors: { base: '#ffb347', top: '#ffd27a', side: '#e08a2a' }, era: 'stone', light: 0.9 },
   { id: 19, name: 'campfire',   label: 'Campfire',     solid: true,  hardness: 0.3, tool: 'hand',    colors: { base: '#a8521f', top: '#ff7b29', side: '#7d3c16' }, era: 'stone', light: 0.8 },
   { id: 20, name: 'clay',       label: 'Clay Deposit', solid: true,  hardness: 0.7, tool: 'shovel',  colors: { base: '#9a8d7a', top: '#afa18a', side: '#807462' }, era: 'stone', drops: 'clay' },
-  { id: 21, name: 'gravel',     label: 'Gravel',       solid: true,  hardness: 0.7, tool: 'shovel',  colors: { base: '#77756f', top: '#8a8882', side: '#62605b' }, era: 'stone', drops: [{ id: 'flint', chance: 0.4 }, { id: 'gravel', chance: 1 }] },
+  { id: 21, name: 'gravel',     label: 'Gravel',       solid: true,  hardness: 0.7, tool: 'shovel',  falls: true, colors: { base: '#77756f', top: '#8a8882', side: '#62605b' }, era: 'stone', drops: [{ id: 'flint', chance: 0.4 }, { id: 'gravel', chance: 1 }] },
 
   // Historical clues / decorations
   { id: 22, name: 'fossil_bed',         label: 'Fossil Bed',         solid: true,  hardness: 1.4, tool: 'pickaxe', colors: { base: '#8d826f', top: '#d9cfb7', side: '#6f6658' }, era: 'stone', drops: 'fossil_bed', clue: 'fossil_bed' },
@@ -114,4 +117,16 @@ export function dropsOf(id, rng = Math.random) {
     if ((d.chance ?? 1) >= 1 || rng() <= d.chance) out.push(d.id);
   }
   return out;
+}
+
+/** Minimum matching-tool tier needed to harvest this block (0 = bare hands). */
+export function minTierOf(id) {
+  const b = BLOCKS[id];
+  return b && b.minTier ? b.minTier : 0;
+}
+
+/** Does this block fall when the tile beneath it is empty? */
+export function fallsOf(id) {
+  const b = BLOCKS[id];
+  return !!(b && b.falls);
 }

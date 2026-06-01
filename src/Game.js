@@ -22,7 +22,7 @@ import { Particles } from './render/Particles.js';
 import { Input, isTouch } from './input/Input.js';
 import { HUD } from './ui/HUD.js';
 import { SaveManager } from './persistence/SaveManager.js';
-import { getBlock, dropsOf, isSolid, AIR, blockId } from './core/blocks.js';
+import { getBlock, dropsOf, isSolid, AIR, blockId, minTierOf, fallsOf } from './core/blocks.js';
 import { getItem, isPlaceable } from './core/items.js';
 import { getEra, nextEra } from './core/eras.js';
 import { getEraTheme, weightedPick } from './core/eraTheme.js';
@@ -765,6 +765,8 @@ export class Game {
         }
       }
     }
+    // Let sand/gravel slump into the fresh crater.
+    for (let dx = -r - 1; dx <= r + 1; dx++) this._settleFalling(cx + dx, cy - r - 1);
 
     // Damage the player + mobs caught in the blast.
     if (Math.hypot(this.player.x - (cx + 0.5), this.player.y - (cy + 0.5)) < 4) {
@@ -818,6 +820,21 @@ export class Game {
     const block = getBlock(id);
     if (block.hardness === Infinity) return;
 
+    // Tool gating: a block with minTier needs a matching tool of at least that
+    // tier (creative ignores this). Refuse with a one-time hint otherwise.
+    if (this.mode === MODE.SURVIVAL && !this._canMine(block)) {
+      this.mineTarget = null;
+      this.mineProgress = 0;
+      this.hover.blocked = true;
+      if (!this._toolHintAt || this._toolHintAt !== `${tileX},${tileY}`) {
+        this._toolHintAt = `${tileX},${tileY}`;
+        const need = block.minTier >= 2 ? 'a stone pickaxe or better' : 'a pickaxe';
+        this.hud.toast(`Need ${need} to mine ${block.label}`, 1600);
+        this.audio?.play('ui');
+      }
+      return;
+    }
+
     if (!this.mineTarget || this.mineTarget.x !== tileX || this.mineTarget.y !== tileY) {
       this.mineTarget = { x: tileX, y: tileY };
       this.mineProgress = 0;
@@ -851,6 +868,15 @@ export class Game {
     return this.powerups.multiplier('miningSpeed');
   }
 
+  /** Can the currently held tool harvest this block? (minTier gating) */
+  _canMine(block) {
+    const need = minTierOf(block.id);
+    if (need <= 0) return true;
+    const sel = this.inventory.selectedItem();
+    const item = sel ? getItem(sel.id) : null;
+    return !!(item && item.kind === 'tool' && item.tool === block.tool && item.tier >= need);
+  }
+
   _breakBlock(x, y, block) {
     this.world.set(x, y, AIR);
     if (block.colors) this.particles.burst(x + 0.5, y + 0.5, block.colors.base, 10);
@@ -861,6 +887,8 @@ export class Game {
       for (const drop of drops) this.inventory.add(drop, 1);
     }
     this.civ.onMine(block.name, y);
+    // Removing a block can drop falling blocks stacked above it.
+    this._settleFalling(x, y - 1);
   }
 
   _discoverClue(block) {
@@ -895,8 +923,18 @@ export class Game {
     if (!isPlaceable(sel.id)) return false;
     if (this.world.get(x, y) !== AIR) return false;
     if (this._overlapsPlayer(x, y)) return false;
+    // Adjacency: a new block must touch an existing solid block (or any
+    // non-air, e.g. water) on at least one side, so you can't place in mid-air.
+    if (!this._hasNeighbor(x, y)) {
+      if (!this._placeHintT || performance.now() - this._placeHintT > 1500) {
+        this._placeHintT = performance.now();
+        this.hud.toast('Place next to an existing block', 1400);
+      }
+      return false;
+    }
     const id = getItem(sel.id).place;
     this.world.set(x, y, id);
+    this._settleFalling(x, y - 1); // a block placed under floating sand re-supports it
     const b = getBlock(id);
     if (b.colors) this.particles.burst(x + 0.5, y + 0.5, b.colors.base, 5, { gravity: 8, life: 0.3 });
     this.audio?.play('place');
@@ -1039,6 +1077,33 @@ export class Game {
     const p = this.player;
     return x >= Math.floor(p.x - p.w / 2) && x <= Math.floor(p.x + p.w / 2) &&
            y >= Math.floor(p.y - p.h) && y <= Math.floor(p.y);
+  }
+
+  /** True if any of the 4 orthogonal neighbors is non-air (a placement anchor). */
+  _hasNeighbor(x, y) {
+    return this.world.get(x - 1, y) !== AIR || this.world.get(x + 1, y) !== AIR ||
+           this.world.get(x, y - 1) !== AIR || this.world.get(x, y + 1) !== AIR;
+  }
+
+  /**
+   * Gravity for falling blocks (sand/gravel): if (x,y) holds a falling block
+   * with air beneath, drop it as far as it can go. Cheap and localized — called
+   * right after a block is removed or placed nearby.
+   */
+  _settleFalling(x, y) {
+    if (!this.world.inBounds(x, y)) return;
+    const id = this.world.get(x, y);
+    if (id === AIR || !fallsOf(id)) return;
+    let ny = y;
+    while (this.world.inBounds(x, ny + 1) && this.world.get(x, ny + 1) === AIR) ny++;
+    if (ny === y) return;
+    this.world.set(x, y, AIR);
+    this.world.set(x, ny, id);
+    const b = getBlock(id);
+    if (b.colors) this.particles.burst(x + 0.5, ny + 0.5, b.colors.base, 4, { gravity: 14, life: 0.25 });
+    this.audio?.play('step');
+    // A block that fell may expose another above it.
+    this._settleFalling(x, y - 1);
   }
 
   _spawnMobs(dt) {

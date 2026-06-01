@@ -11,15 +11,15 @@ A grounded read of the current build (v5.0). Each section: **where we stand**,
   player) and per-era hero art that swaps with your furthest-unlocked age.
 
 ## Building / mining logic
-- **Stand:** hold-to-mine with hardness-based timing; tool tier multiplies speed
-  (`_miningSpeed`); creative is instant; placement blocks AIR-only and refuses
-  to overlap the player; meteors carve craters.
-- **Gap:** (1) no **tool gating** — bare hands can eventually mine stone/iron,
-  just slowly; tiers should *require* a minimum tool. (2) No **block support /
-  gravity** (sand/gravel float). (3) Placement ignores reach-adjacency, so you
-  can place against nothing.
-- **Next:** add `minTier` per block (refuse + "needs better pickaxe" toast);
-  gravity for sand/gravel; require a solid neighbor to place.
+- **Stand:** hold-to-mine with hardness-based timing; tool tier multiplies speed.
+  **Tool gating** now refuses too-weak/wrong tools (`minTier` per block, e.g.
+  stone needs a pickaxe, iron ore needs a stone pickaxe) with a hint toast.
+  **Gravity** drops unsupported sand/gravel (after mining, placing, or a meteor
+  crater). **Placement adjacency** requires a neighboring block, so you can no
+  longer build in mid-air. Creative ignores gating. Covered by `test/mechanics.mjs`.
+- **Gap:** no fluid flow (water is static); no multi-block structures with
+  integrity; no block-specific mining sounds.
+- **Next:** simple water spread; era-specific dig sounds; ladders/scaffolding.
 
 ## Recipes
 - **Stand:** 24 recipes, era-gated, station-gated (campfire smelting/cooking),

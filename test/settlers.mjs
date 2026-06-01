@@ -48,6 +48,22 @@ const st = sm.stock;
 assert.ok((st.food + st.wood + st.ore) > 0, 'town stockpile accumulates from work');
 ok(`roles balanced (${JSON.stringify(roles)}); stock food ${Math.floor(st.food)} wood ${Math.floor(st.wood)} ore ${Math.floor(st.ore)}`);
 
+// Builders visibly grow the village: place planks near home, but bounded
+// (capped footprint + height) so they don't build infinite pillars.
+import { Settler } from '../src/systems/Settlers.js';
+import { blockId } from '../src/core/blocks.js';
+const plank = blockId('planks');
+const builder = new Settler(sm.home.x + 0.5, world.heightMap[sm.home.x], 'builder');
+sm.stock.wood = 999;
+const planksBefore = world.grid.reduce((n, v) => n + (v === plank ? 1 : 0), 0);
+let built = 0;
+for (let i = 0; i < 600; i++) { if (sm._buildNearHome(world, builder)) built++; builder.x = sm.home.x + 0.5; }
+const planksAfter = world.grid.reduce((n, v) => n + (v === plank ? 1 : 0), 0);
+assert.ok(built > 0, 'builders place village blocks');
+assert.ok(built < 600, 'town building is bounded (no infinite pillars)');
+assert.strictEqual(planksAfter - planksBefore, built, 'placements match world changes');
+ok(`builders grow a bounded village (${built} blocks placed)`);
+
 // Save round-trip preserves home + settlers + stock.
 const data = sm.serialize();
 const restored = new SettlerManager(data);

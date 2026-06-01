@@ -15,7 +15,7 @@
  * positions are derived, so saves only need the town center + count.
  */
 import { C } from '../core/constants.js';
-import { isSolid } from '../core/blocks.js';
+import { isSolid, blockId, AIR } from '../core/blocks.js';
 
 let NEXT_ID = 1;
 
@@ -118,7 +118,9 @@ export class SettlerManager {
   }
 
   setHome(x, y) {
-    if (!this.home) this.home = { x, y };
+    // y is the original ground surface — snapshot it as the village's base
+    // level so build-height caps don't drift as builders raise the terrain.
+    if (!this.home) this.home = { x, y, baseSurf: y };
   }
 
   /** How many settlers the settlement currently supports. */
@@ -179,7 +181,16 @@ export class SettlerManager {
           const kind = Math.random() < 0.6 ? 'wood' : 'ore';
           this.stock[kind] += 1; produced[kind] = (produced[kind] || 0) + 1; cp += 0.5; break;
         }
-        case 'builder':  cp += 1.0; produced.build = (produced.build || 0) + 1; break;
+        case 'builder': {
+          cp += 1.0; produced.build = (produced.build || 0) + 1;
+          // Builders visibly grow the village: when the town has spare wood,
+          // a builder lays a plank block on open ground near home.
+          if (world && this.stock.wood >= 2 && this._buildNearHome(world, s)) {
+            this.stock.wood -= 2;
+            produced.placed = (produced.placed || 0) + 1;
+          }
+          break;
+        }
         case 'guard':    cp += 0.3; break;
         default:         cp += 0.5; break;
       }
@@ -192,6 +203,34 @@ export class SettlerManager {
     const x = Math.max(1, Math.min(world.width - 2, hx));
     const surf = world.heightMap[x] ?? Math.floor(world.height / 2);
     this.settlers.push(new Settler(x + 0.5, surf, this._neededRole()));
+  }
+
+  /**
+   * Place one plank on open ground a few tiles from the builder, inside a
+   * bounded town radius, so the settlement visibly grows without sprawling or
+   * burying the player's own builds. Returns true if a block was placed.
+   */
+  _buildNearHome(world, builder) {
+    const plank = blockId('planks');
+    const bx = Math.round(builder.x);
+    // Cap how high the village stacks so builders make low structures, not
+    // endless pillars (placing raises the height map).
+    const baseSurf = this.home?.baseSurf ?? world.heightMap?.[this.home.x] ?? 0;
+    for (let i = 0; i < 4; i++) {
+      const x = bx + (Math.random() < 0.5 ? -1 : 1) * (1 + (Math.random() * 3 | 0));
+      if (Math.abs(x - this.home.x) > 12) continue;            // keep it a village, not sprawl
+      const surf = world.heightMap?.[x];
+      if (surf == null) continue;
+      const groundY = surf;          // first solid tile
+      const openY = groundY - 1;     // tile just above the ground
+      if (groundY < baseSurf - 3) continue;                    // max ~3 tiles tall
+      if (!world.inBounds(x, openY)) continue;
+      if (world.get(x, openY) !== AIR) continue;               // don't stack/overwrite
+      if (!isSolid(world.get(x, groundY))) continue;           // need solid support
+      world.set(x, openY, plank);
+      return true;
+    }
+    return false;
   }
 
   serialize() {

@@ -35,7 +35,8 @@ export class Player {
     if (input.left) ax -= 1;
     if (input.right) ax += 1;
     if (ax !== 0) this.facing = ax;
-    this.vx = ax * C.MOVE_SPEED * (swimmingCell ? 0.62 : 1);
+    const speedBoost = input.modifiers?.moveSpeed || 1;
+    this.vx = ax * C.MOVE_SPEED * (swimmingCell ? 0.62 : speedBoost);
 
     if (flying) {
       this.vy = 0;

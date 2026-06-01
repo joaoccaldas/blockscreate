@@ -116,6 +116,7 @@ export class Game {
         'grass', 'dirt', 'stone', 'cobblestone', 'sand', 'water', 'log', 'planks', 'leaves',
         'thatch', 'brick', 'torch', 'campfire', 'clay', 'gravel',
         'farm_plot', 'wheat_seeds', 'wheat_seedling', 'wheat_green', 'wheat_ripe',
+        'granary', 'market', 'gate', 'road', 'auto_miner',
         'coal_ore', 'copper_ore', 'tin_ore', 'iron_ore', 'gold_ore']
         .forEach((id) => this.inventory.add(id, 99));
     } else if (this.eraId !== 'cell') {
@@ -477,6 +478,7 @@ export class Game {
       this.input.state.modifiers = {
         hungerDrain: this.powerups.multiplier('hungerDrain'),
         cellStability: this.eraId === 'cell',
+        moveSpeed: this._onRoad() ? 1.22 : 1,
       };
       this.player.update(dt, this.world, this.input.state, this.mode);
       this._expandWorldIfNeeded();
@@ -494,6 +496,8 @@ export class Game {
     this._updateDinosaurPressure(dt);
     this._spawnMobs(dt);
     this._updateSettlers(dt);
+    this._updateTownEconomy(dt);
+    this._updateAutomation(dt);
     this.powerups.update(dt);
     this._trackAnimalFriendship(dt);
     this._ambientWeather(dt);
@@ -591,7 +595,13 @@ export class Game {
     if (this.mode !== MODE.SURVIVAL) return;
     if (this.events?.isActive('drought')) {
       this.player.hunger = Math.max(0, this.player.hunger - dt * 0.12);
-      if (this.inventory.count('food') >= 3) this.events._setActive?.('drought', false);
+      const stored = (this.settlers?.stock?.food || 0) + this.inventory.count('food');
+      if (stored >= 3 || (this.civ.storage || 0) >= 8) this.events._setActive?.('drought', false);
+    }
+    if (this.eraId === 'industrial' && (this.civ.pollution || 0) > 4) {
+      this.player.hunger = Math.max(0, this.player.hunger - dt * 0.08);
+      if ((this.civ.pollution || 0) > 10) this.player.health = Math.max(0, this.player.health - dt * 0.08);
+      if (this.player.health <= 0) this.player.alive = false;
     }
     if (!this.events?.isActive('cold_night')) return;
     if (this._hasWarmth()) return;
@@ -1059,6 +1069,14 @@ export class Game {
     return false;
   }
 
+  _onRoad() {
+    if (!this.world) return false;
+    const road = blockId('road');
+    const px = Math.floor(this.player.x);
+    const py = Math.floor(this.player.y);
+    return this.world.get(px, py) === road || this.world.get(px, py + 1) === road;
+  }
+
   _evaluateStructures(origin = null) {
     if (!this.structures) return;
     const found = this.structures.evaluate(this, origin);
@@ -1103,7 +1121,22 @@ export class Game {
       const nearGrazer = this.mobs.some((m) => (m.type === 'stego' || m.type === 'trike') &&
         Math.hypot(m.x - this.player.x, m.y - this.player.y) < 4);
       this.grazerBondTime = nearGrazer ? (this.grazerBondTime || 0) + dt : Math.max(0, (this.grazerBondTime || 0) - dt * 0.35);
+      if ((this.grazerBondTime || 0) >= 10 && !this.mobs.some((m) => m.tamed)) {
+        const grazer = this.mobs.find((m) => (m.type === 'stego' || m.type === 'trike') &&
+          Math.hypot(m.x - this.player.x, m.y - this.player.y) < 4);
+        if (grazer) this._tameGrazer(grazer);
+      }
     }
+  }
+
+  _tameGrazer(grazer) {
+    grazer.tamed = true;
+    grazer.health = Math.max(grazer.health, grazer.def.hp || grazer.health);
+    this.civ.addCP(18 * (this.powerups?.multiplier('cpMultiplier') || 1));
+    this.powerups?.grant?.('grazer_bond');
+    this.audio?.play('objective');
+    this.particles.fountain(grazer.x, grazer.y - 1, ['#6fc04e', '#f4d24a', '#fff'], 24);
+    this.hud?.bigToast(`🌿 <b>Grazer companion</b><br><small>Your bond turned a ${grazer.type} into a town guardian.</small>`, 3200);
   }
 
   _mobTargetContext() {
@@ -1138,7 +1171,9 @@ export class Game {
       rexDistance,
       defended,
       grazerBond: Math.min(100, Math.round(((this.grazerBondTime || 0) / 10) * 100)),
-      warning: fear ? 'T-Rex fear zone' : packPressure >= 2 ? 'raptor pack nearby' : defended ? 'defenses steady' : '',
+      companion: this.mobs.some((m) => m.tamed),
+      warning: fear ? 'T-Rex fear zone' : packPressure >= 2 ? 'raptor pack nearby' :
+        this.mobs.some((m) => m.tamed) ? 'grazer companion nearby' : defended ? 'defenses steady' : '',
     };
   }
 
@@ -1154,6 +1189,7 @@ export class Game {
 
   _hasDinoDefense(radius = 7) {
     if (this.structures?.has('defended_camp') || this.structures?.has('watchtower')) return true;
+    if (this.mobs?.some((m) => m.tamed && Math.hypot(m.x - this.player.x, m.y - this.player.y) < 10)) return true;
     // Guards in the settlement help defend it: 2+ guards count as defense when
     // you're near the town center.
     if ((this.townGuards || 0) >= 2 && this.settlers?.home &&
@@ -1270,6 +1306,10 @@ export class Game {
 
   spawnMobNearPlayer(type) {
     if (!type || !MOB_TYPES[type] || this.mobs.length >= 12) return false;
+    if ((type === 'raider' || type === 'bandit') && this._hasTownDefense() && Math.random() < 0.7) {
+      this.hud?.toast('🛡️ Town defenses turned away scouts', 1800);
+      return false;
+    }
     const dir = Math.random() < 0.5 ? -1 : 1;
     const sx = Math.floor(this.player.x + dir * (12 + Math.random() * 6));
     if (sx < 1 || sx >= this.world.width - 1) return false;
@@ -1277,6 +1317,46 @@ export class Game {
     if (!isSolid(this.world.get(sx, surf))) return false;
     this.mobs.push(new Mob(type, sx + 0.5, surf));
     return true;
+  }
+
+  _hasTownDefense() {
+    const blockDefense = (this.civ?.defense || 0) + (this.civ?.light || 0) * 0.4;
+    const guards = (this.townGuards || 0) * 1.5;
+    const grazer = this.mobs?.some((m) => m.tamed) ? 3 : 0;
+    return blockDefense + guards + grazer >= 4;
+  }
+
+  _updateTownEconomy(dt) {
+    if (!this.settlers?.home || this.mode !== MODE.SURVIVAL) return;
+    const st = this.settlers.stock || {};
+    const storageCap = 20 + (this.civ.storage || 0);
+    for (const key of ['food', 'wheat', 'wood', 'ore']) {
+      if ((st[key] || 0) > storageCap) st[key] = storageCap;
+    }
+    this._tradeTimer = (this._tradeTimer || 0) + dt;
+    if (this._tradeTimer < 12) return;
+    this._tradeTimer = 0;
+    if ((this.civ.trade || 0) <= 0) return;
+    if ((st.wheat || 0) >= 4 || (st.ore || 0) >= 3) {
+      if ((st.wheat || 0) >= 4) st.wheat -= 4;
+      else st.ore -= 3;
+      this.civ.onTrade(5 + (this.civ.trade || 0));
+      this.hud?.toast('🏺 Market traded town surplus for CP', 1800);
+    }
+  }
+
+  _updateAutomation(dt) {
+    const miners = this.civ?.placed?.auto_miner || 0;
+    if (!miners || this.mode !== MODE.SURVIVAL) return;
+    this._autoMineTimer = (this._autoMineTimer || 0) + dt;
+    if (this._autoMineTimer < 10) return;
+    this._autoMineTimer = 0;
+    const produced = Math.max(1, miners);
+    if (this.settlers?.stock) this.settlers.stock.ore = (this.settlers.stock.ore || 0) + produced;
+    else this.inventory.add('coal', produced);
+    this.civ.pollution = (this.civ.pollution || 0) + 0.15 * miners;
+    this.civ.addCP(1.5 * miners);
+    this.hud?.toast(`⚙️ Auto miner produced ${produced} ore`, 1500);
   }
 
   _damagePlayer(amount, cause = 'the wilds') {

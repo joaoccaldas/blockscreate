@@ -77,6 +77,13 @@ const defs = [
   { id: 33, name: 'wheat_seedling', label: 'Wheat Seedling', solid: false, hardness: 0.15, tool: 'hand',   colors: { base: '#6ea647', top: '#9ed36a', side: '#4f7f35' }, era: 'bronze', drops: 'wheat_seeds' },
   { id: 34, name: 'wheat_green',    label: 'Green Wheat',    solid: false, hardness: 0.15, tool: 'hand',   colors: { base: '#94b84f', top: '#bfd46a', side: '#6e8a3d' }, era: 'bronze', drops: 'wheat_seeds' },
   { id: 35, name: 'wheat_ripe',     label: 'Ripe Wheat',     solid: false, hardness: 0.15, tool: 'hand',   colors: { base: '#d9b84a', top: '#f0d76b', side: '#a88931' }, era: 'bronze', drops: [{ id: 'wheat', chance: 1 }, { id: 'wheat_seeds', chance: 1 }] },
+
+  // City systems
+  { id: 36, name: 'granary',    label: 'Granary',     solid: true,  hardness: 1.0, tool: 'axe',     colors: { base: '#b8863f', top: '#d3ad5f', side: '#7d572b' }, era: 'bronze' },
+  { id: 37, name: 'market',     label: 'Market Stall',solid: true,  hardness: 0.8, tool: 'axe',     colors: { base: '#9a4f3f', top: '#e5c15a', side: '#66352d' }, era: 'bronze' },
+  { id: 38, name: 'gate',       label: 'City Gate',   solid: true,  hardness: 1.5, tool: 'axe',     colors: { base: '#6b4428', top: '#9a6a42', side: '#3f2818' }, era: 'iron' },
+  { id: 39, name: 'road',       label: 'Stone Road',  solid: false, hardness: 0.6, tool: 'pickaxe', colors: { base: '#6f6f68', top: '#8a8a82', side: '#55554f' }, era: 'iron' },
+  { id: 40, name: 'auto_miner', label: 'Auto Miner',  solid: true,  hardness: 2.4, tool: 'pickaxe', minTier: 2, colors: { base: '#4f5660', top: '#8b95a1', side: '#303740' }, era: 'industrial', light: 0.2 },
 ];
 
 // fix accidental typo above without breaking the table layout

@@ -99,11 +99,11 @@ export class WorldEventLog {
         this._spawnNear(game, hash2(Math.floor(game.clock), 14, game.world.seed) < 0.5 ? 'stego' : 'trike');
         started.push(this._markSeen('grazer_herd'));
       }
-    } else if (game.eraId === 'bronze') {
+    } else if (game.eraId === 'bronze' || game.eraId === 'iron') {
       this._setActive('cold_night', false);
 
       this.cooldowns.drought -= dt;
-      if (this.cooldowns.drought <= 0) {
+      if (game.eraId === 'bronze' && this.cooldowns.drought <= 0) {
         this.cooldowns.drought = 160;
         this._activate('drought', 45);
         started.push(this._markSeen('drought'));
@@ -113,7 +113,7 @@ export class WorldEventLog {
       if (this.cooldowns.raider_scouts <= 0 && game.dayFactor() < 0.5) {
         this.cooldowns.raider_scouts = 150;
         this._activate('raider_scouts', 40);
-        this._spawnNear(game, 'raider');
+        this._spawnNear(game, game.eraId === 'iron' ? 'bandit' : 'raider');
         started.push(this._markSeen('raider_scouts'));
       }
     } else {

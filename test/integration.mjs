@@ -114,6 +114,18 @@ const grazerJson = SaveManager.toJSON(g);
 if (grazerJson.grazerBondTime < 10) throw new Error('grazer bond time missing from save');
 ok('dinosaur pressure and grazer bond state are tracked');
 
+const grazer = new Mob('stego', g.player.x + 1.5, g.player.y);
+g.mobs = [grazer];
+g.grazerBondTime = 10;
+g._trackAnimalFriendship(0.016);
+if (!grazer.tamed) throw new Error('grazer did not become a companion at full bond');
+if (!g._hasDinoDefense()) throw new Error('tamed grazer did not count as dinosaur defense');
+const grazerSave = SaveManager.toJSON(g);
+const grazerLoad = newGame();
+grazerLoad.loadSave(grazerSave);
+if (!grazerLoad.mobs.some((m) => m.tamed)) throw new Error('tamed grazer did not persist');
+ok('grazer bond creates a persistent defensive companion');
+
 // Objectives wired and evaluating.
 if (!g.objectives || !g.objectives.all.length) throw new Error('objectives missing');
 g.inventory.add('log', 3);
@@ -178,6 +190,41 @@ g2.inventory.selected = g2.inventory.slots.findIndex((s) => s?.id === 'wheat_see
 if (!g2._tryPlace(fx, fy)) throw new Error('could not plant wheat seeds on a farm plot');
 if (g2.world.get(fx, fy - 1) !== blockId('wheat_seedling')) throw new Error('planting did not create a wheat seedling');
 ok('Bronze farming plants wheat through the normal build path');
+
+g2.civ.onBuild('granary');
+g2.civ.onBuild('market');
+g2.settlers.setHome(Math.round(g2.player.x), Math.round(g2.player.y));
+g2.settlers.stock.wheat = 5;
+const cpBeforeTrade = g2.civ.cp;
+g2._tradeTimer = 12;
+g2._updateTownEconomy(0.1);
+if (!(g2.civ.cp > cpBeforeTrade)) throw new Error('market did not convert surplus into CP');
+if (!(g2.civ.storage >= 8)) throw new Error('granary did not raise storage');
+ok('granary and market turn surplus into town value');
+
+const gIron = newGame();
+gIron.newWorld('iron', MODE.SURVIVAL);
+gIron.civ.onBuild('gate');
+gIron.civ.onBuild('gate');
+gIron.townGuards = 2;
+if (!gIron._hasTownDefense()) throw new Error('gates/guards did not create town defense');
+const spawnBefore = gIron.mobs.length;
+const oldRandom = Math.random;
+Math.random = () => 0.1; // force defense deterrence branch
+try { gIron.spawnMobNearPlayer('bandit'); } finally { Math.random = oldRandom; }
+if (gIron.mobs.length !== spawnBefore) throw new Error('defended town still spawned a bandit');
+ok('Iron gates and guards deter raiders');
+
+const gInd = newGame();
+gInd.newWorld('industrial', MODE.SURVIVAL);
+gInd.civ.onBuild('auto_miner');
+gInd.settlers.setHome(Math.round(gInd.player.x), Math.round(gInd.player.y));
+const oreBefore = gInd.settlers.stock.ore || 0;
+gInd._autoMineTimer = 10;
+gInd._updateAutomation(0.1);
+if (!(gInd.settlers.stock.ore > oreBefore)) throw new Error('auto miner did not produce ore');
+if (!(gInd.civ.pollution > 0)) throw new Error('auto miner did not add pollution');
+ok('Industrial auto miner produces ore with pollution tradeoff');
 
 // Asteroid event: a meteor impact carves a crater and hurts a nearby player.
 const g3 = newGame();

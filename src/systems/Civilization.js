@@ -19,11 +19,13 @@ const CP_GAINS = {
   cook: 2,
   tame: 5,
   light: 1,
+  trade: 4,
 };
 
 // Blocks that count as "building your settlement".
 const SETTLEMENT_BLOCKS = new Set([
-  'lipid_membrane', 'planks', 'cobblestone', 'brick', 'thatch', 'campfire', 'torch', 'log', 'farm_plot',
+  'lipid_membrane', 'planks', 'cobblestone', 'brick', 'thatch', 'campfire', 'torch', 'log',
+  'farm_plot', 'granary', 'market', 'gate', 'road', 'auto_miner',
 ]);
 
 export class Civilization {
@@ -38,6 +40,10 @@ export class Civilization {
     this.light = 0;
     this.placed = {};
     this.defeated = {};
+    this.defense = 0;
+    this.storage = 0;
+    this.trade = 0;
+    this.pollution = 0;
     this.highestBuild = Number.MAX_SAFE_INTEGER;
     this.deepestMine = 0;
   }
@@ -74,6 +80,11 @@ export class Civilization {
       if (itemId === 'planks' || itemId === 'log' || itemId === 'thatch') this.housing += 0.2;
       if (itemId === 'cobblestone' || itemId === 'brick') this.housing += 0.35;
       if (itemId === 'farm_plot') this.housing += 0.05;
+      if (itemId === 'granary') this.storage += 8;
+      if (itemId === 'market') this.trade += 1;
+      if (itemId === 'gate') this.defense += 3;
+      if (itemId === 'road') this.trade += 0.1;
+      if (itemId === 'auto_miner') this.pollution += 2;
     }
   }
 
@@ -83,6 +94,10 @@ export class Civilization {
 
   onDefeat(type) {
     this.defeated[type] = (this.defeated[type] || 0) + 1;
+  }
+
+  onTrade(amount = CP_GAINS.trade) {
+    this.addCP(amount);
   }
 
   /** Progress (0..1) toward unlocking the next era. */
@@ -107,7 +122,8 @@ export class Civilization {
   }
 
   settlementScore() {
-    return Math.floor(this.housing + this.light * 0.8 + this.totalBuilt * 0.25);
+    return Math.floor(this.housing + this.light * 0.8 + this.totalBuilt * 0.25 +
+      this.defense * 0.8 + this.storage * 0.15 + this.trade * 1.2 - this.pollution * 0.25);
   }
 
   serialize() {
@@ -115,6 +131,7 @@ export class Civilization {
       eraId: this.eraId, cp: this.cp, population: this.population,
       totalMined: this.totalMined, totalCrafted: this.totalCrafted, totalBuilt: this.totalBuilt,
       housing: this.housing, light: this.light, placed: this.placed, defeated: this.defeated,
+      defense: this.defense, storage: this.storage, trade: this.trade, pollution: this.pollution,
       highestBuild: this.highestBuild, deepestMine: this.deepestMine,
     };
   }
@@ -125,6 +142,10 @@ export class Civilization {
     this.light ??= 0;
     this.placed ??= {};
     this.defeated ??= {};
+    this.defense ??= 0;
+    this.storage ??= 0;
+    this.trade ??= 0;
+    this.pollution ??= 0;
     this.highestBuild ??= Number.MAX_SAFE_INTEGER;
     this.deepestMine ??= 0;
   }

@@ -35,12 +35,19 @@ export const RECIPES = [
   { id: 'farm_plot',     era: 'bronze', out: { id: 'farm_plot', n: 4 }, in: { dirt: 2, clay: 1 } },
   { id: 'wheat_seeds',   era: 'bronze', out: { id: 'wheat_seeds', n: 2 }, in: { fiber: 1 } },
   { id: 'bake_bread',    era: 'bronze', out: { id: 'food', n: 2 }, in: { wheat: 3 }, station: 'campfire' },
+  { id: 'granary',       era: 'bronze', out: { id: 'granary', n: 1 }, in: { planks: 6, wheat: 3 } },
+  { id: 'market',        era: 'bronze', out: { id: 'market', n: 1 }, in: { planks: 4, fiber: 2, copper: 1 } },
   { id: 'bronze_pickaxe',era: 'bronze', out: { id: 'bronze_pickaxe', n: 1 }, in: { bronze: 3, stick: 2 } },
 
   // --- Iron Age ---
   { id: 'iron_ingot',    era: 'iron', out: { id: 'iron', n: 1 }, in: { iron_ore: 1, coal: 1 }, station: 'campfire' },
   { id: 'gold_ingot',    era: 'iron', out: { id: 'gold', n: 1 }, in: { gold_ore: 1, coal: 1 }, station: 'campfire' },
+  { id: 'gate',          era: 'iron', out: { id: 'gate', n: 2 }, in: { planks: 4, iron: 1 } },
+  { id: 'road',          era: 'iron', out: { id: 'road', n: 8 }, in: { cobblestone: 4, gravel: 2 } },
   { id: 'iron_pickaxe',  era: 'iron', out: { id: 'iron_pickaxe', n: 1 }, in: { iron: 3, stick: 2 } },
+
+  // --- Industrial Age ---
+  { id: 'auto_miner',    era: 'industrial', out: { id: 'auto_miner', n: 1 }, in: { iron: 4, coal: 4, gold: 1 } },
 ];
 
 /** Recipes available given the set of unlocked era ids. */

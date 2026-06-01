@@ -51,6 +51,7 @@ export class Mob {
     this.health = def.hp || 6;
     this.hitFlash = 0; // seconds of "just got hit" tint
     this.attackCd = 0; // contact-attack cooldown
+    this.tamed = false;
   }
 
   /**
@@ -61,7 +62,9 @@ export class Mob {
     if (this.hitFlash > 0) this.hitFlash -= dt;
     if (this.attackCd > 0) this.attackCd -= dt;
 
-    if (this.hostile && target) {
+    if (this.tamed && target) {
+      this._follow(dt, target);
+    } else if (this.hostile && target) {
       this._think(dt, target);
     } else {
       this._wander(dt);
@@ -73,8 +76,9 @@ export class Mob {
     const nx = this.x + this.vx * dt;
     if (!this.collides(world, nx, this.y)) {
       this.x = nx;
-    } else if (this.hostile && this._onGround(world)) {
+    } else if ((this.hostile || this.tamed) && this._onGround(world)) {
       if (!this.collides(world, nx, this.y - 1)) this.vy = -9; // hop the ledge
+      else if (!this.collides(world, nx, this.y - 2)) this.vy = -11; // recover from rougher terrain
       else this.vx = -this.vx;
     } else {
       this.vx = -this.vx;
@@ -123,6 +127,23 @@ export class Mob {
     }
   }
 
+  _follow(dt, target) {
+    const dx = target.x - this.x;
+    const dist = Math.abs(dx);
+    if (dist > 18) {
+      this.x = target.x - Math.sign(dx || 1) * 3;
+      this.y = target.y;
+      this.vx = 0;
+      return;
+    }
+    if (dist > 3) {
+      this.vx = Math.sign(dx) * 2.7;
+      this.facing = Math.sign(dx) || this.facing;
+    } else {
+      this.vx *= 0.6;
+    }
+  }
+
   _onGround(world) {
     return this.collides(world, this.x, this.y + 0.05);
   }
@@ -146,12 +167,13 @@ export class Mob {
   }
 
   serialize() {
-    return { type: this.type, x: this.x, y: this.y, health: this.health };
+    return { type: this.type, x: this.x, y: this.y, health: this.health, tamed: this.tamed };
   }
 
   static load(d) {
     const m = new Mob(d.type, d.x, d.y);
     m.health = d.health;
+    m.tamed = !!d.tamed;
     return m;
   }
 }

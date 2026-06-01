@@ -28,6 +28,7 @@ export const OBJECTIVES = {
     { id: 'cave_paint',   kind: 'mastery',   icon: '🎨', label: 'Mastery: leave cave-art clues',         reward: 20, check: (g) => g.discoveries?.unlocked?.has('first_shelter') && g.civ.hasBuilt('torch', 3) },
     { id: 'fossil_memory',kind: 'mastery',   icon: '🦴', label: 'Mastery: decode fossil memories',       reward: 25, check: (g) => g.clues?.has('fossil_bed') },
     { id: 'meteor_omen',  kind: 'mastery',   icon: '☄️', label: 'Mastery: recover a meteor shard',       reward: 25, check: (g) => g.clues?.has('meteor_shard') },
+    { id: 'tame_grazer',  kind: 'mastery',   icon: '🌿', label: 'Mastery: tame a grazer companion',       reward: 30, check: (g) => g.mobs?.some?.((m) => m.tamed) },
     { id: 'make_spear',   kind: 'mastery',   icon: '🪨', label: 'Mastery: craft a Flint Spear',           reward: 20, check: (g) => g.crafted.has('flint_spear') || total(g, 'flint_spear') >= 1 },
     { id: 'hunt_predator',kind: 'mastery',   icon: '🦖', label: 'Mastery: drive off a predator',          reward: 30, check: (g) => (g.civ.defeated?.raptor || 0) + (g.civ.defeated?.rex || 0) >= 1 },
     { id: 'portal_ring',  kind: 'mastery',   icon: '🌀', label: 'Mastery: build a portal ring',          reward: 35, check: (g) => g.structures?.has('portal_ring') },
@@ -42,6 +43,7 @@ export const OBJECTIVES = {
     { id: 'workshop',     kind: 'mastery',   icon: '🛠️', label: 'Mastery: recognized Workshop',     reward: 25, check: (g) => g.structures?.has('workshop') },
     { id: 'first_harvest',kind: 'mastery',   icon: '🌾', label: 'Mastery: harvest the first wheat',  reward: 25, check: (g) => total(g, 'wheat') >= 1 || (g.settlers?.stock?.food || 0) >= 2 },
     { id: 'food_store',   kind: 'mastery',   icon: '🏺', label: 'Mastery: store 3 food',             reward: 25, check: (g) => total(g, 'food') >= 3 || (g.settlers?.stock?.food || 0) >= 3 },
+    { id: 'market_trade', kind: 'mastery',   icon: '⚖️', label: 'Mastery: build a market',          reward: 25, check: (g) => g.civ.hasBuilt('market') },
     { id: 'lit_town',     kind: 'mastery',   icon: '🔥', label: 'Mastery: light the first town',     reward: 25, check: (g) => g.civ.light >= 3 },
     { id: 'advance',      kind: 'portal',    icon: '🌀', label: 'Open the Iron Kingdoms portal',     reward: 0,  check: (g) => g.canAdvance() },
   ],
@@ -51,7 +53,14 @@ export const OBJECTIVES = {
     { id: 'iron_pick',    kind: 'mandatory', icon: '⛏️', label: 'Craft an Iron Pickaxe',             reward: 35, check: (g) => g.crafted.has('iron_pickaxe') || total(g, 'iron_pickaxe') >= 1 },
     { id: 'light_city',   kind: 'mandatory', icon: '🏮', label: 'Place 6 light sources',             reward: 25, check: (g) => g.civ.light >= 6 },
     { id: 'watchtower',   kind: 'mastery',   icon: '🗼', label: 'Mastery: build a Watchtower',       reward: 35, check: (g) => g.structures?.has('watchtower') },
+    { id: 'city_gates',   kind: 'mastery',   icon: '🚪', label: 'Mastery: build city gates',         reward: 35, check: (g) => g.civ.hasBuilt('gate', 2) },
+    { id: 'roads',        kind: 'mastery',   icon: '🛤️', label: 'Mastery: lay roads',                reward: 25, check: (g) => g.civ.hasBuilt('road', 6) },
     { id: 'advance',      kind: 'portal',    icon: '🌀', label: 'Open the Industrial portal',        reward: 0,  check: (g) => g.canAdvance() },
+  ],
+  industrial: [
+    { id: 'build_miner',  kind: 'mandatory', icon: '⚙️', label: 'Build an Auto Miner',               reward: 40, check: (g) => g.civ.hasBuilt('auto_miner') },
+    { id: 'stock_ore',    kind: 'mandatory', icon: '⛏️', label: 'Automate ore stock',                reward: 35, check: (g) => (g.settlers?.stock?.ore || 0) >= 3 },
+    { id: 'pollution',    kind: 'mastery',   icon: '🌫️', label: 'Mastery: keep pollution below 8',   reward: 35, check: (g) => g.civ.hasBuilt('auto_miner') && (g.civ.pollution || 0) < 8 },
   ],
 };
 

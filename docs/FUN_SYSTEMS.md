@@ -99,6 +99,22 @@ Bronze Age now has a physical sustain loop:
 
 This gives the first-town era a distinct civilization verb: food surplus.
 
+## Storage, Trade, Defense And Automation
+
+Files: `src/core/blocks.js`, `src/core/recipes.js`, `src/Game.js`
+
+Several era identities now have one concrete mechanic each:
+
+- Bronze granaries increase town storage and markets trade wheat/ore surplus
+  into CP.
+- Iron gates, guards and tamed companions deter raider/bandit scouts; roads
+  give a movement-speed bonus.
+- Industrial Auto Miners create ore over time, add pollution, and make the final
+  age about production tradeoffs.
+
+These are intentionally small first versions, but each turns an era theme into a
+working gameplay verb.
+
 ## Progressive UI And Feature Complexity
 
 BlocksCreate now starts with a deliberately small **First Cell** era. The player
@@ -129,6 +145,7 @@ Age of Dinosaurs now reacts more like a survival ecosystem:
 - raptors become faster and hit harder in packs,
 - a nearby T-Rex creates a fear zone unless the player has defenses,
 - peaceful time near stegosaurs or triceratops builds Grazer Bond,
+- full Grazer Bond tames a stego/trike into a persistent defensive companion,
 - defended camps are recognized from fire, torches and protective blocks.
 
 This makes the second era a real jump from cell-scale learning into land

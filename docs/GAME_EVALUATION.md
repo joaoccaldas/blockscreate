@@ -1,7 +1,7 @@
 # Game Evaluation - age features, confidence, and gaps
 
 Audit date: 2026-06-01
-Build audited: v5.8.0
+Build audited: v5.9.0
 Verification: `npm test` passes all 10 suites.
 
 Confidence legend:
@@ -69,18 +69,20 @@ What works:
 - RPG layer exists: predator defeat tracking, relic-style powerups, hidden
   discoveries, journal entries, and mastery goals.
 - Grazer bond, pack pressure, and T-Rex fear make animals more than simple mobs.
+- Full Grazer Bond now tames a nearby stego/trike into a persistent companion
+  that follows the player and counts as dinosaur/town defense.
 - Asteroid/meteor events can physically change terrain and create clue blocks.
 
 What does not work yet:
 
-- Grazer bonding is tracked, but not yet a tangible companion/mount/guard reward.
 - Predator and event balance still needs real playtest tuning.
+- Companions are guards/followers, not rideable mounts yet.
 - Dinosaur systems are fun, but not yet boss-like or story-resolving.
 
 Best next improvement:
 
-- Turn grazer bond into a tameable companion. That would make this age's unique
-  social/survival mechanic pay off on screen.
+- Add an optional alpha-predator challenge that tests weapons, fire, shelter and
+  the new companion defense.
 
 ## Bronze Age / Early Cities
 
@@ -97,12 +99,14 @@ What works:
 - Farming is now physical: players craft farm plots, plant wheat seeds, crops
   grow through visible stages, ripe wheat can be harvested, and farmers tend
   crop blocks into town food stock.
+- Granaries raise storage and markets convert wheat/ore surplus into CP, making
+  food surplus economically useful.
 - Housing gates supported population, so building matters.
 - HUD exposes role counts and town stockpile.
 
 What does not work yet:
 
-- Trade/markets are only roadmap concepts.
+- Markets are local surplus conversion, not multi-settlement trade yet.
 - Builders place useful village blocks, but they do not yet path to a planned
   construction site or build recognizable houses.
 - Farming balance is intentionally simple: no irrigation network, spoilage,
@@ -110,8 +114,8 @@ What does not work yet:
 
 Best next improvement:
 
-- Add granaries and markets. Food surplus now exists, so the next Bronze step is
-  making storage and exchange meaningful.
+- Add caravans and rare trade goods so markets connect town-building with
+  exploration.
 
 ## Iron Age / Iron Kingdoms
 
@@ -122,20 +126,21 @@ What works:
 - Iron/gold ore generation, smelting, iron tools, city-lighting objectives, and
   watchtower recognition are implemented.
 - Raider/bandit hostility gives the era a defense theme.
+- Gates, guards and tamed companions now deter raider/bandit spawns; roads give
+  the player a movement boost.
 - Iron-era manifests, decorations, objectives, and progression gates exist.
 
 What does not work yet:
 
-- Walls and gates are not functionally strategic yet. They can be built, but
-  raiders do not meaningfully path around, siege, or respond to them.
+- Gates currently deter scouts probabilistically; there is no full siege/pathing
+  system yet.
 - Roads/laws/expansion are mostly thematic data, not mechanics.
-- The age risks feeling like "Bronze plus iron pickaxe" rather than a new civic
-  phase.
+- Roads are functional speed tiles, but law/expansion are still mostly thematic.
 
 Best next improvement:
 
-- Make walls/gates mechanically defensive: block raids, funnel enemies, and
-  contribute to city safety. That turns building into strategy.
+- Add siege behavior: rare stronger raids should test gates/walls instead of
+  only being deterred.
 
 ## Industrial Age
 
@@ -146,18 +151,19 @@ What works:
 - Industrial era exists as a playable destination with smog/ash/machine theming.
 - Machine enemies and industrial decorations give it a visual identity.
 - It is included in era registry, manifests, themes, and progression.
+- Auto Miners now generate ore over time and add pollution, making automation a
+  real tradeoff instead of only a theme.
 
 What does not work yet:
 
-- No power, factories, rails, automation, or pollution tradeoff mechanics.
-- Recipes currently stop at Iron; Industrial is mostly an endpoint/theme.
-- It does not yet deliver the "acceleration" fantasy.
+- No power grid, factories or rails yet.
+- Pollution is a light pressure, not a full environmental simulation.
+- Automation exists as one block, so the age has identity but not depth.
 
 Best next improvement:
 
-- Add one automation block first, not a whole factory system: a powered miner or
-  conveyor with a small pollution cost. One real automated verb would define the
-  age better than several decorative blocks.
+- Add clean-power choices and a second machine so Industrial becomes a small
+  production puzzle.
 
 ## Cross-Cutting Systems
 
@@ -182,21 +188,20 @@ Low confidence / not done:
 - True diplomacy/trade between settlements.
 - Deep pathfinding for settlers and enemies.
 - Multi-town simulation.
-- Industrial automation and pollution.
+- Deep industrial automation and pollution.
 - Shareable summaries/screenshots.
 
 ## GitHub Status
 
-As of this audit, local `main` is fast-forwarded to `origin/main` at `a5a7821`.
-The gameplay work through v5.8 is on GitHub. This audit is stored as a follow-up
-documentation commit so the evaluation itself is versioned with the game.
+As of this audit, local `main` is prepared for the v5.9 gameplay commit. The
+gameplay work through v5.9 should be pushed to GitHub with the code and docs
+together so the evaluation stays versioned with the game.
 
 ## Priority Order
 
-1. Dinosaur taming: turns bonding into a reward and makes the dinosaur age more
-   memorable.
-2. Bronze granaries/markets: turns food surplus into settlement strategy.
-3. Iron walls/gates: makes defense strategic instead of decorative.
-4. Industrial automation block: gives the final age a real identity.
-5. Better pathing: makes settlers/enemies feel intentional.
+1. Alpha-predator challenge: tests the now-richer dinosaur survival kit.
+2. Caravans: connects Bronze surplus to exploration and rare rewards.
+3. Siege raids: makes Iron defenses more dramatic than deterrence.
+4. Clean power + second machine: deepens Industrial automation.
+5. Planned building sites: makes builders create recognizable town structures.
 6. True chunk streaming: engine milestone for bigger worlds.

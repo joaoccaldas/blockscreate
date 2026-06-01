@@ -649,6 +649,13 @@ export class Renderer {
       }
       ctx.restore();
 
+      if (m.tamed) {
+        ctx.fillStyle = '#6fc04e';
+        ctx.fillRect(sx - w * 0.32, sy - h - 5, w * 0.64, 4);
+        ctx.fillStyle = '#f4d24a';
+        ctx.fillRect(sx - 2, sy - h - 8, 4, 4);
+      }
+
       // Hit flash overlay (drawn unflipped).
       if (m.hitFlash > 0) {
         ctx.globalAlpha = Math.min(0.6, m.hitFlash * 3);

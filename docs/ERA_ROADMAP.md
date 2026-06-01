@@ -40,10 +40,11 @@ The "Minecraft survival" core with a prehistoric twist.
 | Cold nights, predator migrations, world events | ✅ |
 | Fossil/clue blocks + timeline branches (Journal) | ✅ |
 | **Settlers** (visible villagers) | ✅ (new) |
-| Tameable dinosaur companions | ⬜ |
+| Tameable grazer companions | ✅ |
 
-**Next & why:** let the player **tame a grazer** as a mount/guard — it turns the
-bonding system into a tangible reward and deepens the survival→settlement arc.
+**Next & why:** add a named alpha-predator challenge. The survival age now has
+bonding rewards; a rare optional threat would give weapons, companions and
+defenses a memorable test.
 
 ---
 
@@ -58,12 +59,12 @@ Where "civilization" should start to dominate over raw survival.
 | Settlers + housing-gated population | ✅ |
 | Farming plots (plant → grow → harvest) | ✅ |
 | Farmers tend visible crops into town food | ✅ |
-| Trade / market between settlements | ⬜ |
+| Granary storage + market surplus trade | ✅ |
+| Trade / market between settlements | 🚧 |
 | Irrigation / crop rotation / spoilage | ⬜ |
 
-**Next & why:** add **trade and storage buildings** so food surplus can become
-strategic: granaries raise stock caps, markets exchange surplus, and droughts
-start to matter beyond a temporary hunger penalty.
+**Next & why:** add **caravans** so market surplus leaves the town and returns
+rare goods. That makes exploration and settlement economy talk to each other.
 
 ---
 
@@ -74,12 +75,11 @@ start to matter beyond a temporary hunger penalty.
 | Iron/gold smelting, iron tools | ✅ |
 | City lighting objective, watchtower structure | ✅ |
 | Raiders/bandits hostile waves | ✅ |
-| Walls/gates that actually block raids | 🚧 |
-| Roads that speed travel | ⬜ |
+| Gates/guards/tamed companions deter raids | ✅ |
+| Roads that speed travel | ✅ |
 
-**Next & why:** make **walls + gates functionally defensive** (raiders path
-around or are stopped). Defense is the Iron-Age fantasy and gives building a
-strategic payoff beyond decoration.
+**Next & why:** add **siege behavior** for tougher raids. Gates now deter scouts;
+the next step is rare attacks that test walls instead of merely being blocked.
 
 ---
 
@@ -89,12 +89,11 @@ strategic payoff beyond decoration.
 | --- | --- |
 | Era theme (smog, ash, machines) | ✅ |
 | Machine enemies | ✅ |
-| Power/factory/automation blocks | ⬜ |
-| Pollution tradeoff system | ⬜ |
+| Auto Miner automation block | ✅ |
+| Pollution tradeoff system | 🚧 |
 
-**Next & why:** introduce a single **automation block** (a powered miner or
-conveyor) with a pollution cost. Automation is the Industrial identity and sets
-up the "tradeoffs of progress" theme for any future modern era.
+**Next & why:** add **clean-power choices** so automation has strategy: more
+production, less pollution, or safer city health.
 
 ---
 
@@ -102,7 +101,7 @@ up the "tradeoffs of progress" theme for any future modern era.
 
 | System | Status | Next |
 | --- | --- | --- |
-| Settlers / population | ✅ roles + economy; builders raise village blocks; gatherers seek + harvest trees/ore; **farmers tend visible crop plots** | richer pathing; planned building sites |
+| Settlers / population | ✅ roles + economy; builders raise village blocks; gatherers seek + harvest trees/ore; farmers tend visible crop plots | richer pathing; planned building sites |
 | Journal (clues/discoveries/branches) | ✅ | per-era lore pages |
 | Save/persistence (+ chunk metadata) | ✅ | true chunk streaming |
 | Audio | ✅ SFX + ambient | per-era music themes |

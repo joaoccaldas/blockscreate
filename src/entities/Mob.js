@@ -24,6 +24,7 @@ export const MOB_TYPES = {
   trike: { sprite: 'trike', food: 5, w: 1.5, h: 1.1, hp: 18, hostile: false },
   // Predators.
   raptor: { sprite: 'raptor', w: 1.0, h: 1.0, hp: 12, hostile: true, damage: 12, speed: 4.6, color: '#7c8a4a', drop: 'raw_food', dropN: 2, cp: 6 },
+  alpha_raptor: { sprite: 'raptor', w: 1.25, h: 1.2, hp: 32, hostile: true, damage: 18, speed: 5.0, color: '#a05a3a', drop: 'alpha_tooth', dropN: 1, cp: 26 },
   rex: { sprite: 'rex', w: 1.8, h: 2.0, hp: 40, hostile: true, damage: 24, speed: 3.0, color: '#5f7242', drop: 'raw_food', dropN: 4, cp: 16 },
 
   // ---- hostile ---- (color is used when no sprite exists yet)
@@ -94,7 +95,7 @@ export class Mob {
       if (Math.abs(this.x - target.x) < 0.8 && Math.abs(this.y - target.y) < 1.4) {
         this.attackCd = 0.9;
         let damage = this.def.damage || 8;
-        if (this.type === 'raptor' && (target.packPressure || 0) >= 2) damage *= 1.35;
+        if ((this.type === 'raptor' || this.type === 'alpha_raptor') && (target.packPressure || 0) >= 2) damage *= 1.35;
         if (this.type === 'rex' && target.fearExposed) damage *= 1.15;
         return { damage };
       }
@@ -118,7 +119,7 @@ export class Mob {
     if (dist < 12) {
       // Chase.
       let spd = this.def.speed || 3;
-      if (this.type === 'raptor') spd *= 1 + Math.min(0.35, (target.packPressure || 0) * 0.12);
+      if (this.type === 'raptor' || this.type === 'alpha_raptor') spd *= 1 + Math.min(0.35, (target.packPressure || 0) * 0.12);
       if (this.type === 'rex' && target.fearExposed) spd *= 1.08;
       this.vx = Math.sign(dx) * spd;
       this.facing = Math.sign(dx) || this.facing;

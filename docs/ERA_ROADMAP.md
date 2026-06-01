@@ -41,10 +41,11 @@ The "Minecraft survival" core with a prehistoric twist.
 | Fossil/clue blocks + timeline branches (Journal) | ✅ |
 | **Settlers** (visible villagers) | ✅ (new) |
 | Tameable grazer companions | ✅ |
+| Alpha raptor challenge event + trophy drop | ✅ |
 
-**Next & why:** add a named alpha-predator challenge. The survival age now has
-bonding rewards; a rare optional threat would give weapons, companions and
-defenses a memorable test.
+**Next & why:** make companion play deeper: rideable grazers, commands, and
+simple camp defense behaviors would turn the dinosaur age from "survive beside
+animals" into "survive with animals."
 
 ---
 
@@ -60,11 +61,12 @@ Where "civilization" should start to dominate over raw survival.
 | Farming plots (plant → grow → harvest) | ✅ |
 | Farmers tend visible crops into town food | ✅ |
 | Granary storage + market surplus trade | ✅ |
-| Trade / market between settlements | 🚧 |
+| Caravan post converts surplus into rare trade beads | ✅ |
+| Trade / market between settlements | 🚧 local caravans only |
 | Irrigation / crop rotation / spoilage | ⬜ |
 
-**Next & why:** add **caravans** so market surplus leaves the town and returns
-rare goods. That makes exploration and settlement economy talk to each other.
+**Next & why:** add irrigation and field quality so farming asks for planning,
+not only planting. Bronze should become the first "sustain a town" puzzle.
 
 ---
 
@@ -77,9 +79,10 @@ rare goods. That makes exploration and settlement economy talk to each other.
 | Raiders/bandits hostile waves | ✅ |
 | Gates/guards/tamed companions deter raids | ✅ |
 | Roads that speed travel | ✅ |
+| Siege raids that bypass scout deterrence | ✅ |
 
-**Next & why:** add **siege behavior** for tougher raids. Gates now deter scouts;
-the next step is rare attacks that test walls instead of merely being blocked.
+**Next & why:** make sieges physical: raiders should path toward gates, damage
+weak walls, and retreat if the town holds. That makes defense architecture matter.
 
 ---
 
@@ -90,10 +93,11 @@ the next step is rare attacks that test walls instead of merely being blocked.
 | Era theme (smog, ash, machines) | ✅ |
 | Machine enemies | ✅ |
 | Auto Miner automation block | ✅ |
-| Pollution tradeoff system | 🚧 |
+| Pollution tradeoff system | ✅ first pass |
+| Windmill clean-power block | ✅ |
 
-**Next & why:** add **clean-power choices** so automation has strategy: more
-production, less pollution, or safer city health.
+**Next & why:** add a second production chain (factory/workshop/rail) so clean
+power matters as part of an automation network, not just a pollution reducer.
 
 ---
 
@@ -101,7 +105,7 @@ production, less pollution, or safer city health.
 
 | System | Status | Next |
 | --- | --- | --- |
-| Settlers / population | ✅ roles + economy; builders raise village blocks; gatherers seek + harvest trees/ore; farmers tend visible crop plots | richer pathing; planned building sites |
+| Settlers / population | ✅ roles + economy; builders raise village blocks and complete planned build sites; gatherers seek + harvest trees/ore; farmers tend visible crop plots | richer pathing; recognizable house plans |
 | Journal (clues/discoveries/branches) | ✅ | per-era lore pages |
 | Save/persistence (+ chunk metadata) | ✅ | true chunk streaming |
 | Audio | ✅ SFX + ambient | per-era music themes |

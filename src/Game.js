@@ -116,7 +116,7 @@ export class Game {
         'grass', 'dirt', 'stone', 'cobblestone', 'sand', 'water', 'log', 'planks', 'leaves',
         'thatch', 'brick', 'torch', 'campfire', 'clay', 'gravel',
         'farm_plot', 'wheat_seeds', 'wheat_seedling', 'wheat_green', 'wheat_ripe',
-        'granary', 'market', 'gate', 'road', 'auto_miner',
+        'granary', 'market', 'caravan_post', 'gate', 'road', 'auto_miner', 'windmill', 'build_site',
         'coal_ore', 'copper_ore', 'tin_ore', 'iron_ore', 'gold_ore']
         .forEach((id) => this.inventory.add(id, 99));
     } else if (this.eraId !== 'cell') {
@@ -1141,7 +1141,7 @@ export class Game {
 
   _mobTargetContext() {
     if (this.eraId !== 'stone') return this.player;
-    const packPressure = this.mobs.filter((m) => m.type === 'raptor' &&
+    const packPressure = this.mobs.filter((m) => (m.type === 'raptor' || m.type === 'alpha_raptor') &&
       Math.hypot(m.x - this.player.x, m.y - this.player.y) < 10).length;
     const rexDistance = this._nearestMobDistance('rex');
     const defended = this._hasDinoDefense();
@@ -1157,11 +1157,12 @@ export class Game {
       this.dinoStatus = null;
       return;
     }
-    const packPressure = this.mobs.filter((m) => m.type === 'raptor' &&
+    const packPressure = this.mobs.filter((m) => (m.type === 'raptor' || m.type === 'alpha_raptor') &&
       Math.hypot(m.x - this.player.x, m.y - this.player.y) < 10).length;
     const rexDistance = this._nearestMobDistance('rex');
     const defended = this._hasDinoDefense();
     const fear = rexDistance != null && rexDistance < 13 && !defended;
+    const alphaDistance = this._nearestMobDistance('alpha_raptor');
     if (fear) {
       this.player.hunger = Math.max(0, this.player.hunger - dt * 0.16);
       if (!this.reduceMotion && Math.random() < dt * 0.6) this.hud?.shake?.();
@@ -1169,10 +1170,12 @@ export class Game {
     this.dinoStatus = {
       packPressure,
       rexDistance,
+      alphaDistance,
       defended,
       grazerBond: Math.min(100, Math.round(((this.grazerBondTime || 0) / 10) * 100)),
       companion: this.mobs.some((m) => m.tamed),
-      warning: fear ? 'T-Rex fear zone' : packPressure >= 2 ? 'raptor pack nearby' :
+      warning: alphaDistance != null && alphaDistance < 13 ? 'alpha raptor challenge' :
+        fear ? 'T-Rex fear zone' : packPressure >= 2 ? 'raptor pack nearby' :
         this.mobs.some((m) => m.tamed) ? 'grazer companion nearby' : defended ? 'defenses steady' : '',
     };
   }
@@ -1319,6 +1322,22 @@ export class Game {
     return true;
   }
 
+  spawnSiege(type = 'bandit', count = 2) {
+    if (!MOB_TYPES[type]) return 0;
+    let spawned = 0;
+    for (let i = 0; i < count && this.mobs.length < 14; i++) {
+      const dir = i % 2 === 0 ? -1 : 1;
+      const sx = Math.floor(this.player.x + dir * (10 + i * 2));
+      if (sx < 1 || sx >= this.world.width - 1) continue;
+      const surf = this.world.heightMap[sx];
+      if (!isSolid(this.world.get(sx, surf))) continue;
+      this.mobs.push(new Mob(type, sx + 0.5, surf));
+      spawned++;
+    }
+    if (spawned) this.hud?.toast('⚔️ Siege raid incoming', 2200);
+    return spawned;
+  }
+
   _hasTownDefense() {
     const blockDefense = (this.civ?.defense || 0) + (this.civ?.light || 0) * 0.4;
     const guards = (this.townGuards || 0) * 1.5;
@@ -1343,18 +1362,28 @@ export class Game {
       this.civ.onTrade(5 + (this.civ.trade || 0));
       this.hud?.toast('🏺 Market traded town surplus for CP', 1800);
     }
+    if ((this.civ.placed?.caravan_post || 0) > 0 && ((st.food || 0) >= 5 || (st.wheat || 0) >= 6)) {
+      if ((st.wheat || 0) >= 6) st.wheat -= 6;
+      else st.food -= 5;
+      this.inventory.add('trade_bead', 1);
+      this.civ.onTrade(10 + (this.civ.trade || 0));
+      this.hud?.toast('🐪 Caravan returned with a trade bead', 2200);
+    }
   }
 
   _updateAutomation(dt) {
     const miners = this.civ?.placed?.auto_miner || 0;
-    if (!miners || this.mode !== MODE.SURVIVAL) return;
+    const windmills = this.civ?.placed?.windmill || 0;
+    if (this.mode !== MODE.SURVIVAL || (!miners && !windmills)) return;
+    if (windmills) this.civ.pollution = Math.max(0, (this.civ.pollution || 0) - dt * 0.025 * windmills);
+    if (!miners) return;
     this._autoMineTimer = (this._autoMineTimer || 0) + dt;
     if (this._autoMineTimer < 10) return;
     this._autoMineTimer = 0;
     const produced = Math.max(1, miners);
     if (this.settlers?.stock) this.settlers.stock.ore = (this.settlers.stock.ore || 0) + produced;
     else this.inventory.add('coal', produced);
-    this.civ.pollution = (this.civ.pollution || 0) + 0.15 * miners;
+    this.civ.pollution = Math.max(0, (this.civ.pollution || 0) + 0.15 * miners - 0.12 * windmills);
     this.civ.addCP(1.5 * miners);
     this.hud?.toast(`⚙️ Auto miner produced ${produced} ore`, 1500);
   }

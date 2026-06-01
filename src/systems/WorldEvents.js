@@ -27,6 +27,12 @@ export const WORLD_EVENTS = {
     label: 'Predator Migration',
     text: 'Hunters are moving through this region. Fire and high ground matter.',
   },
+  alpha_predator: {
+    id: 'alpha_predator',
+    icon: '🦷',
+    label: 'Alpha Predator',
+    text: 'An alpha raptor is stalking the region. Bring fire, a spear, or a companion.',
+  },
   grazer_herd: {
     id: 'grazer_herd',
     icon: '🌿',
@@ -45,6 +51,12 @@ export const WORLD_EVENTS = {
     label: 'Raider Scouts',
     text: 'Scouts are probing the settlement. Walls and light discourage them.',
   },
+  siege_raid: {
+    id: 'siege_raid',
+    icon: '🛡️',
+    label: 'Siege Raid',
+    text: 'A raiding party is testing the town defenses.',
+  },
 };
 
 export class WorldEventLog {
@@ -52,9 +64,11 @@ export class WorldEventLog {
     this.cooldowns = {
       meteor_shower: 70,
       predator_migration: 95,
+      alpha_predator: 210,
       grazer_herd: 55,
       drought: 85,
       raider_scouts: 110,
+      siege_raid: 220,
       ...(data.cooldowns || {}),
     };
     this.seen = new Set(data.seen || []);
@@ -92,6 +106,14 @@ export class WorldEventLog {
         started.push(this._markSeen('predator_migration'));
       }
 
+      this.cooldowns.alpha_predator -= dt;
+      if (this.cooldowns.alpha_predator <= 0 && game.dayFactor() > 0.28) {
+        this.cooldowns.alpha_predator = 260 + hash2(Math.floor(game.clock), 17, game.world.seed) * 130;
+        this._activate('alpha_predator', 45);
+        this._spawnNear(game, 'alpha_raptor');
+        started.push(this._markSeen('alpha_predator'));
+      }
+
       this.cooldowns.grazer_herd -= dt;
       if (this.cooldowns.grazer_herd <= 0 && game.dayFactor() > 0.45) {
         this.cooldowns.grazer_herd = 120 + hash2(Math.floor(game.clock), 13, game.world.seed) * 70;
@@ -116,8 +138,17 @@ export class WorldEventLog {
         this._spawnNear(game, game.eraId === 'iron' ? 'bandit' : 'raider');
         started.push(this._markSeen('raider_scouts'));
       }
+
+      this.cooldowns.siege_raid -= dt;
+      if (game.eraId === 'iron' && this.cooldowns.siege_raid <= 0 && game.dayFactor() < 0.55) {
+        this.cooldowns.siege_raid = 280;
+        this._activate('siege_raid', 50);
+        if (game.spawnSiege) game.spawnSiege('bandit', game._hasTownDefense?.() ? 2 : 3);
+        else this._spawnNear(game, 'bandit');
+        started.push(this._markSeen('siege_raid'));
+      }
     } else {
-      for (const id of ['cold_night', 'predator_migration', 'grazer_herd', 'drought', 'raider_scouts']) {
+      for (const id of ['cold_night', 'predator_migration', 'alpha_predator', 'grazer_herd', 'drought', 'raider_scouts', 'siege_raid']) {
         this._setActive(id, false);
       }
     }

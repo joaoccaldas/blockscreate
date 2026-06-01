@@ -84,6 +84,9 @@ const defs = [
   { id: 38, name: 'gate',       label: 'City Gate',   solid: true,  hardness: 1.5, tool: 'axe',     colors: { base: '#6b4428', top: '#9a6a42', side: '#3f2818' }, era: 'iron' },
   { id: 39, name: 'road',       label: 'Stone Road',  solid: false, hardness: 0.6, tool: 'pickaxe', colors: { base: '#6f6f68', top: '#8a8a82', side: '#55554f' }, era: 'iron' },
   { id: 40, name: 'auto_miner', label: 'Auto Miner',  solid: true,  hardness: 2.4, tool: 'pickaxe', minTier: 2, colors: { base: '#4f5660', top: '#8b95a1', side: '#303740' }, era: 'industrial', light: 0.2 },
+  { id: 41, name: 'caravan_post', label: 'Caravan Post', solid: true,  hardness: 0.9, tool: 'axe',     colors: { base: '#7a5230', top: '#e5c15a', side: '#4e341d' }, era: 'bronze' },
+  { id: 42, name: 'windmill',     label: 'Windmill',     solid: true,  hardness: 1.6, tool: 'axe',     colors: { base: '#d9cfb7', top: '#f5e8c8', side: '#8f7d5d' }, era: 'industrial', light: 0.1 },
+  { id: 43, name: 'build_site',   label: 'Build Site',   solid: false, hardness: 0.2, tool: 'hand',    colors: { base: '#f4d24a', top: '#fff0a0', side: '#a88931' }, era: 'bronze', light: 0.1 },
 ];
 
 // fix accidental typo above without breaking the table layout

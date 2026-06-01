@@ -202,6 +202,14 @@ export class SettlerManager {
         }
       }
 
+      // Builders prefer explicit player-planned sites. These turn a cheap
+      // marker block into a small structure, so town growth becomes directed
+      // instead of purely random.
+      if (s.role === 'builder' && world) {
+        if (!this._isBuildTarget(world, s.target)) s.target = null;
+        if (!s.target && (this.stock.wood || 0) >= 4) s.target = this._findBuildSite(world, s);
+      }
+
       const tick = s.update(dt, world, this.home);
 
       if (s.role === 'farmer' && s.atTarget() && world) {
@@ -228,6 +236,18 @@ export class SettlerManager {
         continue;
       }
 
+      if (s.role === 'builder' && s.atTarget() && world) {
+        const placed = this._completeBuildSite(world, s.target);
+        s.target = null;
+        if (placed) {
+          this.stock.wood = Math.max(0, (this.stock.wood || 0) - 4);
+          produced.planned = (produced.planned || 0) + 1;
+          produced.placed = (produced.placed || 0) + placed;
+          cp += 1.5;
+        }
+        continue;
+      }
+
       if (!tick) continue;
       // Non-gather roles convert a work tick into role-specific output + CP.
       switch (s.role) {
@@ -237,7 +257,7 @@ export class SettlerManager {
           cp += 1.0; produced.build = (produced.build || 0) + 1;
           // Builders visibly grow the village: when the town has spare wood,
           // a builder lays a plank block on open ground near home.
-          if (world && this.stock.wood >= 2 && this._buildNearHome(world, s)) {
+          if (!s.target && world && this.stock.wood >= 2 && this._buildNearHome(world, s)) {
             this.stock.wood -= 2;
             produced.placed = (produced.placed || 0) + 1;
           }
@@ -350,6 +370,66 @@ export class SettlerManager {
     if (!target || world.get(target.x, target.y) !== target.id) return null;
     world.set(target.x, target.y, AIR);
     return target.kind;
+  }
+
+  _buildIds() {
+    if (!this._build) {
+      this._build = {
+        site: blockId('build_site'),
+        plank: blockId('planks'),
+        cobble: blockId('cobblestone'),
+        thatch: blockId('thatch'),
+      };
+    }
+    return this._build;
+  }
+
+  _isBuildTarget(world, target) {
+    if (!target || target.kind !== 'build_site') return false;
+    return world.get(target.x, target.y) === this._buildIds().site;
+  }
+
+  _findBuildSite(world, s) {
+    const ids = this._buildIds();
+    const cx = Math.round(s.x);
+    const cy = Math.round(s.y);
+    let best = null;
+    let bestD = Infinity;
+    const R = 12;
+    for (let y = cy - R; y <= cy + R; y++) {
+      for (let x = cx - R; x <= cx + R; x++) {
+        if (Math.abs(x - this.home.x) > 14) continue;
+        if (world.get(x, y) !== ids.site) continue;
+        const d = Math.abs(x - s.x) + Math.abs(y - s.y);
+        if (d < bestD) { bestD = d; best = { x, y, id: ids.site, kind: 'build_site' }; }
+      }
+    }
+    return best;
+  }
+
+  _completeBuildSite(world, target) {
+    if (!this._isBuildTarget(world, target)) return 0;
+    const ids = this._buildIds();
+    let placed = 0;
+    world.set(target.x, target.y, AIR);
+    const plan = [
+      [0, 0, ids.plank],
+      [-1, 0, ids.plank], [1, 0, ids.plank],
+      [-1, -1, ids.plank], [1, -1, ids.plank],
+      [0, -2, ids.thatch],
+    ];
+    for (const [dx, dy, id] of plan) {
+      const x = target.x + dx;
+      const y = target.y + dy;
+      if (!world.inBounds(x, y)) continue;
+      if (Math.abs(x - this.home.x) > 14) continue;
+      if (world.get(x, y) !== AIR) continue;
+      const support = world.get(x, y + 1);
+      if (dy === 0 && !isSolid(support)) continue;
+      world.set(x, y, id);
+      placed++;
+    }
+    return placed;
   }
 
   /**

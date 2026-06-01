@@ -123,9 +123,30 @@ eventGame.spawnMobNearPlayer = (type) => { eventGame.spawned = type; return true
 const predatorStarted = events.update(eventGame, 1);
 assert.ok(predatorStarted.some((e) => e.id === 'predator_migration'), 'predator migration can start');
 assert.ok(['raptor', 'rex'].includes(eventGame.spawned), 'predator migration spawns a predator');
+events.cooldowns.alpha_predator = 0;
+eventGame.dayFactor = () => 0.4;
+const alphaStarted = events.update(eventGame, 1);
+assert.ok(alphaStarted.some((e) => e.id === 'alpha_predator'), 'alpha predator event can start');
+assert.strictEqual(eventGame.spawned, 'alpha_raptor', 'alpha event spawns an alpha raptor');
 events.update(eventGame, 40);
 assert.ok(!events.isActive('predator_migration'), 'temporary events expire');
 ok('world events create hazards and physical artifacts');
+
+const siegeEvents = new WorldEventLog({ cooldowns: { siege_raid: 0 } });
+const siegeGame = {
+  mode: 'survival',
+  eraId: 'iron',
+  clock: 99,
+  dayFactor: () => 0.2,
+  world: eventWorld,
+  player: { x: 15, y: 19 },
+  _hasTownDefense: () => true,
+  spawnSiege(type, count) { this.siege = { type, count }; return count; },
+};
+const siegeStarted = siegeEvents.update(siegeGame, 1);
+assert.ok(siegeStarted.some((e) => e.id === 'siege_raid'), 'siege event can start');
+assert.deepStrictEqual(siegeGame.siege, { type: 'bandit', count: 2 }, 'siege event uses the siege spawner');
+ok('Iron siege events test town defenses');
 
 // --- Civilization records creative/building milestones ---
 civ.onBuild('torch', 5, 4);

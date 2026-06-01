@@ -37,6 +37,8 @@ export const RECIPES = [
   { id: 'bake_bread',    era: 'bronze', out: { id: 'food', n: 2 }, in: { wheat: 3 }, station: 'campfire' },
   { id: 'granary',       era: 'bronze', out: { id: 'granary', n: 1 }, in: { planks: 6, wheat: 3 } },
   { id: 'market',        era: 'bronze', out: { id: 'market', n: 1 }, in: { planks: 4, fiber: 2, copper: 1 } },
+  { id: 'caravan_post',  era: 'bronze', out: { id: 'caravan_post', n: 1 }, in: { planks: 5, wheat: 2, copper: 1 } },
+  { id: 'build_site',    era: 'bronze', out: { id: 'build_site', n: 2 }, in: { stick: 2, fiber: 1 } },
   { id: 'bronze_pickaxe',era: 'bronze', out: { id: 'bronze_pickaxe', n: 1 }, in: { bronze: 3, stick: 2 } },
 
   // --- Iron Age ---
@@ -48,6 +50,7 @@ export const RECIPES = [
 
   // --- Industrial Age ---
   { id: 'auto_miner',    era: 'industrial', out: { id: 'auto_miner', n: 1 }, in: { iron: 4, coal: 4, gold: 1 } },
+  { id: 'windmill',      era: 'industrial', out: { id: 'windmill', n: 1 }, in: { planks: 8, iron: 2, fiber: 3 } },
 ];
 
 /** Recipes available given the set of unlocked era ids. */

@@ -83,3 +83,12 @@ BlocksCreate already has the right spine for "Minecraft meets Civilization": blo
 - Added Grazer Bond progression near stegosaurs/triceratops.
 - Added defended camp structure recognition and related discovery rewards.
 - Added dinosaur HUD feedback for grazer bond, pack pressure and defenses.
+
+## Implemented In Era Consequence Pass
+
+- Added a rare alpha raptor event with a stronger predator, higher CP reward and
+  trophy drop.
+- Added caravan posts that convert Bronze town surplus into trade beads and CP.
+- Added player-planned build sites that settlers complete using town wood.
+- Added Iron siege raids that bypass scout deterrence and test town defenses.
+- Added windmills that offset Industrial pollution from automation.

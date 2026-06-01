@@ -193,14 +193,17 @@ ok('Bronze farming plants wheat through the normal build path');
 
 g2.civ.onBuild('granary');
 g2.civ.onBuild('market');
+g2.civ.onBuild('caravan_post');
 g2.settlers.setHome(Math.round(g2.player.x), Math.round(g2.player.y));
-g2.settlers.stock.wheat = 5;
+g2.settlers.stock.wheat = 10;
 const cpBeforeTrade = g2.civ.cp;
+const beadBefore = g2.inventory.count('trade_bead');
 g2._tradeTimer = 12;
 g2._updateTownEconomy(0.1);
 if (!(g2.civ.cp > cpBeforeTrade)) throw new Error('market did not convert surplus into CP');
+if (!(g2.inventory.count('trade_bead') > beadBefore)) throw new Error('caravan did not return a trade bead');
 if (!(g2.civ.storage >= 8)) throw new Error('granary did not raise storage');
-ok('granary and market turn surplus into town value');
+ok('granary, market and caravan turn surplus into town value');
 
 const gIron = newGame();
 gIron.newWorld('iron', MODE.SURVIVAL);
@@ -214,17 +217,25 @@ Math.random = () => 0.1; // force defense deterrence branch
 try { gIron.spawnMobNearPlayer('bandit'); } finally { Math.random = oldRandom; }
 if (gIron.mobs.length !== spawnBefore) throw new Error('defended town still spawned a bandit');
 ok('Iron gates and guards deter raiders');
+const siegeCount = gIron.spawnSiege('bandit', 2);
+if (siegeCount !== 2) throw new Error('siege did not spawn the requested raiding party');
+if (gIron.mobs.length !== spawnBefore + 2) throw new Error('siege did not bypass scout deterrence');
+ok('Iron siege raids can still test defended towns');
 
 const gInd = newGame();
 gInd.newWorld('industrial', MODE.SURVIVAL);
 gInd.civ.onBuild('auto_miner');
+gInd.civ.onBuild('windmill');
 gInd.settlers.setHome(Math.round(gInd.player.x), Math.round(gInd.player.y));
 const oreBefore = gInd.settlers.stock.ore || 0;
 gInd._autoMineTimer = 10;
 gInd._updateAutomation(0.1);
 if (!(gInd.settlers.stock.ore > oreBefore)) throw new Error('auto miner did not produce ore');
 if (!(gInd.civ.pollution > 0)) throw new Error('auto miner did not add pollution');
-ok('Industrial auto miner produces ore with pollution tradeoff');
+const pollutionAfterMine = gInd.civ.pollution;
+gInd._updateAutomation(1);
+if (!(gInd.civ.pollution < pollutionAfterMine)) throw new Error('windmill did not reduce pollution over time');
+ok('Industrial auto miner produces ore while windmills clean pollution');
 
 // Asteroid event: a meteor impact carves a crater and hurts a nearby player.
 const g3 = newGame();

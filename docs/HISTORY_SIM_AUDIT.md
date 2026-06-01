@@ -12,12 +12,12 @@ BlocksCreate is now a modular historical sandbox, but not yet the complete visio
 - **Cell learning loop:** First Cell now surfaces stability and chemical-gradient guidance so the player learns origin-of-life concepts through action.
 - **Physical clues:** Age of Dinosaurs can generate clue blocks such as fossil beds, meteor shards, handprints and standing stones.
 - **World events:** Age of Dinosaurs now has cold-night pressure and meteor showers that place physical meteor shards.
-- **RPG encounters:** Age of Dinosaurs can trigger predator migrations and grazer herds; Early Cities can trigger droughts and raider scouts.
+- **RPG encounters:** Age of Dinosaurs can trigger predator migrations, alpha raptors and grazer herds; Early Cities can trigger droughts and raider scouts; Iron can trigger siege raids.
 - **Dinosaur behavior:** raptors gain pack pressure, T-Rex creates fear zones, grazers can form a bond, full bond tames a persistent companion, and defended camps reduce survival pressure.
 - **RPG progression:** primitive weapons, defeated-enemy stats, relic powerups and optional mastery goals make runs branch more meaningfully.
-- **Living settlements:** housing-supported settlers now appear on screen with roles. Farmers tend visible wheat crops into food, gatherers physically harvest nearby trees/ore into a town stockpile, builders spend wood to raise village blocks, and guards contribute to defense.
+- **Living settlements:** housing-supported settlers now appear on screen with roles. Farmers tend visible wheat crops into food, gatherers physically harvest nearby trees/ore into a town stockpile, builders spend wood to raise village blocks or complete planned build sites, and guards contribute to defense.
 - **Bronze farming:** farm plots, wheat seeds, crop growth stages, wheat harvests and bread recipes turn the first-town era into a sustainable food economy instead of only hunting/abstract food.
-- **Storage, trade, defense and automation:** granaries raise storage, markets convert surplus into CP, gates/guards/companions deter raids, roads speed travel, and Auto Miners produce ore while adding pollution.
+- **Storage, trade, defense and automation:** granaries raise storage, markets and caravan posts convert surplus into CP/trade beads, gates/guards/companions deter raids, roads speed travel, siege raids test defenses, and Auto Miners produce ore while windmills reduce pollution.
 - **Era biomes:** chunks now have deterministic era biomes, starting with fern valleys, fossil basins, meteor scars and ash fields for the Age of Dinosaurs.
 - **Progression:** portals require both CP and mandatory goals. Optional mastery goals grant benefits without blocking advancement.
 - **Historical consistency:** First Cell is science-inspired abstraction, Age of Dinosaurs is explicitly alternate-history survival fantasy, and later eras use historical sandbox framing.

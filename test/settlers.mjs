@@ -54,6 +54,7 @@ import { Settler } from '../src/systems/Settlers.js';
 import { AIR, blockId } from '../src/core/blocks.js';
 const plank = blockId('planks');
 const builder = new Settler(sm.home.x + 0.5, world.heightMap[sm.home.x], 'builder');
+const bigCiv = { population: 12, housing: 10 }; // keep capacity above hand-seeded settlers
 sm.stock.wood = 999;
 const planksBefore = world.grid.reduce((n, v) => n + (v === plank ? 1 : 0), 0);
 let built = 0;
@@ -63,6 +64,28 @@ assert.ok(built > 0, 'builders place village blocks');
 assert.ok(built < 600, 'town building is bounded (no infinite pillars)');
 assert.strictEqual(planksAfter - planksBefore, built, 'placements match world changes');
 ok(`builders grow a bounded village (${built} blocks placed)`);
+
+// Player-planned build sites give builders a specific target and turn stock
+// into a small structure at that marker.
+const bw = new World({ seed: 41, eraId: 'bronze', width: 60, height: 40 });
+bw.generate();
+const bsm = new SettlerManager();
+const bhx = 30, bhy = bw.heightMap[30];
+bsm.setHome(bhx, bhy);
+const site = blockId('build_site');
+const siteX = bhx + 3;
+const siteY = bw.heightMap[siteX] - 1;
+bw.set(siteX, siteY, site);
+bsm.stock.wood = 20;
+bsm.settlers.push(new Settler(bhx + 0.5, bhy, 'builder'));
+let plannedBuilt = false;
+for (let i = 0; i < 800; i++) {
+  if (bsm.update(0.05, bw, bigCiv).produced.planned) { plannedBuilt = true; break; }
+}
+assert.ok(plannedBuilt, 'builder completed a planned build site');
+assert.notStrictEqual(bw.get(siteX, siteY), site, 'build site marker is consumed');
+assert.ok(bsm.stock.wood < 20, 'planned building spends town wood');
+ok('builders complete player-planned build sites');
 
 // Save round-trip preserves home + settlers + stock.
 const data = sm.serialize();
@@ -82,7 +105,6 @@ gsm.setHome(ghx, ghy);
 const logId = blockId('log');
 gw.set(ghx + 3, gw.heightMap[ghx + 3] - 1, logId);
 gsm.settlers.push(new Settler(ghx + 0.5, ghy, 'gatherer'));
-const bigCiv = { population: 12, housing: 10 }; // keep capacity above our gatherer
 let gotWood = false;
 for (let i = 0; i < 800; i++) { if (gsm.update(0.05, gw, bigCiv).produced.wood) { gotWood = true; break; } }
 assert.ok(gotWood, 'gatherer harvested wood from the world');

@@ -25,7 +25,7 @@ const CP_GAINS = {
 // Blocks that count as "building your settlement".
 const SETTLEMENT_BLOCKS = new Set([
   'lipid_membrane', 'planks', 'cobblestone', 'brick', 'thatch', 'campfire', 'torch', 'log',
-  'farm_plot', 'granary', 'market', 'gate', 'road', 'auto_miner',
+  'farm_plot', 'granary', 'market', 'caravan_post', 'gate', 'road', 'auto_miner', 'windmill', 'build_site',
 ]);
 
 export class Civilization {
@@ -82,9 +82,11 @@ export class Civilization {
       if (itemId === 'farm_plot') this.housing += 0.05;
       if (itemId === 'granary') this.storage += 8;
       if (itemId === 'market') this.trade += 1;
+      if (itemId === 'caravan_post') this.trade += 2;
       if (itemId === 'gate') this.defense += 3;
       if (itemId === 'road') this.trade += 0.1;
       if (itemId === 'auto_miner') this.pollution += 2;
+      if (itemId === 'windmill') this.pollution = Math.max(0, this.pollution - 1);
     }
   }
 

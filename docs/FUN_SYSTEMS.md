@@ -106,11 +106,11 @@ Files: `src/core/blocks.js`, `src/core/recipes.js`, `src/Game.js`
 Several era identities now have one concrete mechanic each:
 
 - Bronze granaries increase town storage and markets trade wheat/ore surplus
-  into CP.
+  into CP; caravan posts turn larger surplus into trade beads.
 - Iron gates, guards and tamed companions deter raider/bandit scouts; roads
-  give a movement-speed bonus.
+  give a movement-speed bonus, while siege raids can still test defended towns.
 - Industrial Auto Miners create ore over time, add pollution, and make the final
-  age about production tradeoffs.
+  age about production tradeoffs; windmills clean some of that pollution.
 
 These are intentionally small first versions, but each turns an era theme into a
 working gameplay verb.

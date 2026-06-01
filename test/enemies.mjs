@@ -59,6 +59,13 @@ const packHit = raptor.update(0.05, world, { x: 20, y: groundY, alive: true, pac
 assert.ok(packHit.damage > MOB_TYPES.raptor.damage, 'raptor pack pressure boosts contact damage');
 ok('raptor packs increase danger');
 
+const alpha = new Mob('alpha_raptor', groundClose(), groundY);
+const alphaHit = alpha.update(0.05, world, { x: 20, y: groundY, alive: true, packPressure: 2 });
+assert.ok(alphaHit.damage > MOB_TYPES.raptor.damage, 'alpha raptor hits harder than a normal raptor');
+assert.strictEqual(MOB_TYPES.alpha_raptor.drop, 'alpha_tooth', 'alpha raptor has a trophy drop');
+assert.ok(MOB_TYPES.alpha_raptor.cp > MOB_TYPES.raptor.cp, 'alpha raptor is worth boss-level CP');
+ok('alpha raptor is a stronger trophy predator');
+
 // hurt() returns true when killed and respects hp.
 const boar = new Mob('boar', 20, groundY);
 assert.ok(!boar.hurt(4), 'boar survives a single hit');

@@ -61,7 +61,7 @@ export class Renderer {
    * scene = { world, camera, player, mobs, particles, dayFactor, hover, ghost, dt }
    */
   render(scene) {
-    const { world, camera, player, mobs, particles, dayFactor, tint, meteors, hover, ghost, dt = 0 } = scene;
+    const { world, camera, player, mobs, settlers, particles, dayFactor, tint, meteors, hover, ghost, dt = 0 } = scene;
     const ctx = this.ctx;
     const W = this.canvas.width;
     const H = this.canvas.height;
@@ -89,6 +89,7 @@ export class Renderer {
 
     this.drawDecorations(world, era, camera, T, x0, x1);
     if (meteors && meteors.length) this.drawMeteors(camera, meteors, T);
+    if (settlers && settlers.length) this.drawSettlers(camera, settlers, T);
     this.drawMobs(camera, mobs, T);
     this.drawPlayer(camera, player, T);
     if (particles) this.drawParticles(camera, particles, T);
@@ -585,6 +586,38 @@ export class Renderer {
       ctx.beginPath();
       ctx.arc(sx, sy, (m.impact ? 0.32 : 0.2) * T, 0, Math.PI * 2);
       ctx.fill();
+    }
+  }
+
+  /** Villagers: small robed figures with a gentle walk bob. Procedural so they
+   *  need no sprite; builders wear a warmer tone. */
+  drawSettlers(camera, settlers, T) {
+    const ctx = this.ctx;
+    for (const s of settlers) {
+      const { sx, sy } = camera.worldToScreen(s.x, s.y);
+      const w = s.w * T;
+      const h = s.h * T;
+      const moving = Math.abs(s.vx) > 0.2;
+      const bob = moving ? Math.abs(Math.sin(this.t * 8 + s.id)) * h * 0.05 : 0;
+      const top = sy - h + bob;
+      // Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, w * 0.55, T * 0.12, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Robe (role-colored)
+      const robe = s.role === 'builder' ? '#b9772f' : '#4f6b8a';
+      ctx.fillStyle = shadeArr([parseInt(robe.slice(1, 3), 16), parseInt(robe.slice(3, 5), 16), parseInt(robe.slice(5, 7), 16)], s.tone);
+      ctx.fillRect(sx - w / 2, top + h * 0.38, w, h * 0.62);
+      // Head
+      ctx.fillStyle = '#e9c39b';
+      ctx.fillRect(sx - w * 0.32, top, w * 0.64, h * 0.4);
+      // Hair/cap
+      ctx.fillStyle = s.role === 'builder' ? '#caa14a' : '#5a4632';
+      ctx.fillRect(sx - w * 0.32, top, w * 0.64, h * 0.12);
+      // Eye (facing)
+      ctx.fillStyle = '#1b1b1b';
+      ctx.fillRect(sx + (s.facing > 0 ? w * 0.05 : -w * 0.2), top + h * 0.18, w * 0.14, h * 0.07);
     }
   }
 

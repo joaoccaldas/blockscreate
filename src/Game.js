@@ -16,6 +16,7 @@ import { HistoricalClueLog, clueForBlock } from './systems/HistoricalClues.js';
 import { StructureTracker } from './systems/Structures.js';
 import { PowerupManager } from './systems/Powerups.js';
 import { WorldEventLog } from './systems/WorldEvents.js';
+import { SettlerManager } from './systems/Settlers.js';
 import { Camera } from './render/Camera.js';
 import { Renderer } from './render/Renderer.js';
 import { Particles } from './render/Particles.js';
@@ -74,6 +75,7 @@ export class Game {
     this.clues = new HistoricalClueLog();
     this.powerups = new PowerupManager();
     this.events = new WorldEventLog();
+    this.settlers = new SettlerManager();
     this.mobs = [];
     this._grantStarter();
     this._setup();
@@ -99,6 +101,7 @@ export class Game {
     this.clues = new HistoricalClueLog(save.clues || []);
     this.powerups = new PowerupManager(save.powerups || []);
     this.events = new WorldEventLog(save.events || {});
+    this.settlers = new SettlerManager(save.settlers || null);
     this.mobs = (save.mobs || []).map((m) => Mob.load(m));
     this.animalPeaceTime = save.animalPeaceTime || 0;
     this.grazerBondTime = save.grazerBondTime || 0;
@@ -489,6 +492,7 @@ export class Game {
     }
     this._updateDinosaurPressure(dt);
     this._spawnMobs(dt);
+    this._updateSettlers(dt);
     this.powerups.update(dt);
     this._trackAnimalFriendship(dt);
     this._ambientWeather(dt);
@@ -1149,6 +1153,22 @@ export class Game {
     this._settleFalling(x, y - 1);
   }
 
+  /**
+   * Settlers bring the civilization to life. They only exist once you have a
+   * recognized settlement (a town home) and a population to draw on; the cell
+   * era has no citizens. Their "work" trickles Civ Points back.
+   */
+  _updateSettlers(dt) {
+    if (!this.settlers || this.eraId === 'cell' || this.mode !== MODE.SURVIVAL) return;
+    // Anchor the town to the first hut/camp/workshop the player builds.
+    if (!this.settlers.home && (this.structures?.has('hut') || this.structures?.has('camp') || this.structures?.has('workshop'))) {
+      this.settlers.setHome(Math.round(this.player.x), Math.round(this.player.y));
+      this.hud?.toast('🏘️ Your settlement attracts its first villagers', 2600);
+    }
+    const work = this.settlers.update(dt, this.world, this.civ);
+    if (work > 0) this.civ.addCP(work * 0.6 * (this.powerups?.multiplier('cpMultiplier') || 1));
+  }
+
   _spawnMobs(dt) {
     this.mobTimer -= dt;
     if (this.mobTimer > 0 || this.mobs.length >= 9) return;
@@ -1203,6 +1223,7 @@ export class Game {
       camera: this.camera,
       player: this.player,
       mobs: this.mobs,
+      settlers: this.settlers?.settlers || [],
       particles: this.particles,
       powerups: this.powerups,
       dayFactor: this.dayFactor(),

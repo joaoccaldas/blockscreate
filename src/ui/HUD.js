@@ -305,7 +305,10 @@ export class HUD {
     this.el('eraBadge').textContent = `${era.icon} ${era.name}${survival ? '' : ' · Creative'}`;
     this.el('eraStory').textContent = era.manifest?.subtitle || era.blurb;
 
-    this.el('popVal').textContent = game.civ.population;
+    const settlers = game.settlers?.count?.() || 0;
+    this.el('popVal').textContent = settlers > 0
+      ? `${game.civ.population} (${settlers} 🧍)`
+      : game.civ.population;
     this.el('cpVal').textContent = Math.floor(game.civ.cp);
     this.el('settleVal').textContent = game.civ.settlementScore();
     this.el('clueVal').textContent = game.clues?.count?.() || 0;

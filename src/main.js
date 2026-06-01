@@ -113,6 +113,18 @@ function buildPortals() {
   }
 }
 
+function syncSettingsUI() {
+  const set = (id, val, checkbox = true) => {
+    const e = document.getElementById(id);
+    if (!e) return;
+    if (checkbox) e.checked = !!val; else e.value = val;
+  };
+  set('lsSound', settings.get('sound'));
+  set('lsMusic', settings.get('music'));
+  set('lsReduceMotion', settings.get('reduceMotion'));
+  set('lsZoom', settings.get('zoomPref') ?? 1, false);
+}
+
 function setMode(mode) {
   chosenMode = mode;
   document.getElementById('modeSurvival').classList.toggle('on', mode === MODE.SURVIVAL);
@@ -128,6 +140,7 @@ function wire() {
   screens.landing = document.getElementById('landing');
   screens.portal = document.getElementById('portal');
   screens.howto = document.getElementById('howto');
+  screens.settings = document.getElementById('settings');
   screens.game = document.getElementById('game');
 
   const click = (id, fn) => { const e = document.getElementById(id); if (e) e.onclick = () => { audio.resume(); audio.play('ui'); fn(); }; };
@@ -140,6 +153,26 @@ function wire() {
   click('howtoBtn', () => show('howto'));
   click('howtoBack', () => show('landing'));
   click('portalBack', () => show('landing'));
+  click('settingsBtn', () => { syncSettingsUI(); show('settings'); });
+  click('settingsBack', () => show('landing'));
+
+  // Landing settings — apply immediately and persist, so players can mute
+  // before any audio starts.
+  const bind = (id, key, apply) => {
+    const e = document.getElementById(id);
+    if (!e) return;
+    e.onchange = e.oninput = () => {
+      const v = e.type === 'checkbox' ? e.checked : parseFloat(e.value);
+      settings.set(key, v);
+      apply?.(v);
+    };
+  };
+  bind('lsSound', 'sound', (v) => audio.setSound(v));
+  bind('lsMusic', 'music', (v) => audio.setMusic(v));
+  bind('lsReduceMotion', 'reduceMotion', (v) => {
+    try { document.body.classList.toggle('reduce-motion', v); } catch (e) { /* ignore */ }
+  });
+  bind('lsZoom', 'zoomPref');
 
   document.getElementById('modeSurvival').onclick = () => { audio.play('ui'); setMode(MODE.SURVIVAL); };
   document.getElementById('modeCreative').onclick = () => { audio.play('ui'); setMode(MODE.CREATIVE); };
@@ -151,5 +184,7 @@ function wire() {
 window.addEventListener('DOMContentLoaded', () => {
   loadSprites();
   wire();
+  // Honor saved reduce-motion before any screen animates.
+  if (settings.get('reduceMotion')) document.body.classList.add('reduce-motion');
   show('landing');
 });

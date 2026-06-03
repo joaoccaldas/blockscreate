@@ -725,6 +725,9 @@ export class Game {
     const structureBonus = Math.min(16, (this.civ.placed.lipid_membrane || 0) * 4);
     const target = Math.min(100, 28 + resourceBonus + membrane * 18 + structureBonus + proto * 20);
     this.cellStability = this.cellStability == null ? target : this.cellStability + (target - this.cellStability) * Math.min(1, dt * 2);
+    // Visible growth: the cell swells as it stabilizes (1.0 .. ~1.6), so the
+    // player *sees* themselves becoming a real cell as they absorb and build.
+    if (this.player) this.player.cellGrowth = 1 + (this.cellStability / 100) * 0.6;
     this.cellStatus = {
       stability: Math.round(this.cellStability),
       gradient: nearest ? nearest.label : 'quiet chemistry',
@@ -1536,12 +1539,22 @@ export class Game {
     let spawned = 0;
     for (let i = 0; i < count && this.mobs.length < 14; i++) {
       const dir = i % 2 === 0 ? -1 : 1;
-      const sx = Math.floor(this.player.x + dir * (10 + i * 2));
-      if (sx < 1 || sx >= this.world.width - 1) continue;
-      const surf = this.world.heightMap[sx];
-      if (!isSolid(this.world.get(sx, surf))) continue;
-      this.mobs.push(new Mob(type, sx + 0.5, surf));
-      spawned++;
+      const base = Math.floor(this.player.x + dir * (10 + i * 2));
+      // Probe outward for a column with solid ground so a requested raid never
+      // silently under-spawns on water/caves (search is bounded).
+      let placed = false;
+      for (let off = 0; off <= 8 && !placed; off++) {
+        for (const s of off === 0 ? [0] : [off, -off]) {
+          const sx = base + dir * s;
+          if (sx < 1 || sx >= this.world.width - 1) continue;
+          const surf = this.world.heightMap[sx];
+          if (surf == null || !isSolid(this.world.get(sx, surf))) continue;
+          this.mobs.push(new Mob(type, sx + 0.5, surf));
+          spawned++;
+          placed = true;
+          break;
+        }
+      }
     }
     if (spawned) this.hud?.toast('⚔️ Siege raid incoming', 2200);
     return spawned;

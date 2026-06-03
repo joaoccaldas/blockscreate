@@ -24,6 +24,9 @@ export class HUD {
     this.cache = {};
     this._build();
     if (isTouch) this._buildTouchControls();
+    // On phones the stat panels crowd the play area; collapse them by default
+    // (one tap on 📊 brings them back). Desktop keeps them open.
+    if (isTouch) this.root.classList.add('info-collapsed');
   }
 
   el(id) { return this.cache[id] || (this.cache[id] = this.root.querySelector('#' + id)); }
@@ -72,6 +75,7 @@ export class HUD {
       </div>
 
       <button id="pauseBtn" class="icon-btn" title="Menu (Esc)">☰</button>
+      <button id="infoBtn" class="icon-btn info-btn" title="Toggle stats panels">📊</button>
       <div id="buildIndicator" class="build-indicator"></div>
       <div id="powerupBar" class="powerup-bar hidden"></div>
       <div id="eventBar" class="event-bar hidden"></div>
@@ -188,6 +192,7 @@ export class HUD {
     this.el('invSort').onclick = () => this.h.onSortInventory?.();
     this.el('craftClose').onclick = () => this.h.onToggleCrafting?.();
     this.el('pauseBtn').onclick = () => this.h.onPause?.();
+    this.el('infoBtn').onclick = () => this.root.classList.toggle('info-collapsed');
     this.el('resumeBtn').onclick = () => this.h.onResume?.();
     this.el('pInv').onclick = () => this.h.onToggleInventory?.();
     this.el('pCraft').onclick = () => this.h.onToggleCrafting?.();
@@ -581,10 +586,20 @@ export class HUD {
         <div><b>${got ? s.label : '???'}</b><small>${got ? 'Recognized' : 'Build this structure to recognize it.'}</small></div></div>`;
     }).join('');
 
+    // The hidden "matrix" layer: anomalies are real but easy to miss as a
+    // fleeting toast, so the Journal gives them a permanent (redacted) home.
+    const anomalies = game.anomalies?.all?.() || [];
+    const anomalyRows = anomalies.map((a) => {
+      const got = game.anomalies.has(a.id);
+      return `<div class="jr-row anomaly ${got ? '' : 'locked'}"><span class="jr-ic">${got ? a.icon : '▓'}</span>
+        <div><b>${got ? a.label : '█████████'}</b><small>${got ? a.text : 'An unexplained reading. Not yet observed.'}</small></div></div>`;
+    }).join('');
+
     this.el('journalBody').innerHTML =
       section('🔎 Clues', clues.length, game.clues?.count?.() || 0, clueRows) +
       section('🏛️ Structures', structs.length, structs.filter((s) => game.structures.has(s.id)).length, structRows) +
-      section('✨ Discoveries', discos.length, discos.filter((d) => game.discoveries.has(d.id)).length, discoRows);
+      section('✨ Discoveries', discos.length, discos.filter((d) => game.discoveries.has(d.id)).length, discoRows) +
+      (anomalies.length ? section('⩗ Anomalies', anomalies.length, anomalies.filter((a) => game.anomalies.has(a.id)).length, anomalyRows) : '');
   }
 
   /** Reusable confirm dialog for destructive actions. onYes runs on Confirm. */

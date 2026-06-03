@@ -334,6 +334,7 @@ export class Renderer {
 
     if (player.form === 'cell') {
       const pulse = 1 + Math.sin(this.t * 5) * 0.08;
+      const grow = player.cellGrowth || 1; // swells as the cell stabilizes
       ctx.save();
       const sprite = this.sprites.cell;
       if (sprite && sprite.complete && sprite.naturalWidth) {
@@ -341,10 +342,10 @@ export class Renderer {
         ctx.globalAlpha = 0.38;
         ctx.fillStyle = '#76f7dd';
         ctx.beginPath();
-        ctx.arc(sx, sy - h * 0.45, h * 0.68 * pulse, 0, Math.PI * 2);
+        ctx.arc(sx, sy - h * 0.45, h * 0.68 * pulse * grow, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
-        const size = Math.max(w, h) * 1.55 * pulse;
+        const size = Math.max(w, h) * 1.55 * pulse * grow;
         ctx.drawImage(sprite, sx - size / 2, sy - h * 0.48 - size / 2, size, size);
         ctx.restore();
         return;
@@ -352,7 +353,7 @@ export class Renderer {
       ctx.globalAlpha = 0.95;
       ctx.fillStyle = 'rgba(118,247,221,0.26)';
       ctx.beginPath();
-      ctx.arc(sx, sy - h * 0.45, h * 0.58 * pulse, 0, Math.PI * 2);
+      ctx.arc(sx, sy - h * 0.45, h * 0.58 * pulse * grow, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#ffd6ff';
       ctx.lineWidth = Math.max(2, T * 0.08);

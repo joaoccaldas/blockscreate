@@ -390,10 +390,19 @@ html, body {
   cursor: pointer;
 }
 
+/* Stats toggle sits left of the menu button; build indicator shifts further left. */
+.info-btn { right: 54px; }
+
+/* Collapsed stats mode (default on touch): hide the secondary info panels so
+   the play area is clean. The 📊 button toggles them back. */
+.info-collapsed #civPanel,
+.info-collapsed #objPanel,
+.info-collapsed #discoveryPanel { display: none; }
+
 .build-indicator {
   position: absolute;
   top: calc(8px + env(safe-area-inset-top, 0px));
-  right: 54px;
+  right: 100px;
   background: rgba(0, 0, 0, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 9px;
@@ -820,6 +829,8 @@ button:focus-visible, input:focus-visible, .era-card:focus-visible {
 .jr-head { font-weight: bold; margin-bottom: 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 3px; }
 .jr-row { display: flex; gap: 10px; align-items: flex-start; padding: 6px 4px; }
 .jr-row.locked { opacity: 0.5; }
+.jr-row.anomaly b { color: #7be4ff; letter-spacing: 0.5px; }
+.jr-row.anomaly .jr-ic { color: #7be4ff; }
 .jr-ic { font-size: 1.3rem; width: 1.6rem; text-align: center; flex: 0 0 auto; }
 .jr-row b { display: block; font-size: 0.92rem; }
 .jr-row small { color: var(--muted); font-size: 0.76rem; line-height: 1.35; }

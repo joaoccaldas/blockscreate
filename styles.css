@@ -395,9 +395,22 @@ html, body {
 
 /* Collapsed stats mode (default on touch): hide the secondary info panels so
    the play area is clean. The 📊 button toggles them back. */
+/* Collapsed mode (default on touch): hide the bulky stat + discovery panels
+   but KEEP a compact objectives panel — the one thing the player needs to know
+   what to do next. 📊 toggles the full stats back. */
 .info-collapsed #civPanel,
-.info-collapsed #objPanel,
-.info-collapsed #discoveryPanel { display: none; }
+.info-collapsed #discoveryPanel,
+.info-collapsed #powerupBar,
+.info-collapsed #eventBar { display: none; }
+/* In collapsed mode the right column holds the quick 🎒🔨 buttons, so dock the
+   compact objectives panel on the LEFT under the topbar to avoid overlap. */
+.info-collapsed #objPanel {
+  top: calc(46px + env(safe-area-inset-top, 0px));
+  left: 8px;
+  right: auto;
+  width: auto;
+  max-width: 62vw;
+}
 
 .build-indicator {
   position: absolute;

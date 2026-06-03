@@ -403,7 +403,9 @@ export class HUD {
 
   renderObjectives(game) {
     const list = this.el('objList');
-    const active = game.objectives.active(3);
+    // In collapsed (mobile) mode show just the next goal to keep it tiny.
+    const collapsed = this.root.classList.contains('info-collapsed');
+    const active = game.objectives.active(collapsed ? 1 : 3);
     const done = game.objectives.completed.size;
     const total = game.objectives.all.length;
     let html = '';

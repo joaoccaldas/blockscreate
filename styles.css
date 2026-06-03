@@ -686,11 +686,15 @@ html, body {
   #hud { font-size: 12px; }
   .civ-panel { width: 165px; }
   .era-story { display: none; }
+  /* On phones the era badge widens the top row into the build/menu buttons;
+     the era is clear from the world + shown on the intro/journal, so drop it. */
+  #topbar .era-badge { display: none; }
   .obj-panel { width: 150px; top: calc(48px + env(safe-area-inset-top, 0px)); }
   .discovery-panel { display: none; }
+  /* Expanded (📊) stat overlays stack down the left edge. */
   .powerup-bar { left: 8px; top: calc(152px + env(safe-area-inset-top, 0px)); max-width: 70vw; }
   .event-bar { left: 8px; top: calc(182px + env(safe-area-inset-top, 0px)); max-width: 70vw; }
-  .bar { width: 80px; }
+  .bar { width: 72px; }
   .slot { width: 40px; height: 40px; }
   .swatch { width: 22px; height: 22px; }
 }

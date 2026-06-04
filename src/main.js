@@ -9,10 +9,12 @@ import { Progress } from './persistence/Progress.js';
 import { Settings } from './persistence/Settings.js';
 import { SaveManager } from './persistence/SaveManager.js';
 import { Audio } from './systems/Audio.js';
+import { LandingScene } from './ui/LandingScene.js';
 import { Game } from './Game.js';
 
 const screens = {};
 let game = null;
+let landingScene = null;
 let chosenMode = MODE.SURVIVAL;
 
 const progress = new Progress();
@@ -53,6 +55,11 @@ function loadSprites() {
 
 function show(id) {
   for (const key in screens) screens[key].classList.toggle('active', key === id);
+  // Only animate the landing backdrop while the landing screen is visible.
+  if (landingScene) {
+    if (id === 'landing') landingScene.start();
+    else landingScene.stop();
+  }
 }
 
 function startGame({ eraId, mode, save }) {
@@ -186,5 +193,7 @@ window.addEventListener('DOMContentLoaded', () => {
   wire();
   // Honor saved reduce-motion before any screen animates.
   if (settings.get('reduceMotion')) document.body.classList.add('reduce-motion');
+  const sceneCanvas = document.getElementById('landingScene');
+  if (sceneCanvas) landingScene = new LandingScene(sceneCanvas, { reduceMotion: settings.get('reduceMotion') });
   show('landing');
 });

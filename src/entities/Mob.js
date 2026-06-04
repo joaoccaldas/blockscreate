@@ -79,6 +79,8 @@ export class Mob {
       return this._floatUpdate(dt, world, target);
     }
 
+    let result = null;
+
     if (this.mounted) {
       this.vx = 0;
       this.vy = 0;
@@ -100,9 +102,14 @@ export class Mob {
     } else if ((this.hostile || this.tamed) && this._onGround(world)) {
       if (!this.collides(world, nx, this.y - 1)) this.vy = -9; // hop the ledge
       else if (!this.collides(world, nx, this.y - 2)) this.vy = -11; // recover from rougher terrain
-      else this.vx = -this.vx;
+      else {
+        // Too tall to climb. Siege marauders smash the wall instead of fleeing.
+        result = this._tryBreakWall(world, target) || result;
+        this.vx = result ? -this.vx * 0.2 : -this.vx;
+      }
     } else {
-      this.vx = -this.vx;
+      if (this.hostile) result = this._tryBreakWall(world, target) || result;
+      this.vx = result ? -this.vx * 0.2 : -this.vx;
     }
 
     // Vertical move.
@@ -110,7 +117,7 @@ export class Mob {
     if (!this.collides(world, this.x, ny)) this.y = ny;
     else this.vy = 0;
 
-    // Contact damage when adjacent to the target.
+    // Contact damage when adjacent to the target (player).
     if (this.hostile && target && this.attackCd <= 0) {
       if (Math.abs(this.x - target.x) < 0.8 && Math.abs(this.y - target.y) < 1.4) {
         this.attackCd = 0.9;
@@ -118,6 +125,36 @@ export class Mob {
         if ((this.type === 'raptor' || this.type === 'alpha_raptor') && (target.packPressure || 0) >= 2) damage *= 1.35;
         if (this.type === 'rex' && target.fearExposed) damage *= 1.15;
         return { damage };
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Siege behavior: when a wall stops a marauder, report the blocking tile so
+   * the game can chip its integrity (walls become a physical, breakable defense
+   * rather than an abstract deterrent). Only fires for targets the game has
+   * flagged `canBreakWalls`, and respects the shared attack cooldown.
+   */
+  _tryBreakWall(world, target) {
+    if (!target || !target.canBreakWalls || this.attackCd > 0) return null;
+    const wall = this._frontWall(world);
+    if (!wall) return null;
+    this.attackCd = 0.7;
+    return { breakWall: wall, dps: this.def.damage || 10 };
+  }
+
+  /** The lowest solid tile in the mob's path (the base of the wall ahead). */
+  _frontWall(world) {
+    const dir = Math.sign(this.vx) || this.facing || 1;
+    const top = Math.floor(this.y - this.h);
+    const bottom = Math.floor(this.y - 0.05);
+    // Probe the leading edge and the tile just beyond it, so a mob pressed up
+    // against a wall still finds the block it's trying to push through.
+    for (const reach of [this.w / 2 + 0.05, this.w / 2 + 0.55]) {
+      const fx = Math.floor(this.x + dir * reach);
+      for (let ty = bottom; ty >= top; ty--) {
+        if (isSolid(world.get(fx, ty))) return { x: fx, y: ty };
       }
     }
     return null;
@@ -180,10 +217,13 @@ export class Mob {
   }
 
   _think(dt, target) {
-    const dx = target.x - this.x;
+    // Siege marauders march on the town (target.goalX) even from across the map;
+    // everyone else only engages once the target is within sight.
+    const goalX = (target.siege && target.goalX != null) ? target.goalX : target.x;
+    const dx = goalX - this.x;
     const dist = Math.abs(dx);
-    if (dist < 12) {
-      // Chase.
+    if (dist < 12 || target.siege) {
+      // Chase / advance.
       let spd = this.def.speed || 3;
       if (this.type === 'raptor' || this.type === 'alpha_raptor') spd *= 1 + Math.min(0.35, (target.packPressure || 0) * 0.12);
       if (this.type === 'rex' && target.fearExposed) spd *= 1.08;

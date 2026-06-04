@@ -83,9 +83,17 @@ not only planting. Bronze should become the first "sustain a town" puzzle.
 | Gates/guards/tamed companions deter raids | ✅ |
 | Roads that speed travel | ✅ |
 | Siege raids that bypass scout deterrence | ✅ |
+| **Physical sieges: raiders march on the town & smash through walls** | ✅ |
 
-**Next & why:** make sieges physical: raiders should path toward gates, damage
-weak walls, and retreat if the town holds. That makes defense architecture matter.
+Raiders/bandits (and industrial machines) now path toward the settlement when
+the player is away and physically batter any wall too tall to climb. Wall
+integrity scales with block hardness — a cobblestone rampart outlasts a thatch
+fence, bedrock is immune — so *what you build* is your defense, not an abstract
+deterrence roll. Near the player they revert to chasing directly.
+
+**Next & why:** let raiders also damage town structures (granary/market) once
+inside the walls, and have guards sally out to intercept — closing the loop so a
+breach has consequences and standing defenders earn their keep.
 
 ---
 

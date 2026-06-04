@@ -508,9 +508,12 @@ export class Game {
       if (m.mounted) { this._syncMountedCompanion(m); continue; }
       const target = this.mode === MODE.SURVIVAL ? this._mobTargetContext(m) : null;
       const hit = m.update(dt, this.world, target);
-      if (hit && this.player.alive) {
-        if (hit.sap) this._sapCell(hit.sap, m);   // phage drains stability, doesn't maul
-        else if (hit.damage) this._damagePlayer(hit.damage, `a ${m.type}`);
+      if (hit) {
+        if (hit.breakWall) this._raiderBreakWall(m, hit.breakWall, hit.dps); // siege chews through walls
+        else if (this.player.alive) {
+          if (hit.sap) this._sapCell(hit.sap, m);   // phage drains stability, doesn't maul
+          else if (hit.damage) this._damagePlayer(hit.damage, `a ${m.type}`);
+        }
       }
     }
     this._updateDinosaurPressure(dt);
@@ -1346,16 +1349,34 @@ export class Game {
       }
       return this.player;
     }
-    if (this.eraId !== 'stone') return this.player;
-    const packPressure = this.mobs.filter((m) => (m.type === 'raptor' || m.type === 'alpha_raptor') &&
-      Math.hypot(m.x - this.player.x, m.y - this.player.y) < 10).length;
-    const rexDistance = this._nearestMobDistance('rex');
-    const defended = this._hasDinoDefense();
-    return Object.assign(Object.create(this.player), this.player, {
-      packPressure,
-      fearExposed: rexDistance != null && rexDistance < 13 && !defended,
-      defended,
-    });
+    if (this.eraId === 'stone') {
+      const packPressure = this.mobs.filter((m) => (m.type === 'raptor' || m.type === 'alpha_raptor') &&
+        Math.hypot(m.x - this.player.x, m.y - this.player.y) < 10).length;
+      const rexDistance = this._nearestMobDistance('rex');
+      const defended = this._hasDinoDefense();
+      return Object.assign(Object.create(this.player), this.player, {
+        packPressure,
+        fearExposed: rexDistance != null && rexDistance < 13 && !defended,
+        defended,
+      });
+    }
+
+    // Iron-age physical sieges: raiders/bandits (and industrial machines) march
+    // on the settlement and smash through walls to reach it. Close to the player
+    // they switch to chasing them directly. Walls become a real, breakable
+    // defense — see Mob._tryBreakWall / Game._raiderBreakWall.
+    if (mob && (mob.type === 'raider' || mob.type === 'bandit' || mob.type === 'machine')) {
+      const home = this.settlers?.home;
+      const chasePlayer = !home || Math.abs(mob.x - this.player.x) < 11;
+      return Object.assign(Object.create(this.player), this.player, {
+        canBreakWalls: true,
+        siege: home ? !chasePlayer : false,
+        chasePlayer,
+        goalX: home?.x,
+        goalY: home?.y,
+      });
+    }
+    return this.player;
   }
 
   _updateDinosaurPressure(dt) {
@@ -1542,8 +1563,10 @@ export class Game {
 
   spawnMobNearPlayer(type) {
     if (!type || !MOB_TYPES[type] || this.mobs.length >= 12) return false;
-    if ((type === 'raider' || type === 'bandit') && this._hasTownDefense() && Math.random() < 0.7) {
-      this.hud?.toast('🛡️ Town defenses turned away scouts', 1800);
+    // A well-watched town turns away some lone scouts, but most raiders now come
+    // and test the walls themselves — physical defense (walls/gates) is the point.
+    if ((type === 'raider' || type === 'bandit') && this._hasTownDefense() && Math.random() < 0.4) {
+      this.hud?.toast('🛡️ Town watch turned away a scout', 1800);
       return false;
     }
     const dir = Math.random() < 0.5 ? -1 : 1;
@@ -1579,6 +1602,40 @@ export class Game {
     }
     if (spawned) this.hud?.toast('⚔️ Siege raid incoming', 2200);
     return spawned;
+  }
+
+  /**
+   * A marauder is chewing on a wall tile. Walls have no stored HP, so we track
+   * transient siege damage in a Map keyed by tile and scale the threshold to the
+   * block's mining hardness — a cobblestone rampart outlasts a thatch hut. When
+   * a tile's integrity is spent it collapses (and any block above it settles).
+   */
+  _raiderBreakWall(mob, pos, dps = 10) {
+    if (!pos || this.mode !== MODE.SURVIVAL) return;
+    const { x, y } = pos;
+    const id = this.world.get(x, y);
+    const b = getBlock(id);
+    if (!b.solid || b.hardness === Infinity) return; // never gnaw bedrock
+    if (!this._wallDamage) this._wallDamage = new Map();
+    const key = `${x},${y}`;
+    const integrity = Math.max(6, (b.hardness || 1) * 8);
+    const dmg = (this._wallDamage.get(key) || 0) + dps;
+    this.audio?.play('mine');
+    this.particles.burst(x + 0.5, y + 0.5, b.colors?.base || '#999', 5, { gravity: 10, life: 0.3 });
+    if (dmg >= integrity) {
+      this._wallDamage.delete(key);
+      this.world.set(x, y, AIR);
+      this.particles.burst(x + 0.5, y + 0.5, b.colors?.base || '#999', 12, { gravity: 14, life: 0.5 });
+      this._settleFalling(x, y - 1);
+      const t = Date.now();
+      if (!this._lastBreachToast || t - this._lastBreachToast > 2500) {
+        this._lastBreachToast = t;
+        if (!this.reduceMotion) this.hud?.shake?.();
+        this.hud?.toast('⚔️ Raiders breached a wall!', 2200);
+      }
+    } else {
+      this._wallDamage.set(key, dmg);
+    }
   }
 
   _hasTownDefense() {

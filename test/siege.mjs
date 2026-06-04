@@ -152,4 +152,47 @@ for (let i = 0; i < 800 && solidCount() === before; i++) {
 assert.ok(solidCount() < before, 'a determined raider physically breaches the wall over time');
 ok('end-to-end: raiders break through a cobblestone wall to reach the town');
 
+// ---- Breach consequences: guards sally out --------------------------------
+const gg = newGame();
+gg.newWorld('iron', MODE.SURVIVAL);
+gg.settlers.setHome(Math.round(gg.player.x), Math.round(gg.player.y));
+gg.settlers.stock = { food: 0, wheat: 0, ore: 0, wood: 0 };
+gg.townGuards = 2;
+const guarded = new Mob('raider', gg.settlers.home.x + 0.5, gg.settlers.home.y);
+gg.mobs = [guarded];
+const defeatedBefore = gg.civ.defeated.raider || 0;
+for (let i = 0; i < 12 && gg.mobs.length; i++) gg._updateRaiders(0.8);
+assert.strictEqual(gg.mobs.length, 0, 'town guards eventually cut down a breaching raider');
+assert.ok((gg.civ.defeated.raider || 0) > defeatedBefore, 'guard kill is recorded as a defeat');
+ok('guards sally out and destroy raiders that reach the town');
+
+// ---- Breach consequences: pillage (no guards, so the raider survives) ------
+const gp = newGame();
+gp.newWorld('iron', MODE.SURVIVAL);
+gp.settlers.setHome(Math.round(gp.player.x), Math.round(gp.player.y));
+gp.townGuards = 0;
+gp.settlers.stock = { food: 10, wheat: 0, ore: 0, wood: 0 };
+const home = gp.settlers.home;
+gp.world.set(home.x + 1, home.y - 1, blockId('granary'));
+gp.civ.onBuild('granary'); // storage +8, placed.granary = 1
+const storageBefore = gp.civ.storage;
+const looter = new Mob('raider', home.x + 0.5, home.y);
+gp.mobs = [looter];
+for (let i = 0; i < 6; i++) gp._updateRaiders(1.4);
+assert.ok(gp.settlers.stock.food < 10, 'raiders loot the town stockpile');
+assert.ok(!isSolid(gp.world.get(home.x + 1, home.y - 1)), 'raiders smash a town building');
+assert.ok(gp.civ.storage < storageBefore, 'losing the granary rolls back its storage bonus');
+assert.strictEqual(gp.civ.placed.granary || 0, 0, 'destroyed building leaves the placed tally');
+ok('undefended breach: raiders loot stock and wreck town buildings');
+
+// ---- Civilization.onStructureLost rolls back bonuses -----------------------
+const civ = gp.civ;
+civ.onBuild('market');      // trade +1
+civ.onBuild('caravan_post'); // trade +2
+const tradeBefore = civ.trade;
+civ.onStructureLost('caravan_post');
+assert.strictEqual(civ.trade, tradeBefore - 2, 'losing a caravan post removes its trade bonus');
+assert.strictEqual(civ.placed.caravan_post || 0, 0, 'lost structure drops from the placed tally');
+ok('Civilization.onStructureLost reverses a building’s contribution');
+
 console.log(`\nAll ${passed} siege checks passed.`);

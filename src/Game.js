@@ -30,6 +30,9 @@ import { getItem, isPlaceable } from './core/items.js';
 import { getEra, nextEra } from './core/eras.js';
 import { getEraTheme, weightedPick } from './core/eraTheme.js';
 
+// Buildings a raider will smash when it breaches the town (drives _pillageTown).
+const TOWN_BUILDINGS = new Set(['granary', 'market', 'caravan_post', 'windmill', 'auto_miner', 'gate']);
+
 export class Game {
   constructor({ canvas, hudRoot, sprites, progress, settings, audio, onExit }) {
     this.canvas = canvas;
@@ -520,6 +523,7 @@ export class Game {
     this._spawnMobs(dt);
     this._updateSettlers(dt);
     this._updateTownEconomy(dt);
+    this._updateRaiders(dt);
     this._updateAutomation(dt);
     this.powerups.update(dt);
     this._trackAnimalFriendship(dt);
@@ -1636,6 +1640,106 @@ export class Game {
     } else {
       this._wallDamage.set(key, dmg);
     }
+  }
+
+  /**
+   * Closes the siege loop once raiders reach the settlement: the town militia
+   * (guards) sallies out to fight them within a defensive perimeter, and any
+   * raider that makes it to the town center pillages — looting the stockpile and
+   * battering town buildings. Defense architecture + guards now have stakes:
+   * walls buy time, guards win the fight, an undefended breach costs you.
+   */
+  _updateRaiders(dt) {
+    if (this.mode !== MODE.SURVIVAL) return;
+    const home = this.settlers?.home;
+    if (!home) return;
+    const guards = this.townGuards || 0;
+    for (let i = this.mobs.length - 1; i >= 0; i--) {
+      const m = this.mobs[i];
+      if (m.tamed) continue;
+      if (m.type !== 'raider' && m.type !== 'bandit' && m.type !== 'machine') continue;
+      const dxHome = Math.abs(m.x - home.x);
+
+      // Guards sally out: militia engages raiders within the town's perimeter,
+      // dealing steady damage scaled by how many guards the town supports.
+      if (guards > 0 && dxHome < 9 && Math.abs(m.y - home.y) < 6) {
+        m._guardCd = (m._guardCd || 0) - dt;
+        if (m._guardCd <= 0) {
+          m._guardCd = 0.8;
+          this.particles.burst(m.x, m.y - m.h / 2, '#ffd36b', 6);
+          if (m.hurt(2 + guards * 1.5)) {
+            this.mobs.splice(i, 1);
+            this.civ.onDefeat(m.type);
+            this.civ.addCP((m.def.cp || 4) * 0.5 * (this.powerups?.multiplier('cpMultiplier') || 1));
+            const t = Date.now();
+            if (!this._lastGuardToast || t - this._lastGuardToast > 3000) {
+              this._lastGuardToast = t;
+              this.hud?.toast('🛡️ Town guards cut down a raider', 2000);
+            }
+            continue;
+          }
+        }
+      }
+
+      // Pillage: a raider at the town center wrecks the economy.
+      if (dxHome < 3.2 && Math.abs(m.y - home.y) < 4) {
+        m._pillageCd = (m._pillageCd || 0) - dt;
+        if (m._pillageCd <= 0) {
+          m._pillageCd = 1.4;
+          this._pillageTown(m);
+        }
+      }
+    }
+  }
+
+  /** A raider loots the town stockpile and batters the nearest town building. */
+  _pillageTown(m) {
+    const st = this.settlers?.stock;
+    let looted = false;
+    if (st) {
+      for (const k of ['food', 'wheat', 'ore', 'wood']) {
+        if ((st[k] || 0) > 0) { st[k] = Math.max(0, st[k] - 2); looted = true; break; }
+      }
+    }
+    const wrecked = this._damageTownStructure(m);
+    if (this.civ) this.civ.cp = Math.max(0, this.civ.cp - 1); // civic unrest
+    this.particles.burst(m.x, m.y - m.h / 2, '#c8502f', 8, { gravity: 8 });
+    this.audio?.play('hurt');
+    if (wrecked || looted) {
+      const t = Date.now();
+      if (!this._lastPillageToast || t - this._lastPillageToast > 3000) {
+        this._lastPillageToast = t;
+        if (!this.reduceMotion) this.hud?.shake?.();
+        this.hud?.toast(wrecked ? `🔥 Raiders wrecked your ${wrecked}!` : '🔥 Raiders are looting the town!', 2400);
+      }
+    }
+  }
+
+  /** Chip the nearest town building near a raider; collapse it when spent. */
+  _damageTownStructure(m) {
+    const cx = Math.round(m.x);
+    const cy = Math.round(m.y);
+    for (let y = cy - 2; y <= cy + 2; y++) {
+      for (let x = cx - 2; x <= cx + 2; x++) {
+        const b = getBlock(this.world.get(x, y));
+        if (!b.solid || !TOWN_BUILDINGS.has(b.name)) continue;
+        if (!this._wallDamage) this._wallDamage = new Map();
+        const key = `${x},${y}`;
+        const integrity = Math.max(8, (b.hardness || 1) * 8);
+        const dmg = (this._wallDamage.get(key) || 0) + (m.def.damage || 10);
+        this.particles.burst(x + 0.5, y + 0.5, b.colors?.base || '#999', 5, { gravity: 8 });
+        if (dmg >= integrity) {
+          this._wallDamage.delete(key);
+          this.world.set(x, y, AIR);
+          this.civ?.onStructureLost(b.name);
+          this._settleFalling(x, y - 1);
+          return b.label || b.name;
+        }
+        this._wallDamage.set(key, dmg);
+        return null;
+      }
+    }
+    return null;
   }
 
   _hasTownDefense() {

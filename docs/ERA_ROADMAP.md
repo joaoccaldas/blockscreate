@@ -84,6 +84,7 @@ not only planting. Bronze should become the first "sustain a town" puzzle.
 | Roads that speed travel | ✅ |
 | Siege raids that bypass scout deterrence | ✅ |
 | **Physical sieges: raiders march on the town & smash through walls** | ✅ |
+| **Breach stakes: raiders pillage buildings/stock; guards sally out** | ✅ |
 
 Raiders/bandits (and industrial machines) now path toward the settlement when
 the player is away and physically batter any wall too tall to climb. Wall
@@ -91,9 +92,16 @@ integrity scales with block hardness — a cobblestone rampart outlasts a thatch
 fence, bedrock is immune — so *what you build* is your defense, not an abstract
 deterrence roll. Near the player they revert to chasing directly.
 
-**Next & why:** let raiders also damage town structures (granary/market) once
-inside the walls, and have guards sally out to intercept — closing the loop so a
-breach has consequences and standing defenders earn their keep.
+The siege loop now has stakes on both sides: town **guards sally out** and fight
+raiders within a defensive perimeter (damage scales with guard count, kills earn
+CP), and any raider that reaches the town center **pillages** — looting the
+stockpile and smashing buildings, which rolls back that building's bonus
+(`Civilization.onStructureLost`). Walls buy time, guards win the fight, an
+undefended breach costs you.
+
+**Next & why:** telegraph incoming raids (a horn/HUD warning + muster window) and
+let the player rally guards to a rally point, so defense becomes an active
+decision rather than a passive stat.
 
 ---
 

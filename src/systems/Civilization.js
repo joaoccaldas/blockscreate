@@ -94,6 +94,19 @@ export class Civilization {
     this.addCP(CP_GAINS.cook);
   }
 
+  /**
+   * A town building was destroyed (e.g. pillaged by raiders): drop it from the
+   * placed tally and roll back the bonus it granted, so losing infrastructure
+   * actually hurts the civilization.
+   */
+  onStructureLost(itemId) {
+    if (this.placed[itemId]) this.placed[itemId] = Math.max(0, this.placed[itemId] - 1);
+    if (itemId === 'granary') this.storage = Math.max(0, this.storage - 8);
+    else if (itemId === 'market') this.trade = Math.max(0, this.trade - 1);
+    else if (itemId === 'caravan_post') this.trade = Math.max(0, this.trade - 2);
+    else if (itemId === 'gate') this.defense = Math.max(0, this.defense - 3);
+  }
+
   onDefeat(type) {
     this.defeated[type] = (this.defeated[type] || 0) + 1;
   }

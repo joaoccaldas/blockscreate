@@ -21,9 +21,11 @@ export const ERA_THEME = {
     weather: 'bubbles',
     weatherRate: 1.8,
     accent: '#55f0d8',
-    passive: [],
-    hostile: [],
-    hostileDay: false,
+    passive: [['microbe', 3]],
+    hostile: [['phage', 1]],
+    hostileDay: true,    // microscopic life has no day/night — phages always drift
+    hostileChance: 0.3,  // mostly harmless microbes; phages are the minority
+    float: true,         // spawn entities in open water, not on the ground
     decorations: [
       { kind: 'bubble', chance: 0.08 },
       { kind: 'vent', chance: 0.018 },

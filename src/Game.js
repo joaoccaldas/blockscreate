@@ -508,7 +508,10 @@ export class Game {
       if (m.mounted) { this._syncMountedCompanion(m); continue; }
       const target = this.mode === MODE.SURVIVAL ? this._mobTargetContext(m) : null;
       const hit = m.update(dt, this.world, target);
-      if (hit && this.player.alive) this._damagePlayer(hit.damage, `a ${m.type}`);
+      if (hit && this.player.alive) {
+        if (hit.sap) this._sapCell(hit.sap, m);   // phage drains stability, doesn't maul
+        else if (hit.damage) this._damagePlayer(hit.damage, `a ${m.type}`);
+      }
     }
     this._updateDinosaurPressure(dt);
     this._spawnMobs(dt);
@@ -1510,13 +1513,31 @@ export class Game {
     // Decide passive vs hostile. Hostiles come out at night (or any time in
     // eras flagged hostileDay), and only in Survival.
     const wantHostile = this.mode === MODE.SURVIVAL && theme.hostile.length &&
-      (!isDay || theme.hostileDay) && Math.random() < 0.6;
+      (!isDay || theme.hostileDay) && Math.random() < (theme.hostileChance ?? 0.6);
     const table = wantHostile ? theme.hostile : theme.passive;
     if (!table || !table.length) return;
     const type = weightedPick(table);
     if (!type || !MOB_TYPES[type]) return;
 
-    this.spawnMobNearPlayer(type);
+    if (theme.float) this._spawnFloatMob(type);
+    else this.spawnMobNearPlayer(type);
+  }
+
+  /** Spawn a floating microbe/phage in open water a short distance away. */
+  _spawnFloatMob(type) {
+    if (this.mobs.length >= 10) return false;
+    for (let tries = 0; tries < 8; tries++) {
+      const ang = Math.random() * Math.PI * 2;
+      const dist = 6 + Math.random() * 6;
+      const sx = Math.round(this.player.x + Math.cos(ang) * dist);
+      const sy = Math.round(this.player.y + Math.sin(ang) * dist);
+      if (!this.world.inBounds(sx, sy)) continue;
+      // Open water/empty tile (not inside solid rock).
+      if (isSolid(this.world.get(sx, sy))) continue;
+      this.mobs.push(new Mob(type, sx + 0.5, sy + 0.5));
+      return true;
+    }
+    return false;
   }
 
   spawnMobNearPlayer(type) {
@@ -1618,6 +1639,21 @@ export class Game {
     this.civ.pollution = Math.max(0, (this.civ.pollution || 0) + 0.15 * miners - 0.12 * windmills);
     this.civ.addCP(1.5 * miners);
     this.hud?.toast(`⚙️ Auto miner produced ${produced} ore`, 1500);
+  }
+
+  /**
+   * A phage nibble in the First Cell era: drains stability (and a little
+   * hunger) rather than dealing hard HP damage, so the origin era has stakes
+   * without being lethal. Repeated hits with no nutrients can still starve you.
+   */
+  _sapCell(amount, mob) {
+    this.cellStability = Math.max(0, (this.cellStability ?? 50) - amount);
+    this.player.hunger = Math.max(0, this.player.hunger - amount * 0.4);
+    this.audio?.play('hurt');
+    this.particles.burst(this.player.x, this.player.y - this.player.h / 2, '#c86bff', 6, { gravity: 2, life: 0.4 });
+    if (!this.reduceMotion) this.hud?.shake?.();
+    this.hud?.toast('🦠 A phage drains your membrane!', 1400);
+    void mob;
   }
 
   _damagePlayer(amount, cause = 'the wilds') {

@@ -12,6 +12,13 @@ import { C } from '../core/constants.js';
 import { isSolid } from '../core/blocks.js';
 
 export const MOB_TYPES = {
+  // ---- First Cell era (microscopic, float instead of fall) ----
+  // Passive drifter: harmless life that makes the primordial sea feel alive.
+  microbe: { sprite: 'microbe', w: 0.5, h: 0.5, hp: 3, hostile: false, float: true, color: '#8effd9' },
+  // Gentle predator: a phage that drifts toward the cell and saps stability on
+  // contact (handled in Game, not raw HP) — stakes without punishment.
+  phage: { sprite: 'phage', w: 0.6, h: 0.6, hp: 5, hostile: true, float: true, damage: 6, speed: 2.2, color: '#c86bff', drop: 'nutrient_blob', dropN: 1, cp: 3, saps: 'stability' },
+
   // ---- passive ----
   cow: { sprite: 'cow', food: 3, w: 1.1, h: 1.0, hp: 6, hostile: false },
   pig: { sprite: 'pig', food: 2, w: 1.0, h: 0.9, hp: 6, hostile: false },
@@ -66,6 +73,12 @@ export class Mob {
     if (this.hitFlash > 0) this.hitFlash -= dt;
     if (this.attackCd > 0) this.attackCd -= dt;
 
+    // Floating microscopic life (First Cell): drift in 2D, no gravity. Phages
+    // gently home in on the cell; microbes just bob around.
+    if (this.def.float) {
+      return this._floatUpdate(dt, world, target);
+    }
+
     if (this.mounted) {
       this.vx = 0;
       this.vy = 0;
@@ -106,6 +119,52 @@ export class Mob {
         if (this.type === 'rex' && target.fearExposed) damage *= 1.15;
         return { damage };
       }
+    }
+    return null;
+  }
+
+  /**
+   * 2D floating movement for microscopic life. Phages drift toward the cell;
+   * microbes meander. Returns a { sap } contact event for phages so the game
+   * can drain stability instead of dealing hard HP damage.
+   */
+  _floatUpdate(dt, world, target) {
+    this.timer -= dt;
+    if (this.timer <= 0) {
+      this.timer = 0.8 + Math.random() * 1.8;
+      // base gentle drift
+      this.vx = (Math.random() - 0.5) * 2;
+      this.vy = (Math.random() - 0.5) * 1.6;
+    }
+    // Phages home in on a nearby cell.
+    if (this.hostile && target) {
+      const dx = target.x - this.x;
+      const dy = (target.y - this.h / 2) - this.y;
+      const d = Math.hypot(dx, dy) || 1;
+      if (d < 13) {
+        const spd = this.def.speed || 2;
+        this.vx += (dx / d) * spd * dt * 4;
+        this.vy += (dy / d) * spd * dt * 4;
+      }
+      this.facing = Math.sign(this.vx) || this.facing;
+    }
+    // Damp + clamp so they glide, not rocket.
+    this.vx *= 1 - dt * 1.2;
+    this.vy *= 1 - dt * 1.2;
+    const maxV = 3;
+    this.vx = Math.max(-maxV, Math.min(maxV, this.vx));
+    this.vy = Math.max(-maxV, Math.min(maxV, this.vy));
+
+    const nx = this.x + this.vx * dt;
+    if (!this.collides(world, nx, this.y)) this.x = nx; else this.vx = -this.vx * 0.5;
+    const ny = this.y + this.vy * dt;
+    if (!this.collides(world, this.x, ny)) this.y = ny; else this.vy = -this.vy * 0.5;
+
+    // Contact "sap" event for phages.
+    if (this.hostile && target && this.attackCd <= 0 &&
+        Math.abs(this.x - target.x) < 0.8 && Math.abs((this.y) - (target.y - target.h / 2)) < 1.0) {
+      this.attackCd = 1.1;
+      return { sap: this.def.damage || 6 };
     }
     return null;
   }

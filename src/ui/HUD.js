@@ -61,6 +61,11 @@ export class HUD {
           <div class="civ-progress dino-progress"><div id="grazerBondBar" class="dino-fill"></div></div>
           <div id="dinoWarning" class="dino-warning"></div>
         </div>
+        <div id="industryPanel" class="industry-panel hidden">
+          <div class="civ-row"><span>🏭 Machine Parts</span><b id="industryParts">0</b></div>
+          <div id="industryChain" class="industry-chain"></div>
+          <div id="industryPollution" class="industry-poll"></div>
+        </div>
         <div class="civ-progress"><div id="advanceBar" class="advance-fill"></div></div>
         <div id="advanceLabel" class="advance-label"></div>
         <button id="advanceBtn" class="advance-btn hidden">Enter Portal</button>
@@ -343,6 +348,7 @@ export class HUD {
     this.el('eraStageBar').style.width = `${Math.round((stage.percent || 0) * 100)}%`;
     this.renderCellStatus(game);
     this.renderDinoStatus(game);
+    this.renderIndustryStatus(game);
     const status = game.advancementStatus?.() || {};
     this.el('masteryVal').textContent = `${status.masteryDone || 0}/${status.masteryTotal || 0}`;
     const prog = game.civ.advanceProgress();
@@ -428,6 +434,23 @@ export class HUD {
     const mount = status.companion ? ` · X/🐾 ${status.mounted ? 'dismount' : 'mount'}` : '';
     const cargo = status.cargo ? ` · V/📦 ${status.cargo.used}/${status.cargo.capacity}` : '';
     this.el('dinoWarning').textContent = `${status.warning || 'listen for movement'}${pack}${cmd}${mount}${cargo}`;
+  }
+
+  renderIndustryStatus(game) {
+    const panel = this.el('industryPanel');
+    const s = game.industryStatus;
+    const show = game.eraId === 'industrial' && s;
+    panel.classList.toggle('hidden', !show);
+    if (!show) return;
+    this.el('industryParts').textContent = s.parts;
+    // Show the live supply chain with machine counts feeding each stage.
+    this.el('industryChain').innerHTML =
+      `<span class="ic-node">⛏️${s.ore}<i>×${s.miners}</i></span><span class="ic-arrow">→</span>` +
+      `<span class="ic-node">🔥${s.steel}<i>×${s.smelters}</i></span><span class="ic-arrow">→</span>` +
+      `<span class="ic-node">🛠️${s.parts}<i>×${s.factories}</i></span>`;
+    const poll = this.el('industryPollution');
+    poll.textContent = `🌫️ Smog ${s.pollution}${s.windmills ? ` · 🌬️×${s.windmills}` : ''}`;
+    poll.classList.toggle('poll-high', s.pollution >= 10);
   }
 
   renderObjectives(game) {

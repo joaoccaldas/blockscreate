@@ -341,6 +341,13 @@ html, body {
 .dino-progress { background: rgba(111, 192, 78, 0.12); }
 .dino-fill { height: 100%; background: linear-gradient(90deg, #6fc04e, #f4d24a); width: 0; transition: width 0.3s; }
 .dino-warning { color: #f7d07a; font-size: 0.7rem; line-height: 1.2; }
+.industry-panel { margin: 6px 0; padding-top: 5px; border-top: 1px solid rgba(138, 150, 162, 0.28); }
+.industry-chain { display: flex; align-items: center; gap: 3px; font-size: 0.74rem; color: #dfe6ff; margin: 3px 0; flex-wrap: wrap; }
+.industry-chain .ic-node { background: rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 1px 5px; }
+.industry-chain .ic-node i { color: #8fd0ff; font-style: normal; font-size: 0.62rem; margin-left: 1px; }
+.industry-chain .ic-arrow { color: #8a96a2; }
+.industry-poll { color: #b9c2cf; font-size: 0.7rem; }
+.industry-poll.poll-high { color: #ff8a6b; font-weight: bold; }
 .advance-label { color: var(--muted); font-size: 0.74rem; }
 .advance-btn {
   width: 100%;

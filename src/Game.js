@@ -138,6 +138,7 @@ export class Game {
         'thatch', 'brick', 'torch', 'campfire', 'clay', 'gravel',
         'farm_plot', 'wheat_seeds', 'wheat_seedling', 'wheat_green', 'wheat_ripe',
         'granary', 'market', 'caravan_post', 'gate', 'road', 'auto_miner', 'windmill', 'build_site',
+        'smelter', 'factory',
         'coal_ore', 'copper_ore', 'tin_ore', 'iron_ore', 'gold_ore']
         .forEach((id) => this.inventory.add(id, 99));
     } else if (this.eraId !== 'cell') {
@@ -1875,21 +1876,83 @@ export class Game {
     }
   }
 
+  /**
+   * Industrial automation as a real supply chain:
+   *   auto miner → ore → smelter → steel → factory → machine parts.
+   * Each stage consumes the previous good from the town stock, emits pollution,
+   * and pays CP that scales up the chain — so the late game is an automation
+   * power-fantasy where stacking machines compounds your output. Windmills scrub
+   * the pollution all of this produces.
+   */
   _updateAutomation(dt) {
     const miners = this.civ?.placed?.auto_miner || 0;
     const windmills = this.civ?.placed?.windmill || 0;
-    if (this.mode !== MODE.SURVIVAL || (!miners && !windmills)) return;
+    const smelters = this.civ?.placed?.smelter || 0;
+    const factories = this.civ?.placed?.factory || 0;
+    if (this.mode !== MODE.SURVIVAL || (!miners && !windmills && !smelters && !factories)) {
+      this.industryStatus = null;
+      return;
+    }
+    if (this.settlers && !this.settlers.stock) this.settlers.stock = {};
+    const stock = this.settlers?.stock || {};
+
+    // Windmills continuously scrub the pollution the chain produces.
     if (windmills) this.civ.pollution = Math.max(0, (this.civ.pollution || 0) - dt * 0.025 * windmills);
-    if (!miners) return;
-    this._autoMineTimer = (this._autoMineTimer || 0) + dt;
-    if (this._autoMineTimer < 10) return;
-    this._autoMineTimer = 0;
-    const produced = Math.max(1, miners);
-    if (this.settlers?.stock) this.settlers.stock.ore = (this.settlers.stock.ore || 0) + produced;
-    else this.inventory.add('coal', produced);
-    this.civ.pollution = Math.max(0, (this.civ.pollution || 0) + 0.15 * miners - 0.12 * windmills);
-    this.civ.addCP(1.5 * miners);
-    this.hud?.toast(`⚙️ Auto miner produced ${produced} ore`, 1500);
+
+    // Stage 1 — auto miners dig ore every 10s.
+    if (miners) {
+      this._autoMineTimer = (this._autoMineTimer || 0) + dt;
+      if (this._autoMineTimer >= 10) {
+        this._autoMineTimer = 0;
+        const produced = Math.max(1, miners);
+        stock.ore = (stock.ore || 0) + produced;
+        this.civ.pollution = Math.max(0, (this.civ.pollution || 0) + 0.15 * miners - 0.12 * windmills);
+        this.civ.addCP(1.5 * miners);
+        this.hud?.toast(`⚙️ Auto miner produced ${produced} ore`, 1500);
+      }
+    }
+
+    // Stage 2 — smelters refine 2 ore → 1 steel every 8s.
+    if (smelters) {
+      this._smeltTimer = (this._smeltTimer || 0) + dt;
+      if (this._smeltTimer >= 8) {
+        this._smeltTimer = 0;
+        let made = 0;
+        for (let i = 0; i < smelters; i++) {
+          if ((stock.ore || 0) >= 2) { stock.ore -= 2; stock.steel = (stock.steel || 0) + 1; made++; }
+        }
+        if (made) {
+          this.civ.pollution = Math.max(0, (this.civ.pollution || 0) + 0.2 * made - 0.12 * windmills);
+          this.civ.addCP(3 * made);
+          this.hud?.toast(`🔥 Smelter forged ${made} steel`, 1500);
+        }
+      }
+    }
+
+    // Stage 3 — factories assemble 2 steel → 1 machine part every 9s (the payoff).
+    if (factories) {
+      this._factoryTimer = (this._factoryTimer || 0) + dt;
+      if (this._factoryTimer >= 9) {
+        this._factoryTimer = 0;
+        let made = 0;
+        for (let i = 0; i < factories; i++) {
+          if ((stock.steel || 0) >= 2) { stock.steel -= 2; stock.machine_part = (stock.machine_part || 0) + 1; made++; }
+        }
+        if (made) {
+          this.civ.pollution = Math.max(0, (this.civ.pollution || 0) + 0.25 * made - 0.12 * windmills);
+          this.civ.addCP(8 * made);
+          this.hud?.toast(`🏭 Factory built ${made} machine part${made > 1 ? 's' : ''} (+${8 * made} CP)`, 1800);
+        }
+      }
+    }
+
+    this.industryStatus = {
+      miners, smelters, factories, windmills,
+      ore: Math.round(stock.ore || 0),
+      steel: Math.round(stock.steel || 0),
+      parts: Math.round(stock.machine_part || 0),
+      pollution: Math.round((this.civ.pollution || 0) * 10) / 10,
+    };
   }
 
   /**

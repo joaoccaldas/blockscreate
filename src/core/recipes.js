@@ -51,6 +51,12 @@ export const RECIPES = [
   // --- Industrial Age ---
   { id: 'auto_miner',    era: 'industrial', out: { id: 'auto_miner', n: 1 }, in: { iron: 4, coal: 4, gold: 1 } },
   { id: 'windmill',      era: 'industrial', out: { id: 'windmill', n: 1 }, in: { planks: 8, iron: 2, fiber: 3 } },
+  // Production chain: smelt ore into steel, forge steel into machine parts. The
+  // machines automate this, but the recipes let you craft by hand at a station.
+  { id: 'smelter',       era: 'industrial', out: { id: 'smelter', n: 1 }, in: { iron: 4, brick: 4, coal: 2 } },
+  { id: 'steel',         era: 'industrial', out: { id: 'steel', n: 1 }, in: { iron: 2, coal: 2 }, station: 'smelter' },
+  { id: 'factory',       era: 'industrial', out: { id: 'factory', n: 1 }, in: { iron: 6, steel: 2, planks: 6 } },
+  { id: 'machine_part',  era: 'industrial', out: { id: 'machine_part', n: 1 }, in: { steel: 2, gold: 1 }, station: 'factory' },
 ];
 
 /** Recipes available given the set of unlocked era ids. */

@@ -87,6 +87,11 @@ const defs = [
   { id: 41, name: 'caravan_post', label: 'Caravan Post', solid: true,  hardness: 0.9, tool: 'axe',     colors: { base: '#7a5230', top: '#e5c15a', side: '#4e341d' }, era: 'bronze' },
   { id: 42, name: 'windmill',     label: 'Windmill',     solid: true,  hardness: 1.6, tool: 'axe',     colors: { base: '#d9cfb7', top: '#f5e8c8', side: '#8f7d5d' }, era: 'industrial', light: 0.1 },
   { id: 43, name: 'build_site',   label: 'Build Site',   solid: false, hardness: 0.2, tool: 'hand',    colors: { base: '#f4d24a', top: '#fff0a0', side: '#a88931' }, era: 'bronze', light: 0.1 },
+
+  // Industrial production chain: smelter turns town ore into steel; the factory
+  // turns steel into finished machine parts (see Game._updateAutomation).
+  { id: 44, name: 'smelter',  label: 'Smelter', solid: true, hardness: 2.6, tool: 'pickaxe', minTier: 2, colors: { base: '#5a4a44', top: '#7a655c', side: '#3c302c' }, era: 'industrial', light: 0.5 },
+  { id: 45, name: 'factory',  label: 'Factory', solid: true, hardness: 2.8, tool: 'pickaxe', minTier: 2, colors: { base: '#586068', top: '#8a96a2', side: '#383e44' }, era: 'industrial', light: 0.3 },
 ];
 
 // fix accidental typo above without breaking the table layout

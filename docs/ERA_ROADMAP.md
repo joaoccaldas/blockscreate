@@ -131,9 +131,21 @@ identity and an automation power-fantasy, mirroring how Iron got defense depth.
 | Auto Miner automation block | ✅ |
 | Pollution tradeoff system | ✅ first pass |
 | Windmill clean-power block | ✅ |
+| **Production chain: ore → smelter → steel → factory → machine parts** | ✅ |
+| **Chain objective ladder + live HUD industry panel** | ✅ |
 
-**Next & why:** add a second production chain (factory/workshop/rail) so clean
-power matters as part of an automation network, not just a pollution reducer.
+The final era now has its own identity: a real **automation supply chain**. Auto
+miners dig ore, smelters refine 2 ore → steel, factories assemble 2 steel →
+machine parts — each stage emits pollution (windmills scrub it) and pays CP that
+scales up the chain, so stacking machines compounds output. Steel and machine
+parts are also hand-craftable at the smelter/factory stations. A live HUD panel
+shows the `⛏️→🔥→🛠️` chain with per-stage machine counts and smog level, and a
+five-step objective ladder (miner → smelter → steel → factory → parts, plus
+mass-production & low-smog mastery) guides the build-out.
+
+**Next & why:** add rails/conveyors or a power grid so factories must be *fed*
+(spatial logistics), turning the chain into a layout puzzle rather than a pure
+stat tick.
 
 ---
 

@@ -277,6 +277,37 @@ gInd._updateAutomation(1);
 if (!(gInd.civ.pollution < pollutionAfterMine)) throw new Error('windmill did not reduce pollution over time');
 ok('Industrial auto miner produces ore while windmills clean pollution');
 
+// Production chain: ore → smelter → steel → factory → machine parts.
+gInd.civ.onBuild('smelter');
+gInd.civ.onBuild('factory');
+gInd.settlers.stock.ore = 10;
+const steelBefore = gInd.settlers.stock.steel || 0;
+gInd._smeltTimer = 8;
+gInd._updateAutomation(0.1);
+if (!((gInd.settlers.stock.steel || 0) > steelBefore)) throw new Error('smelter did not refine ore into steel');
+if ((gInd.settlers.stock.ore || 0) !== 8) throw new Error('smelter did not consume 2 ore per steel');
+gInd.settlers.stock.steel = 6;
+const cpBeforeParts = gInd.civ.cp;
+const partsBefore = gInd.settlers.stock.machine_part || 0;
+gInd._factoryTimer = 9;
+gInd._updateAutomation(0.1);
+if (!((gInd.settlers.stock.machine_part || 0) > partsBefore)) throw new Error('factory did not assemble machine parts');
+if (!(gInd.civ.cp > cpBeforeParts)) throw new Error('factory output did not pay CP');
+if (!gInd.industryStatus || gInd.industryStatus.factories !== 1) throw new Error('industry status not exposed for HUD');
+ok('Industrial chain: ore → steel → machine parts, each stage paying CP');
+
+// The full objective chain is mandatory and completes from the chain outputs.
+const indObjIds = gInd.objectives.list.map((o) => o.id);
+for (const id of ['build_miner', 'build_smelter', 'forge_steel', 'build_factory', 'make_parts'])
+  if (!indObjIds.includes(id)) throw new Error(`industrial objective ${id} missing`);
+gInd.settlers.stock.steel = 5;
+gInd.settlers.stock.machine_part = 4;
+const indDone = gInd.objectives.evaluate(gInd).map((o) => o.id);
+if (!indDone.includes('build_smelter') || !indDone.includes('forge_steel') || !indDone.includes('make_parts'))
+  throw new Error(`industrial chain objectives did not complete: ${JSON.stringify(indDone)}`);
+gInd.update(0.016); // exercise the industrial HUD panel render path
+ok('Industrial objective chain completes from automated production');
+
 // Asteroid event: a meteor impact carves a crater and hurts a nearby player.
 const g3 = newGame();
 g3.newWorld('stone', MODE.SURVIVAL);

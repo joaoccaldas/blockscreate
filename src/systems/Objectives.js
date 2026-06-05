@@ -58,9 +58,13 @@ export const OBJECTIVES = {
     { id: 'advance',      kind: 'portal',    icon: '🌀', label: 'Open the Industrial portal',        reward: 0,  check: (g) => g.canAdvance() },
   ],
   industrial: [
-    { id: 'build_miner',  kind: 'mandatory', icon: '⚙️', label: 'Build an Auto Miner',               reward: 40, check: (g) => g.civ.hasBuilt('auto_miner') },
-    { id: 'stock_ore',    kind: 'mandatory', icon: '⛏️', label: 'Automate ore stock',                reward: 35, check: (g) => (g.settlers?.stock?.ore || 0) >= 3 },
-    { id: 'pollution',    kind: 'mastery',   icon: '🌫️', label: 'Mastery: keep pollution below 8',   reward: 35, check: (g) => g.civ.hasBuilt('auto_miner') && (g.civ.pollution || 0) < 8 },
+    { id: 'build_miner',   kind: 'mandatory', icon: '⚙️', label: 'Build an Auto Miner',                 reward: 40, check: (g) => g.civ.hasBuilt('auto_miner') },
+    { id: 'build_smelter', kind: 'mandatory', icon: '🔥', label: 'Build a Smelter',                      reward: 45, check: (g) => g.civ.hasBuilt('smelter') },
+    { id: 'forge_steel',   kind: 'mandatory', icon: '🔩', label: 'Produce 3 steel',                      reward: 45, check: (g) => ((g.settlers?.stock?.steel || 0) + g.inventory.count('steel')) >= 3 },
+    { id: 'build_factory', kind: 'mandatory', icon: '🏭', label: 'Build a Factory',                      reward: 60, check: (g) => g.civ.hasBuilt('factory') },
+    { id: 'make_parts',    kind: 'mandatory', icon: '🛠️', label: 'Manufacture 2 machine parts',         reward: 70, check: (g) => ((g.settlers?.stock?.machine_part || 0) + g.inventory.count('machine_part')) >= 2 },
+    { id: 'mass_produce',  kind: 'mastery',   icon: '📦', label: 'Mastery: stockpile 10 machine parts',  reward: 60, check: (g) => ((g.settlers?.stock?.machine_part || 0) + g.inventory.count('machine_part')) >= 10 },
+    { id: 'pollution',     kind: 'mastery',   icon: '🌫️', label: 'Mastery: keep a factory under 10 smog', reward: 50, check: (g) => g.civ.hasBuilt('factory') && (g.civ.pollution || 0) < 10 },
   ],
 };
 

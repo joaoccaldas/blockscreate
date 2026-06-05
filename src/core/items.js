@@ -44,6 +44,8 @@ const materials = [
   ['trade_bead', 'Trade Bead', '#4f86ee'],
   ['alpha_tooth', 'Alpha Tooth', '#eee3c5'],
   ['clay', 'Clay', '#9a8d7a'],
+  ['steel', 'Steel Beam', '#8a96a2'],
+  ['machine_part', 'Machine Part', '#c8a24a'],
 ];
 for (const [id, label, color] of materials) {
   add({ id, label, kind: 'material', colors: { base: color, top: color, side: color } });

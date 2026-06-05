@@ -308,6 +308,19 @@ html, body {
   border-radius: 8px;
   font-weight: bold;
 }
+/* Reality-divergence glyph: faint and easy to miss until it escalates. */
+.timeline-glyph {
+  font-size: 1rem;
+  opacity: 0.5;
+  color: #b8a8ff;
+  text-shadow: 0 0 6px rgba(142, 107, 214, 0.6);
+  cursor: help;
+  transition: opacity 0.4s;
+}
+.timeline-glyph.tl-2 { opacity: 0.8; color: #c8b6ff; animation: tlPulse 3.2s ease-in-out infinite; }
+.timeline-glyph.tl-3 { opacity: 0.95; color: #e0c6ff; animation: tlPulse 1.8s ease-in-out infinite; }
+@keyframes tlPulse { 0%, 100% { text-shadow: 0 0 5px rgba(142, 107, 214, 0.4); } 50% { text-shadow: 0 0 12px rgba(178, 136, 255, 0.9); } }
+.reduce-motion .timeline-glyph { animation: none; }
 
 .civ-panel {
   position: absolute;

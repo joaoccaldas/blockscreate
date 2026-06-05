@@ -38,6 +38,7 @@ export class HUD {
         <div class="stat"><span id="healthIcon" class="stat-label">❤️</span><div class="bar"><div id="healthBar" class="bar-fill health"></div></div></div>
         <div class="stat"><span id="hungerIcon" class="stat-label">🍖</span><div class="bar"><div id="hungerBar" class="bar-fill hunger"></div></div></div>
         <div id="eraBadge" class="era-badge"></div>
+        <span id="timelineGlyph" class="timeline-glyph hidden" aria-hidden="true"></span>
       </div>
 
       <div id="civPanel" class="civ-panel">
@@ -329,6 +330,7 @@ export class HUD {
     const era = getEra(game.eraId);
     this.el('eraBadge').textContent = `${era.icon} ${era.name}${survival ? '' : ' · Creative'}`;
     this.el('eraStory').textContent = era.manifest?.subtitle || era.blurb;
+    this.renderTimeline(game);
 
     const settlers = game.settlers?.count?.() || 0;
     const popEl = this.el('popVal');
@@ -435,6 +437,24 @@ export class HUD {
     const mount = status.companion ? ` · X/🐾 ${status.mounted ? 'dismount' : 'mount'}` : '';
     const cargo = status.cargo ? ` · V/📦 ${status.cargo.used}/${status.cargo.capacity}` : '';
     this.el('dinoWarning').textContent = `${status.warning || 'listen for movement'}${pack}${cmd}${mount}${cargo}`;
+  }
+
+  // A deliberately cryptic indicator that only surfaces once reality has begun
+  // to branch — subtle at first (✷), eerier as divergence climbs (⌁ → 🌀).
+  renderTimeline(game) {
+    const el = this.el('timelineGlyph');
+    const tl = game.timeline;
+    const stage = tl?.stage || 0;
+    el.classList.toggle('hidden', !(game.mode === MODE.SURVIVAL && stage > 0));
+    if (!(game.mode === MODE.SURVIVAL && stage > 0)) return;
+    const glyph = ['', '✷', '⌁', '🌀'][stage];
+    el.textContent = glyph;
+    el.classList.toggle('tl-2', stage === 2);
+    el.classList.toggle('tl-3', stage >= 3);
+    const diverged = tl.divergedCount?.() || 0;
+    el.title = `Reality divergence ${tl.divergence.toFixed(1)}`
+      + (diverged ? ` · ${diverged} branch${diverged > 1 ? 'es' : ''} taken` : '')
+      + (tl.crossovers ? ` · ${tl.crossovers} crossover${tl.crossovers > 1 ? 's' : ''}` : '');
   }
 
   renderIndustryStatus(game) {

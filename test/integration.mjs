@@ -204,7 +204,7 @@ g.mode = MODE.SURVIVAL;
 const json = SaveManager.toJSON(g);
 if (!('objectives' in json) || !('crafted' in json)) throw new Error('save missing new fields');
 if (!('eraStage' in json)) throw new Error('save missing era stage');
-for (const key of ['structures', 'discoveries', 'clues', 'powerups', 'events', 'anomalies', 'guidance']) {
+for (const key of ['structures', 'discoveries', 'clues', 'powerups', 'events', 'anomalies', 'timeline', 'guidance']) {
   if (!(key in json)) throw new Error(`save missing ${key}`);
 }
 if (!json.world.chunks?.generated?.length) throw new Error('save missing generated chunk metadata');
@@ -229,6 +229,7 @@ if (!g2.objectives.isDone('gather_wood')) throw new Error('objective state lost 
 if (g2.eraStage !== g.eraStage) throw new Error('era stage lost across save');
 if (!g2.anomalies.has('checksum_echo')) throw new Error('anomaly state lost across save');
 if (!g2.guidance.seen.has('artifact_hunt')) throw new Error('guidance state lost across save');
+if (typeof g2.timeline?.divergence !== 'number') throw new Error('timeline state lost across save');
 if (!g2.structures || !g2.discoveries || !g2.clues || !g2.powerups || !g2.events || !g2.anomalies || !g2.guidance) throw new Error('fun systems missing after load');
 ok(`save/load round-trip; era ${g2.eraId}, objectives + fun systems restored`);
 
@@ -378,6 +379,22 @@ if (gPow.industryStatus.powerOverloaded) throw new Error('an adequately powered 
 const powObj = gPow.objectives.list.find((o) => o.id === 'powered');
 if (!powObj || !powObj.check(gPow)) throw new Error('power objective did not complete for a powered machine');
 ok('Power grid energizes machines and reports overload (energy layer)');
+
+// Timeline: special events record branches, divergence escalates, and a bleed is
+// staged in-game once divergence is high enough (a rift pays a CP windfall).
+const gTl = newGame();
+gTl.newWorld('stone', MODE.SURVIVAL);
+const branch = gTl.timeline.branchEvent('meteor_shower', 'stone');
+if (branch.variant !== 0) throw new Error('a fresh timeline should resolve prime, not branch');
+if (!(gTl.timeline.divergence > 0)) throw new Error('branching an event did not accumulate divergence');
+// Force a rift and verify the game stages it (CP windfall + crossover counted).
+gTl.timeline.divergence = 5; gTl.timeline.cooldown = 0;
+gTl.timeline._rng = (() => { let i = 0; const q = [0.0, 0.1]; return () => (i < q.length ? q[i++] : 0.5); })();
+const cpBeforeRift = gTl.civ.cp;
+gTl._updateTimeline(1);
+if (!(gTl.civ.cp > cpBeforeRift)) throw new Error('rift crossover did not pay its windfall');
+if (gTl.timeline.crossovers !== 1) throw new Error('crossover was not recorded');
+ok('Timeline branches events and stages reality crossovers (multiverse layer)');
 
 // Asteroid event: a meteor impact carves a crater and hurts a nearby player.
 const g3 = newGame();

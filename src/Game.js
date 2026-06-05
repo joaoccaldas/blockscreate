@@ -17,6 +17,7 @@ import { StructureTracker } from './systems/Structures.js';
 import { PowerupManager } from './systems/Powerups.js';
 import { WorldEventLog } from './systems/WorldEvents.js';
 import { SimulationAnomalyLog } from './systems/SimulationAnomalies.js';
+import { Timeline, DIVERGENCE } from './systems/Timeline.js';
 import { GuidanceHints } from './systems/GuidanceHints.js';
 import { SettlerManager } from './systems/Settlers.js';
 import { IndustryNetwork } from './systems/IndustryNetwork.js';
@@ -93,6 +94,7 @@ export class Game {
     this.powerups = new PowerupManager();
     this.events = new WorldEventLog();
     this.anomalies = new SimulationAnomalyLog();
+    this.timeline = new Timeline();
     this.guidance = new GuidanceHints();
     this.settlers = new SettlerManager();
     this.mobs = [];
@@ -122,6 +124,7 @@ export class Game {
     this.powerups = new PowerupManager(save.powerups || []);
     this.events = new WorldEventLog(save.events || {});
     this.anomalies = new SimulationAnomalyLog(save.anomalies || {});
+    this.timeline = new Timeline(save.timeline || {});
     this.guidance = new GuidanceHints(save.guidance || {});
     this.settlers = new SettlerManager(save.settlers || null);
     this.mobs = (save.mobs || []).map((m) => Mob.load(m));
@@ -574,6 +577,7 @@ export class Game {
 
     this._evaluateFunSystems(dt);
     this._updateSimulationAnomalies(dt);
+    this._updateTimeline(dt);
     this._updateGuidanceHints(dt);
 
     // Era advancement.
@@ -581,6 +585,7 @@ export class Game {
       const nxt = nextEra(this.eraId);
       if (nxt && this.unlocked.unlock(nxt.id)) {
         this.audio?.play('unlock');
+        this.timeline?.note(0.5); // a leap between ages widens the possibility space
         this.particles.fountain(this.player.x, this.player.y - 1,
           ['#f4d24a', '#6fc04e', '#4f86ee', '#ff7b29', '#fff'], 40);
         this.hud.bigToast(`🌀 <b>${nxt.name}</b> portal unlocked!<br><small>Now playable in Creative too.</small>`);
@@ -660,7 +665,16 @@ export class Game {
     const started = this.events.update(this, dt);
     for (const e of started) {
       this.audio?.play('unlock');
-      this.hud?.toast(`${e.icon} ${e.label}: ${e.text}`, 3000);
+      // Every special event resolves into a branch of the timeline. Early on the
+      // split width is 1 (nothing changes); as divergence grows the same event
+      // can land on an alternate outcome, marked with a subtle glyph.
+      const branch = this.mode === MODE.SURVIVAL && this.timeline
+        ? this.timeline.branchEvent(e.id, this.eraId)
+        : { diverged: false, variant: 0 };
+      const tag = branch.diverged ? ` ✷ <small>variant ${branch.variant}</small>` : '';
+      this.hud?.toast(`${e.icon} ${e.label}: ${e.text}${tag}`, 3000);
+      // Alternate branches pay a small "echo" — a hint that other outcomes exist.
+      if (branch.diverged) this.civ.addCP(4 * this.powerups.multiplier('cpMultiplier'));
     }
     this._applyHazards(dt);
   }
@@ -1247,6 +1261,7 @@ export class Game {
     if (!this.anomalies || !this.clues) return;
     const found = this.anomalies.update(dt, this);
     for (const a of found) {
+      this.timeline?.note(0.3); // each anomaly destabilizes the timeline a little
       const clue = this.clues.discover(a.clue);
       if (clue?.reward && this.mode === MODE.SURVIVAL) {
         this.civ.addCP(clue.reward * this.powerups.multiplier('cpMultiplier'));
@@ -1255,6 +1270,39 @@ export class Game {
       this.particles.fountain(this.player.x, this.player.y - 1,
         ['#f4d24a', '#8e6bd6', '#7be4ff', '#fff'], 34);
       this.hud?.bigToast(`${a.icon} <b>${a.label}</b><br><small>${a.text}</small>`, 4200);
+    }
+  }
+
+  /**
+   * Stage a reality bleed when the timeline decides one occurs. The Timeline
+   * system owns the *decision*; the Game owns the *presentation* (particles,
+   * toast, and a small cross-branch reward). Two flavors:
+   *   glitch — an unintended "bug in the matrix"; eerie, a faint resource echo.
+   *   rift   — a deliberate crossover; a real windfall pulled from another thread.
+   */
+  _updateTimeline(dt) {
+    if (this.mode !== MODE.SURVIVAL || !this.timeline) return;
+    const bleed = this.timeline.update(dt);
+    if (!bleed) return;
+    const px = this.player.x;
+    const py = this.player.y - 1;
+    if (bleed.kind === 'rift') {
+      this.audio?.play('unlock');
+      this.particles.fountain(px, py, ['#b388ff', '#7be4ff', '#fff', '#ff7be4'], 46);
+      const windfall = Math.round(40 * this.powerups.multiplier('cpMultiplier'));
+      this.civ.addCP(windfall);
+      this.hud?.bigToast(
+        `🌀 <b>Rift Crossover</b><br><small>${bleed.first ? 'A parallel thread opens. ' : ''}You pull +${windfall} CP across realities.</small>`,
+        4200,
+      );
+    } else {
+      this.audio?.play('mine');
+      this.particles.fountain(px, py, ['#8e6bd6', '#7be4ff', '#cfd0ff'], 22);
+      this.civ.addCP(8 * this.powerups.multiplier('cpMultiplier'));
+      this.hud?.bigToast(
+        `⌁ <b>Glitch in the Matrix</b><br><small>${bleed.first ? 'Two timelines overlap for a heartbeat. ' : 'Reality stutters. '}An echo bleeds through.</small>`,
+        3600,
+      );
     }
   }
 

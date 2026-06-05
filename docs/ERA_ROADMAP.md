@@ -177,6 +177,7 @@ See "What's next" discussion below.
 | Intra-era progression | ✅ 3-stage era evolution with HUD progress and animated stage-up moments | richer per-era stage names/rewards |
 | Settlers / population | ✅ roles + economy; builders raise village blocks and complete planned build sites; gatherers seek + harvest trees/ore; farmers tend visible crop plots | richer pathing; recognizable house plans |
 | Journal (clues/discoveries/branches) | ✅ | per-era lore pages |
+| **Branching realities (multiverse)** | ✅ framework — see below | tangible bleeds (glitch tiles, doppelgängers), enterable rifts, branch-tree screen |
 | Save/persistence (+ chunk metadata) | ✅ | true chunk streaming |
 | Audio | ✅ SFX + ambient | per-era music themes |
 | Accessibility | ✅ reduce-motion, focus, landing settings | colorblind palette, font scale |
@@ -188,3 +189,29 @@ chosen to strengthen that era's *distinct identity* (cell = learn, dinosaurs =
 survive, bronze = sustain, iron = defend, industrial = automate) rather than
 adding generic content — so advancing an era always feels like a new kind of
 play, not just new textures.
+
+---
+
+## 🌌 Branching realities (the multiverse layer)
+A slow-burn meta-system that spans every era. The player steers one thread of a
+larger possibility space, and a hidden **divergence** meter climbs as they play
+(every world event +0.15, era leap +0.5, anomaly +0.3).
+
+- **Subtle → escalating.** Below 1.0 nothing shows; events resolve one way. At
+  1.0 events start to *split* and can land on an alternate branch (a faint ✷
+  glyph + small CP "echo"). At 2.5 reality begins to **bleed** — a "bug in the
+  matrix" **glitch**. At 4.0 deliberate **rift** crossovers open and pay a real
+  windfall pulled from a parallel thread, and events split three ways.
+- **Modular & testable.** `systems/Timeline.js` is pure logic with an injected
+  RNG — it decides *whether* and *what kind* of bleed; the Game stages the
+  presentation (particles/toast/reward). No DOM, no world mutation, fully
+  serialized into saves. Covered by `test/timeline.mjs` (7) + integration.
+- **HUD.** A deliberately cryptic glyph by the era badge (✷ → ⌁ → 🌀) that only
+  appears once reality has begun to branch, with divergence/branch/crossover
+  detail on hover.
+
+**Next & why:** make the bleeds *tangible* — glitches that drop an out-of-era
+tile or a doppelgänger mob, **enterable rifts** that take you to a short parallel
+slice for loot, and a **branch-tree journal screen** so players can see the
+shape of the timeline they've carved. The framework + save format are already in
+place for these to slot on top.

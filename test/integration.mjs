@@ -95,6 +95,13 @@ gCell.civ.onBuild('lipid_membrane');
 gCell.civ.onBuild('lipid_membrane');
 gCell.crafted.add('proto_cell');
 gCell.civ.cp = 80;
+// Drive stability up so the cell visibly evolves through its stages.
+for (let i = 0; i < 30; i++) gCell.update(0.05);
+if (gCell.cellStatus.stage == null) throw new Error('cell status missing evolution stage');
+if (gCell.player.cellStage !== gCell.cellStatus.stage) throw new Error('player cellStage out of sync with status');
+if (!(gCell.cellStatus.stage >= 1)) throw new Error(`a stabilized cell did not evolve past stage 0 (stability ${gCell.cellStatus.stability})`);
+if (!gCell.cellStatus.stageName) throw new Error('cell status missing stage name');
+ok(`first-cell visibly evolves (stage ${gCell.cellStatus.stage}: ${gCell.cellStatus.stageName})`);
 gCell.update(0.016);
 if (!gCell.canAdvance()) throw new Error('cell era did not unlock evolution after mandatory goals');
 if (!gCell._advanceEra() || gCell.eraId !== 'stone') throw new Error('cell era did not evolve into dinosaurs');

@@ -19,7 +19,17 @@ The tutorial-era: teaches interaction with the fewest systems.
 | Stability + gradient guidance HUD | ✅ |
 | Craft membrane → proto-cell → evolve | ✅ |
 | Era-aware mobile swim controls + guidance banner | ✅ |
-| Microbe predators / drift hazards | ⬜ |
+| Microbe predators / drift hazards | ✅ |
+| **Cell visibly evolves: nucleus → organelles → flagellum → complete** | ✅ |
+| **Primordial-sea backdrop (no sky/clouds) + microscope mood** | ✅ |
+| **Stage-up celebrations + evolution pip track in the HUD** | ✅ |
+
+The first age now *shows* progress instead of only reporting a number. The cell
+is drawn procedurally and grows new structure as stability rises — a bare
+protocell gains a nucleus, then energy organelles, then a whipping flagellum,
+then a complete-cell glow ready to evolve. The scene is a deep-water microscope
+field (light shafts, marine snow, lens vignette) rather than a daytime sky, and
+each new organelle fires a toast + sparkle so the player feels the transformation.
 
 **Next & why:** add a gentle microbe threat (something that chases the cell) so
 survival has stakes before the dinosaur era. Keep it forgiving — this era's job

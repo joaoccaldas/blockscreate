@@ -71,8 +71,14 @@ export class Renderer {
     const era = getEra(world.eraId);
 
     ctx.clearRect(0, 0, W, H);
-    this.drawSky(era, dayFactor, camera, W, H);
-    if (world.eraId === 'cell') this.drawMicroscopeField(camera, W, H);
+    if (world.eraId === 'cell') {
+      // The First Cell isn't outdoors — it's primordial sea seen through a lens.
+      // Skip the sun/cloud sky entirely for a deep-water microscope mood.
+      this.drawCellBackdrop(camera, W, H);
+      this.drawMicroscopeField(camera, W, H);
+    } else {
+      this.drawSky(era, dayFactor, camera, W, H);
+    }
 
     // Visible tile range.
     const x0 = Math.floor(camera.x - camera.tilesX / 2) - 1;
@@ -184,6 +190,63 @@ export class Renderer {
     ctx.arc(x + r * 0.4, y + 4, r * 0.38, 0, Math.PI * 2);
     ctx.arc(x - r * 0.4, y + 4, r * 0.34, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  /**
+   * Primordial-sea backdrop for the First Cell era: a deep teal water gradient,
+   * soft light shafts from the surface, drifting out-of-focus debris, and a
+   * microscope vignette — so the first age reads as warm, alive ocean chemistry
+   * rather than a daytime sky.
+   */
+  drawCellBackdrop(camera, W, H) {
+    const ctx = this.ctx;
+    // Deep-water vertical gradient (lighter near the "surface" up top).
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#10565a');
+    g.addColorStop(0.45, '#0c3a40');
+    g.addColorStop(1, '#06222a');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // Light shafts slanting down from the surface.
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    for (let i = 0; i < 5; i++) {
+      const base = (i * 0.21 + 0.05);
+      const x = ((base * W - camera.x * 8) % (W + 240)) - 120 + Math.sin(this.t * 0.2 + i) * 20;
+      ctx.globalAlpha = 0.05 + (i % 2) * 0.03;
+      ctx.fillStyle = '#a8ffe8';
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + 70, 0);
+      ctx.lineTo(x + 70 - 120, H);
+      ctx.lineTo(x - 120, H);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Out-of-focus drifting debris (marine snow) for depth.
+    ctx.save();
+    for (let i = 0; i < 14; i++) {
+      const depth = 0.3 + (i % 4) * 0.2;
+      const dx = (((hash(i, 31) * W) - camera.x * 12 * depth + this.t * (3 + i % 4)) % (W + 100)) - 50;
+      const dy = (((hash(i, 32) * H) - camera.y * 7 * depth + Math.sin(this.t * 0.5 + i) * 12) % (H + 80)) - 40;
+      const r = 8 + hash(i, 33) * 26;
+      ctx.globalAlpha = 0.04 + hash(i, 34) * 0.05;
+      ctx.fillStyle = '#bdfff0';
+      ctx.beginPath();
+      ctx.arc(dx, dy, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Microscope vignette — bright lens center fading to dark edges.
+    const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.28, W / 2, H / 2, Math.max(W, H) * 0.62);
+    v.addColorStop(0, 'rgba(0,0,0,0)');
+    v.addColorStop(1, 'rgba(2,12,14,0.62)');
+    ctx.fillStyle = v;
+    ctx.fillRect(0, 0, W, H);
   }
 
   drawMicroscopeField(camera, W, H) {
@@ -333,36 +396,8 @@ export class Renderer {
     const py = sy - h;
 
     if (player.form === 'cell') {
-      const pulse = 1 + Math.sin(this.t * 5) * 0.08;
-      const grow = player.cellGrowth || 1; // swells as the cell stabilizes
-      ctx.save();
-      const sprite = this.sprites.cell;
-      if (sprite && sprite.complete && sprite.naturalWidth) {
-        ctx.imageSmoothingEnabled = false;
-        ctx.globalAlpha = 0.38;
-        ctx.fillStyle = '#76f7dd';
-        ctx.beginPath();
-        ctx.arc(sx, sy - h * 0.45, h * 0.68 * pulse * grow, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        const size = Math.max(w, h) * 1.55 * pulse * grow;
-        ctx.drawImage(sprite, sx - size / 2, sy - h * 0.48 - size / 2, size, size);
-        ctx.restore();
-        return;
-      }
-      ctx.globalAlpha = 0.95;
-      ctx.fillStyle = 'rgba(118,247,221,0.26)';
-      ctx.beginPath();
-      ctx.arc(sx, sy - h * 0.45, h * 0.58 * pulse * grow, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#ffd6ff';
-      ctx.lineWidth = Math.max(2, T * 0.08);
-      ctx.stroke();
-      ctx.fillStyle = '#9f66c8';
-      ctx.beginPath();
-      ctx.arc(sx + w * 0.14, sy - h * 0.5, h * 0.13, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+      this.drawCell(sx, sy - h * 0.45, Math.max(w, h) * 0.62 * (player.cellGrowth || 1),
+        player.cellStage || 0, player);
       return;
     }
 
@@ -411,6 +446,133 @@ export class Renderer {
     ctx.fillStyle = '#1b1b1b';
     const eo = player.facing > 0 ? w * 0.55 : w * 0.22;
     ctx.fillRect(px + eo, py + h * 0.16, w * 0.16, h * 0.08);
+  }
+
+  /**
+   * Procedural First Cell that visibly evolves with `stage` (0..4):
+   *   0 bare protocell · 1 +nucleus · 2 +organelles · 3 +flagellum · 4 complete.
+   * Drawn from primitives (no art assets) so the cell smoothly grows new
+   * structure as the player stabilizes it — the heart of the first age's payoff.
+   */
+  drawCell(cx, cy, R, stage = 0, player = null) {
+    const ctx = this.ctx;
+    const t = this.t;
+    const pulse = 1 + Math.sin(t * 4) * 0.06;
+    R *= pulse;
+    const moving = player && Math.abs(player.vx || 0) + Math.abs(player.vy || 0) > 0.4;
+    const dir = (player?.facing ?? 1) < 0 ? -1 : 1;
+
+    ctx.save();
+
+    // Outer aura — stronger as the cell matures (a "this is alive" glow).
+    const auraR = R * (1.5 + stage * 0.12);
+    const aura = ctx.createRadialGradient(cx, cy, R * 0.4, cx, cy, auraR);
+    aura.addColorStop(0, `rgba(118,247,221,${0.18 + stage * 0.04})`);
+    aura.addColorStop(1, 'rgba(118,247,221,0)');
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(cx, cy, auraR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Flagellum (stage >= 3): a whipping tail trailing behind the cell.
+    if (stage >= 3) {
+      ctx.strokeStyle = 'rgba(255,214,255,0.9)';
+      ctx.lineWidth = Math.max(2, R * 0.12);
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      const tailLen = R * 2.0;
+      const beat = moving ? 7 : 3.5;
+      for (let i = 0; i <= 10; i++) {
+        const f = i / 10;
+        const tx = cx - dir * (R * 0.7 + tailLen * f);
+        const ty = cy + Math.sin(t * beat - f * 6) * R * 0.5 * f;
+        if (i === 0) ctx.moveTo(tx, ty); else ctx.lineTo(tx, ty);
+      }
+      ctx.stroke();
+    }
+
+    // Membrane — a gently wobbling lipid bilayer with a cytoplasm gradient fill.
+    const N = 28;
+    ctx.beginPath();
+    for (let i = 0; i <= N; i++) {
+      const a = (i / N) * Math.PI * 2;
+      const wob = 1 + Math.sin(a * 3 + t * 2) * 0.045 + Math.sin(a * 5 - t * 1.5) * 0.03;
+      const rx = cx + Math.cos(a) * R * wob;
+      const ry = cy + Math.sin(a) * R * wob;
+      if (i === 0) ctx.moveTo(rx, ry); else ctx.lineTo(rx, ry);
+    }
+    ctx.closePath();
+    const cyto = ctx.createRadialGradient(cx - R * 0.25, cy - R * 0.25, R * 0.1, cx, cy, R);
+    cyto.addColorStop(0, 'rgba(180,255,236,0.92)');
+    cyto.addColorStop(0.7, `rgba(86,210,190,${0.78 + stage * 0.03})`);
+    cyto.addColorStop(1, 'rgba(46,150,140,0.85)');
+    ctx.fillStyle = cyto;
+    ctx.fill();
+    ctx.lineWidth = Math.max(1.5, R * 0.09);
+    ctx.strokeStyle = `rgba(255,214,255,${0.7 + stage * 0.05})`;
+    ctx.stroke();
+
+    // Organelles (stage >= 2): little mitochondria drifting in the cytoplasm.
+    if (stage >= 2) {
+      const count = stage >= 4 ? 5 : stage >= 3 ? 4 : 3;
+      ctx.fillStyle = 'rgba(255,176,90,0.85)';
+      for (let i = 0; i < count; i++) {
+        const a = t * 0.6 + i * (Math.PI * 2 / count);
+        const rr = R * (0.42 + 0.12 * Math.sin(t + i));
+        const ox = cx + Math.cos(a) * rr;
+        const oy = cy + Math.sin(a) * rr;
+        ctx.save();
+        ctx.translate(ox, oy);
+        ctx.rotate(a);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, R * 0.16, R * 0.08, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // Nucleus (stage >= 1): a purple core with a brighter nucleolus.
+    if (stage >= 1) {
+      const nx = cx + R * 0.12;
+      const ny = cy - R * 0.05;
+      const nr = R * (0.34 + stage * 0.015);
+      const ng = ctx.createRadialGradient(nx - nr * 0.3, ny - nr * 0.3, nr * 0.1, nx, ny, nr);
+      ng.addColorStop(0, 'rgba(214,150,255,0.95)');
+      ng.addColorStop(1, 'rgba(120,70,170,0.92)');
+      ctx.fillStyle = ng;
+      ctx.beginPath();
+      ctx.arc(nx, ny, nr, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,236,255,0.9)';
+      ctx.beginPath();
+      ctx.arc(nx - nr * 0.25, ny - nr * 0.2, nr * 0.32, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      // Stage 0: just a faint genetic speck so the bare protocell isn't empty.
+      ctx.fillStyle = 'rgba(159,102,200,0.6)';
+      ctx.beginPath();
+      ctx.arc(cx + R * 0.1, cy, R * 0.12, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Specular highlight for a wet, three-dimensional read.
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.beginPath();
+    ctx.arc(cx - R * 0.38, cy - R * 0.4, R * 0.16, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Stage 4: a "ready to evolve" ring pulse.
+    if (stage >= 4) {
+      ctx.globalAlpha = 0.4 + 0.3 * Math.sin(t * 3);
+      ctx.strokeStyle = '#fff6a0';
+      ctx.lineWidth = Math.max(1.5, R * 0.06);
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 1.35, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
   }
 
   /**

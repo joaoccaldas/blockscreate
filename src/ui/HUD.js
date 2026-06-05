@@ -50,7 +50,9 @@ export class HUD {
         <div class="civ-progress"><div id="eraStageBar" class="advance-fill"></div></div>
         <div class="civ-row"><span>⭐ Mastery</span><b id="masteryVal">0/0</b></div>
         <div id="cellPanel" class="cell-panel hidden">
-          <div class="civ-row"><span>🧬 Stability</span><b id="cellStabilityVal">0%</b></div>
+          <div class="civ-row"><span>🧬 Evolution</span><b id="cellStageVal">—</b></div>
+          <div class="cell-stages" id="cellStages"></div>
+          <div class="civ-row"><span>🫧 Stability</span><b id="cellStabilityVal">0%</b></div>
           <div class="civ-progress cell-progress"><div id="cellStabilityBar" class="cell-fill"></div></div>
           <div id="cellGradient" class="cell-gradient"></div>
         </div>
@@ -384,6 +386,11 @@ export class HUD {
     const hint = this.el('cellHint');
     hint.classList.toggle('hidden', !isCell);
     if (!isCell) return;
+    const stage = status.stage || 0;
+    this.el('cellStageVal').textContent = (status.stageName || '—').replace(/^a /, '');
+    // Five-pip evolution track so progress toward a full cell is glanceable.
+    this.el('cellStages').innerHTML = Array.from({ length: 5 }, (_, i) =>
+      `<span class="cell-pip${i <= stage ? ' on' : ''}"></span>`).join('');
     this.el('cellStabilityVal').textContent = `${status.stability}%`;
     this.el('cellStabilityBar').style.width = `${status.stability}%`;
     const distance = status.distance == null ? '' : ` · ${Math.ceil(status.distance)} tiles`;
@@ -391,13 +398,15 @@ export class HUD {
       ? 'ready to evolve'
       : `sense: ${status.gradient}${distance}`;
 
-    // Persistent plain-language guidance so the first era is intuitive.
+    // Persistent, stage-aware guidance so the first era teaches itself.
     const move = this.isTouch ? 'Use ◀ ▶ ▲ ▼ to swim' : 'Swim with WASD / arrows';
     hint.innerHTML = status.ready
-      ? '✨ Cell stable! Open the menu objective or press <b>Enter Portal</b> to evolve →'
-      : status.gradient && status.gradient !== 'quiet chemistry'
-        ? `🫧 ${move} into the glowing <b>${status.gradient}</b>${distance} to absorb it`
-        : `🫧 ${move} and explore to find glowing nutrients &amp; warm vents`;
+      ? '✨ Cell complete! Press <b>Enter Portal</b> to evolve into the 🦖 Age of Dinosaurs →'
+      : stage >= 3
+        ? '🧬 So close! Keep absorbing and build <b>lipid membranes</b> to finish your cell'
+        : status.gradient && status.gradient !== 'quiet chemistry'
+          ? `🫧 ${move} into the glowing <b>${status.gradient}</b>${distance} to absorb it`
+          : `🫧 ${move} to find glowing <b>nutrients</b> &amp; warm <b>vents</b> — absorb them to grow`;
   }
 
   renderDinoStatus(game) {

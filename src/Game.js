@@ -33,6 +33,15 @@ import { getEraTheme, weightedPick } from './core/eraTheme.js';
 // Buildings a raider will smash when it breaches the town (drives _pillageTown).
 const TOWN_BUILDINGS = new Set(['granary', 'market', 'caravan_post', 'windmill', 'auto_miner', 'gate']);
 
+// First Cell evolution stages — the cell visibly gains structure as it stabilizes.
+const CELL_STAGE_NAMES = [
+  'a bare protocell',
+  'a nucleus',
+  'energy organelles',
+  'a beating flagellum',
+  'a complete cell — ready to evolve!',
+];
+
 export class Game {
   constructor({ canvas, hudRoot, sprites, progress, settings, audio, onExit }) {
     this.canvas = canvas;
@@ -162,6 +171,7 @@ export class Game {
     this.pendingRaid = null; // telegraphed siege awaiting its muster window
     this.raidStatus = null;  // HUD countdown banner state
     this.rallyBuff = 0;      // seconds of boosted guard damage after a mustered defense
+    this._lastCellStage = null; // tracks First Cell evolution stage for celebrations
     this.resize();
     this.camera.snap(this.player);
     this._onResize = () => this.resize();
@@ -739,15 +749,42 @@ export class Game {
     const structureBonus = Math.min(16, (this.civ.placed.lipid_membrane || 0) * 4);
     const target = Math.min(100, 28 + resourceBonus + membrane * 18 + structureBonus + proto * 20);
     this.cellStability = this.cellStability == null ? target : this.cellStability + (target - this.cellStability) * Math.min(1, dt * 2);
-    // Visible growth: the cell swells as it stabilizes (1.0 .. ~1.6), so the
-    // player *sees* themselves becoming a real cell as they absorb and build.
-    if (this.player) this.player.cellGrowth = 1 + (this.cellStability / 100) * 0.6;
+    // Visible growth + evolution stages: the cell swells AND grows organelles as
+    // it stabilizes, so the player *sees* themselves becoming a real cell.
+    const stage = this._cellStage(this.cellStability);
+    if (this.player) {
+      this.player.cellGrowth = 1 + (this.cellStability / 100) * 0.7;
+      this.player.cellStage = stage;
+    }
+    this._celebrateCellStage(stage);
     this.cellStatus = {
       stability: Math.round(this.cellStability),
+      stage,
+      stageName: CELL_STAGE_NAMES[stage],
       gradient: nearest ? nearest.label : 'quiet chemistry',
       distance: nearest ? nearest.distance : null,
       ready: this.objectives?.mandatoryDone?.() && this.civ.canAdvance(),
     };
+  }
+
+  /** Map stability (0..100) to an evolution stage (0..4). */
+  _cellStage(stability) {
+    if (stability >= 90) return 4;
+    if (stability >= 70) return 3;
+    if (stability >= 50) return 2;
+    if (stability >= 33) return 1;
+    return 0;
+  }
+
+  /** Toast + sparkle the first time the cell reaches a new evolution stage. */
+  _celebrateCellStage(stage) {
+    if (this._lastCellStage == null) { this._lastCellStage = stage; return; }
+    if (stage <= this._lastCellStage) { this._lastCellStage = Math.min(this._lastCellStage, stage); return; }
+    this._lastCellStage = stage;
+    this.hud?.toast(`🧬 Your cell evolved: ${CELL_STAGE_NAMES[stage]}`, 2800);
+    this.audio?.play('objective');
+    this.particles?.fountain?.(this.player.x, this.player.y - 0.5,
+      ['#b8ff85', '#76f7dd', '#ffd6ff', '#fff'], 20);
   }
 
   _nearestCellResource(radius = 12) {

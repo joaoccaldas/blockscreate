@@ -23,6 +23,7 @@ The tutorial-era: teaches interaction with the fewest systems.
 | **Cell visibly evolves: nucleus → organelles → flagellum → complete** | ✅ |
 | **Primordial-sea backdrop (no sky/clouds) + microscope mood** | ✅ |
 | **Stage-up celebrations + evolution pip track in the HUD** | ✅ |
+| **Feeding range grows with stage + bioluminescent swim trail** | ✅ |
 
 The first age now *shows* progress instead of only reporting a number. The cell
 is drawn procedurally and grows new structure as stability rises — a bare

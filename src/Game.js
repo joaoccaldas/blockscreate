@@ -516,6 +516,7 @@ export class Game {
       this._syncMountedCompanion();
       this._expandWorldIfNeeded();
       this._absorbCellResources(dt);
+      this._cellSwimTrail(dt);
       this._updateCellStatus(dt);
       this._footsteps(dt, wasGround);
       this._handleInteraction(dt);
@@ -718,24 +719,50 @@ export class Game {
       [blockId('nutrient_blob'), { item: 'nutrient_blob', cp: 1.5, color: '#b8ff85' }],
       [blockId('mineral_vent'), { item: 'mineral_vent', cp: 2.5, color: '#9bd6e0' }],
     ]);
+    // Feeding range grows as the cell evolves — a tangible sense of power: a
+    // mature cell sweeps up nearby food it couldn't reach as a bare protocell.
+    const reach = 2.1 + (this.player.cellStage || 0) * 0.28;
+    const R = Math.ceil(reach);
     const px = Math.round(this.player.x);
     const py = Math.round(this.player.y - this.player.h / 2);
-    for (let y = py - 2; y <= py + 2; y++) {
-      for (let x = px - 2; x <= px + 2; x++) {
+    for (let y = py - R; y <= py + R; y++) {
+      for (let x = px - R; x <= px + R; x++) {
         const def = targets.get(this.world.get(x, y));
-        if (!def || Math.hypot(x + 0.5 - this.player.x, y + 0.5 - this.player.y) > 2.1) continue;
+        if (!def || Math.hypot(x + 0.5 - this.player.x, y + 0.5 - this.player.y) > reach) continue;
         this.world.set(x, y, AIR);
         this.inventory.add(def.item, 1);
         this.civ.addCP(def.cp * this.powerups.multiplier('cpMultiplier'));
         this.player.eat(def.item === 'nutrient_blob' ? 8 : 3);
         this.cellStability = Math.min(100, (this.cellStability ?? this.player.hunger) + (def.item === 'nutrient_blob' ? 7 : 4));
+        // A little flow toward the cell sells the "absorb" read.
         this.particles.fountain(x + 0.5, y + 0.5, [def.color, '#76f7dd', '#fff'], 12);
+        this.particles.spawn(x + 0.5, y + 0.5,
+          (this.player.x - x - 0.5) * 2, (this.player.y - this.player.h / 2 - y - 0.5) * 2,
+          { color: def.color, life: 0.4, size: 0.16, gravity: 0 });
         this.audio?.play('mine');
-        this.hud?.toast(def.item === 'nutrient_blob' ? 'Absorbed nutrients' : 'Absorbed vent minerals', 900);
+        // Throttle the toast so rapid feeding doesn't spam the banner.
+        const now = Date.now();
+        if (!this._lastAbsorbToast || now - this._lastAbsorbToast > 2200) {
+          this._lastAbsorbToast = now;
+          this.hud?.toast(def.item === 'nutrient_blob' ? '🫧 Absorbed nutrients' : '♨️ Absorbed vent minerals', 900);
+        }
         this.cellAbsorbCooldown = 0.35;
         return;
       }
     }
+  }
+
+  /** Bioluminescent trail behind a swimming cell — makes movement feel alive. */
+  _cellSwimTrail(dt) {
+    if (this.eraId !== 'cell' || this.reduceMotion) return;
+    const speed = Math.hypot(this.player.vx || 0, this.player.vy || 0);
+    if (speed < 0.6) return;
+    this._trailAccum = (this._trailAccum || 0) + dt;
+    if (this._trailAccum < 0.06) return;
+    this._trailAccum = 0;
+    const cy = this.player.y - this.player.h / 2;
+    this.particles.spawn(this.player.x, cy, (Math.random() - 0.5) * 0.4, (Math.random() - 0.5) * 0.4,
+      { color: Math.random() < 0.5 ? '#76f7dd' : '#b8ff85', life: 0.7 + Math.random() * 0.5, size: 0.09, gravity: 0 });
   }
 
   _updateCellStatus(dt) {

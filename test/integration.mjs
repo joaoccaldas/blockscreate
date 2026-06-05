@@ -107,6 +107,27 @@ if (!gCell.canAdvance()) throw new Error('cell era did not unlock evolution afte
 if (!gCell._advanceEra() || gCell.eraId !== 'stone') throw new Error('cell era did not evolve into dinosaurs');
 ok('first-cell era evolves into Age of Dinosaurs');
 
+// Cell feeding range grows with evolution stage (a tangible power read).
+const gReach = newGame();
+gReach.newWorld('cell', MODE.SURVIVAL);
+gReach.player.x = 20; gReach.player.y = 20 + gReach.player.h / 2;
+for (let y = 15; y <= 25; y++) for (let x = 15; x <= 25; x++) gReach.world.set(x, y, 0);
+gReach.world.set(22, 20, blockId('nutrient_blob')); // center ~2.55 tiles from the cell
+gReach.player.cellStage = 0; gReach.cellAbsorbCooldown = 0;
+gReach._absorbCellResources(0.1);
+if (gReach.world.get(22, 20) === 0) throw new Error('stage-0 cell absorbed beyond its 2.1-tile reach');
+gReach.player.cellStage = 4; gReach.cellAbsorbCooldown = 0;
+gReach._absorbCellResources(0.1);
+if (gReach.world.get(22, 20) !== 0) throw new Error('mature cell did not sweep up nutrient within its grown reach');
+ok('cell feeding range grows with evolution stage');
+
+// A swimming cell leaves a bioluminescent trail.
+gReach.player.vx = 3; gReach.player.vy = 0; gReach._trailAccum = 1;
+const trailBefore = gReach.particles.list.length;
+gReach._cellSwimTrail(0.1);
+if (!(gReach.particles.list.length > trailBefore)) throw new Error('swimming cell left no trail');
+ok('swimming cell leaves a bioluminescent trail');
+
 for (let i = 0; i < 60; i++) g.update(0.016);
 if (!(g.player.health > 0)) throw new Error('player died unexpectedly');
 ok(`60 ticks run; hp ${g.player.health.toFixed(1)}, onGround ${g.player.onGround}`);

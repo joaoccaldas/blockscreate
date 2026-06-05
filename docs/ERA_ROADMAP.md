@@ -134,6 +134,7 @@ identity and an automation power-fantasy, mirroring how Iron got defense depth.
 | Windmill clean-power block | ✅ |
 | **Production chain: ore → smelter → steel → factory → machine parts** | ✅ |
 | **Chain objective ladder + live HUD industry panel** | ✅ |
+| **Conveyor logistics: wire machines into fed supply lines for bonus output** | ✅ |
 
 The final era now has its own identity: a real **automation supply chain**. Auto
 miners dig ore, smelters refine 2 ore → steel, factories assemble 2 steel →
@@ -144,9 +145,15 @@ shows the `⛏️→🔥→🛠️` chain with per-stage machine counts and smog
 five-step objective ladder (miner → smelter → steel → factory → parts, plus
 mass-production & low-smog mastery) guides the build-out.
 
-**Next & why:** add rails/conveyors or a power grid so factories must be *fed*
-(spatial logistics), turning the chain into a layout puzzle rather than a pure
-stat tick.
+Conveyor belts now turn the chain into a spatial layout: a dedicated read-only
+`IndustryNetwork` system scans the world and works out which machines are wired
+into an end-to-end line (auto miner ─belt─ smelter ─belt─ factory). Fed factories
+produce bonus parts with less smog, the HUD shows `🔗 linked/total ⚡+%`, and a
+"wire a factory to a smelter" objective teaches it. The analyzer keeps the world
+grid as the single source of truth, so there's no placement bookkeeping to drift.
+
+**Next & why:** add a power grid (generators + lines) so windmills become part of
+the network too — clean power as a routed resource, not just a pollution sink.
 
 ---
 

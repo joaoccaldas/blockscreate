@@ -19,6 +19,7 @@ import { WorldEventLog } from './systems/WorldEvents.js';
 import { SimulationAnomalyLog } from './systems/SimulationAnomalies.js';
 import { GuidanceHints } from './systems/GuidanceHints.js';
 import { SettlerManager } from './systems/Settlers.js';
+import { IndustryNetwork } from './systems/IndustryNetwork.js';
 import { Camera } from './render/Camera.js';
 import { Renderer } from './render/Renderer.js';
 import { Particles } from './render/Particles.js';
@@ -138,7 +139,7 @@ export class Game {
         'thatch', 'brick', 'torch', 'campfire', 'clay', 'gravel',
         'farm_plot', 'wheat_seeds', 'wheat_seedling', 'wheat_green', 'wheat_ripe',
         'granary', 'market', 'caravan_post', 'gate', 'road', 'auto_miner', 'windmill', 'build_site',
-        'smelter', 'factory',
+        'smelter', 'factory', 'conveyor',
         'coal_ore', 'copper_ore', 'tin_ore', 'iron_ore', 'gold_ore']
         .forEach((id) => this.inventory.add(id, 99));
     } else if (this.eraId !== 'cell') {
@@ -173,6 +174,8 @@ export class Game {
     this.raidStatus = null;  // HUD countdown banner state
     this.rallyBuff = 0;      // seconds of boosted guard damage after a mustered defense
     this._lastCellStage = null; // tracks First Cell evolution stage for celebrations
+    this.industry = new IndustryNetwork(); // spatial logistics analyzer (read-only)
+    this.industryNet = null;
     this.resize();
     this.camera.snap(this.player);
     this._onResize = () => this.resize();
@@ -1923,6 +1926,17 @@ export class Game {
     if (this.settlers && !this.settlers.stock) this.settlers.stock = {};
     const stock = this.settlers?.stock || {};
 
+    // Re-evaluate the conveyor supply network periodically (read-only world scan).
+    this._industryTimer = (this._industryTimer || 0) + dt;
+    if (!this.industryNet || this._industryTimer >= 1.2) {
+      this._industryTimer = 0;
+      const cx = this.settlers?.home?.x ?? this.player.x;
+      const cy = this.settlers?.home?.y ?? this.player.y;
+      this.industryNet = this.industry.evaluate(this.world, cx, cy);
+    }
+    const eff = this.industryNet?.efficiency || 1;
+    const fed = this.industryNet?.fedFraction || 0;
+
     // Windmills continuously scrub the pollution the chain produces.
     if (windmills) this.civ.pollution = Math.max(0, (this.civ.pollution || 0) - dt * 0.025 * windmills);
 
@@ -1966,19 +1980,32 @@ export class Game {
           if ((stock.steel || 0) >= 2) { stock.steel -= 2; stock.machine_part = (stock.machine_part || 0) + 1; made++; }
         }
         if (made) {
-          this.civ.pollution = Math.max(0, (this.civ.pollution || 0) + 0.25 * made - 0.12 * windmills);
-          this.civ.addCP(8 * made);
-          this.hud?.toast(`🏭 Factory built ${made} machine part${made > 1 ? 's' : ''} (+${8 * made} CP)`, 1800);
+          // Connected supply lines boost throughput and cut smog per unit.
+          const bonus = Math.round(made * (eff - 1));
+          if (bonus > 0) stock.machine_part = (stock.machine_part || 0) + bonus;
+          const total = made + bonus;
+          const pollutionFactor = 1 - 0.45 * fed;
+          this.civ.pollution = Math.max(0, (this.civ.pollution || 0) + 0.25 * made * pollutionFactor - 0.12 * windmills);
+          this.civ.addCP(8 * total);
+          this.hud?.toast(
+            `🏭 Factory built ${total} machine part${total > 1 ? 's' : ''}${bonus > 0 ? ' 🔗' : ''} (+${8 * total} CP)`,
+            1800,
+          );
         }
       }
     }
 
+    const net = this.industryNet || {};
     this.industryStatus = {
       miners, smelters, factories, windmills,
       ore: Math.round(stock.ore || 0),
       steel: Math.round(stock.steel || 0),
       parts: Math.round(stock.machine_part || 0),
       pollution: Math.round((this.civ.pollution || 0) * 10) / 10,
+      conveyors: net.conveyors || 0,
+      linkedFactories: net.linkedFactories || 0,
+      linkedSmelters: net.linkedSmelters || 0,
+      efficiencyPct: Math.round(((net.efficiency || 1) - 1) * 100),
     };
   }
 

@@ -92,6 +92,9 @@ const defs = [
   // turns steel into finished machine parts (see Game._updateAutomation).
   { id: 44, name: 'smelter',  label: 'Smelter', solid: true, hardness: 2.6, tool: 'pickaxe', minTier: 2, colors: { base: '#5a4a44', top: '#7a655c', side: '#3c302c' }, era: 'industrial', light: 0.5 },
   { id: 45, name: 'factory',  label: 'Factory', solid: true, hardness: 2.8, tool: 'pickaxe', minTier: 2, colors: { base: '#586068', top: '#8a96a2', side: '#383e44' }, era: 'industrial', light: 0.3 },
+  // Conveyor: a non-solid belt that links machines into supply lines so factories
+  // get fed (see systems/IndustryNetwork.js). Walkable, cheap, no pollution.
+  { id: 46, name: 'conveyor', label: 'Conveyor Belt', solid: false, hardness: 0.6, tool: 'pickaxe', colors: { base: '#3c4250', top: '#aeb6c2', side: '#272c36' }, era: 'industrial' },
 ];
 
 // fix accidental typo above without breaking the table layout

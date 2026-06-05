@@ -449,7 +449,10 @@ export class HUD {
       `<span class="ic-node">🔥${s.steel}<i>×${s.smelters}</i></span><span class="ic-arrow">→</span>` +
       `<span class="ic-node">🛠️${s.parts}<i>×${s.factories}</i></span>`;
     const poll = this.el('industryPollution');
-    poll.textContent = `🌫️ Smog ${s.pollution}${s.windmills ? ` · 🌬️×${s.windmills}` : ''}`;
+    const link = s.factories
+      ? ` · 🔗 ${s.linkedFactories}/${s.factories}${s.efficiencyPct > 0 ? ` ⚡+${s.efficiencyPct}%` : ''}`
+      : '';
+    poll.textContent = `🌫️ Smog ${s.pollution}${s.windmills ? ` · 🌬️×${s.windmills}` : ''}${link}`;
     poll.classList.toggle('poll-high', s.pollution >= 10);
   }
 

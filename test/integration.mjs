@@ -329,6 +329,33 @@ if (!indDone.includes('build_smelter') || !indDone.includes('forge_steel') || !i
 gInd.update(0.016); // exercise the industrial HUD panel render path
 ok('Industrial objective chain completes from automated production');
 
+// Conveyor logistics: wiring a factory to a smelter to a miner boosts output.
+const gNet = newGame();
+gNet.newWorld('industrial', MODE.SURVIVAL);
+const ny = Math.round(gNet.player.y);
+const nx = Math.round(gNet.player.x);
+gNet.world.set(nx, ny, blockId('auto_miner'));
+gNet.world.set(nx + 1, ny, blockId('conveyor'));
+gNet.world.set(nx + 2, ny, blockId('smelter'));
+gNet.world.set(nx + 3, ny, blockId('conveyor'));
+gNet.world.set(nx + 4, ny, blockId('factory'));
+gNet.civ.placed.auto_miner = 1; gNet.civ.placed.smelter = 1; gNet.civ.placed.factory = 1;
+gNet.settlers.setHome(nx + 2, ny);
+gNet.industryNet = null; gNet._industryTimer = 99;
+gNet.settlers.stock.steel = 20;
+gNet._factoryTimer = 9;
+gNet._updateAutomation(0.1);
+if (!gNet.industryStatus || gNet.industryStatus.linkedFactories !== 1) {
+  throw new Error(`conveyor line not recognized: ${JSON.stringify(gNet.industryStatus)}`);
+}
+if (!(gNet.industryStatus.efficiencyPct > 0)) throw new Error('wired chain gave no efficiency bonus');
+// The wired factory should out-produce 2-per-tick base (bonus parts from the line).
+const linkedParts = gNet.settlers.stock.machine_part || 0;
+if (!(linkedParts > 1)) throw new Error(`wired factory underproduced: ${linkedParts}`);
+const supplyObj = gNet.objectives.list.find((o) => o.id === 'supply_line');
+if (!supplyObj || !supplyObj.check(gNet)) throw new Error('supply-line objective did not complete for a wired chain');
+ok('Conveyor supply lines feed factories for bonus output (logistics layer)');
+
 // Asteroid event: a meteor impact carves a crater and hurts a nearby player.
 const g3 = newGame();
 g3.newWorld('stone', MODE.SURVIVAL);

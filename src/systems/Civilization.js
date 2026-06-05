@@ -26,7 +26,7 @@ const CP_GAINS = {
 const SETTLEMENT_BLOCKS = new Set([
   'lipid_membrane', 'planks', 'cobblestone', 'brick', 'thatch', 'campfire', 'torch', 'log',
   'farm_plot', 'granary', 'market', 'caravan_post', 'gate', 'road', 'auto_miner', 'windmill', 'build_site',
-  'smelter', 'factory',
+  'smelter', 'factory', 'conveyor',
 ]);
 
 export class Civilization {

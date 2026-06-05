@@ -64,6 +64,7 @@ export const OBJECTIVES = {
     { id: 'build_factory', kind: 'mandatory', icon: '🏭', label: 'Build a Factory',                      reward: 60, check: (g) => g.civ.hasBuilt('factory') },
     { id: 'make_parts',    kind: 'mandatory', icon: '🛠️', label: 'Manufacture 2 machine parts',         reward: 70, check: (g) => ((g.settlers?.stock?.machine_part || 0) + g.inventory.count('machine_part')) >= 2 },
     { id: 'supply_line',   kind: 'mandatory', icon: '🔗', label: 'Wire a factory to a smelter with conveyors', reward: 55, check: (g) => (g.industryStatus?.linkedFactories || 0) >= 1 },
+    { id: 'powered',       kind: 'mastery',   icon: '⚡', label: 'Mastery: power a machine with the grid', reward: 55, check: (g) => (g.industryStatus?.poweredCount || 0) >= 1 },
     { id: 'mass_produce',  kind: 'mastery',   icon: '📦', label: 'Mastery: stockpile 10 machine parts',  reward: 60, check: (g) => ((g.settlers?.stock?.machine_part || 0) + g.inventory.count('machine_part')) >= 10 },
     { id: 'pollution',     kind: 'mastery',   icon: '🌫️', label: 'Mastery: keep a factory under 10 smog', reward: 50, check: (g) => g.civ.hasBuilt('factory') && (g.civ.pollution || 0) < 10 },
   ],

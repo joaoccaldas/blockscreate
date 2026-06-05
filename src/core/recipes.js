@@ -58,6 +58,8 @@ export const RECIPES = [
   { id: 'factory',       era: 'industrial', out: { id: 'factory', n: 1 }, in: { iron: 6, steel: 2, planks: 6 } },
   { id: 'machine_part',  era: 'industrial', out: { id: 'machine_part', n: 1 }, in: { steel: 2, gold: 1 }, station: 'factory' },
   { id: 'conveyor',      era: 'industrial', out: { id: 'conveyor', n: 4 }, in: { iron: 1, planks: 2 } },
+  { id: 'generator',     era: 'industrial', out: { id: 'generator', n: 1 }, in: { iron: 4, brick: 4, coal: 4 } },
+  { id: 'power_line',    era: 'industrial', out: { id: 'power_line', n: 6 }, in: { iron: 1, copper: 1 } },
 ];
 
 /** Recipes available given the set of unlocked era ids. */

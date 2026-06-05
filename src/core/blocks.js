@@ -95,6 +95,10 @@ const defs = [
   // Conveyor: a non-solid belt that links machines into supply lines so factories
   // get fed (see systems/IndustryNetwork.js). Walkable, cheap, no pollution.
   { id: 46, name: 'conveyor', label: 'Conveyor Belt', solid: false, hardness: 0.6, tool: 'pickaxe', colors: { base: '#3c4250', top: '#aeb6c2', side: '#272c36' }, era: 'industrial' },
+  // Power grid: a coal generator (dirty, high capacity) feeds machines through
+  // power lines (see systems/PowerGrid.js). Windmills are the clean alternative.
+  { id: 47, name: 'generator',  label: 'Coal Generator', solid: true,  hardness: 2.6, tool: 'pickaxe', minTier: 2, colors: { base: '#4a3c30', top: '#7a5a2c', side: '#2e251d' }, era: 'industrial', light: 0.45 },
+  { id: 48, name: 'power_line', label: 'Power Line',     solid: false, hardness: 0.4, tool: 'pickaxe', colors: { base: '#3a2f22', top: '#e0b24a', side: '#241c12' }, era: 'industrial', light: 0.08 },
 ];
 
 // fix accidental typo above without breaking the table layout

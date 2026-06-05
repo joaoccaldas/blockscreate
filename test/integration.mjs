@@ -356,6 +356,29 @@ const supplyObj = gNet.objectives.list.find((o) => o.id === 'supply_line');
 if (!supplyObj || !supplyObj.check(gNet)) throw new Error('supply-line objective did not complete for a wired chain');
 ok('Conveyor supply lines feed factories for bonus output (logistics layer)');
 
+// Power grid: wiring a generator to the machines powers them; the boost stacks
+// with conveyors, and an undersized grid reports an overload.
+const gPow = newGame();
+gPow.newWorld('industrial', MODE.SURVIVAL);
+const py = Math.round(gPow.player.y);
+const pxx = Math.round(gPow.player.x);
+gPow.world.set(pxx, py, blockId('auto_miner'));
+gPow.world.set(pxx + 2, py, blockId('factory'));
+// power line running beneath, fed by a generator
+gPow.world.set(pxx, py + 1, blockId('power_line'));
+gPow.world.set(pxx + 1, py + 1, blockId('power_line'));
+gPow.world.set(pxx + 2, py + 1, blockId('power_line'));
+gPow.world.set(pxx + 1, py + 2, blockId('generator'));
+gPow.civ.placed.auto_miner = 1; gPow.civ.placed.factory = 1; gPow.civ.placed.generator = 1;
+gPow.settlers.setHome(pxx + 1, py);
+gPow.powerNet = null; gPow.industryNet = null; gPow._industryTimer = 99;
+gPow._updateAutomation(0.1);
+if (!(gPow.industryStatus.poweredCount >= 1)) throw new Error(`generator did not power machines: ${JSON.stringify(gPow.industryStatus)}`);
+if (gPow.industryStatus.powerOverloaded) throw new Error('an adequately powered grid wrongly reported overload');
+const powObj = gPow.objectives.list.find((o) => o.id === 'powered');
+if (!powObj || !powObj.check(gPow)) throw new Error('power objective did not complete for a powered machine');
+ok('Power grid energizes machines and reports overload (energy layer)');
+
 // Asteroid event: a meteor impact carves a crater and hurts a nearby player.
 const g3 = newGame();
 g3.newWorld('stone', MODE.SURVIVAL);

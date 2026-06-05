@@ -64,6 +64,7 @@ export class HUD {
         <div id="industryPanel" class="industry-panel hidden">
           <div class="civ-row"><span>🏭 Machine Parts</span><b id="industryParts">0</b></div>
           <div id="industryChain" class="industry-chain"></div>
+          <div id="industryPower" class="industry-poll"></div>
           <div id="industryPollution" class="industry-poll"></div>
         </div>
         <div class="civ-progress"><div id="advanceBar" class="advance-fill"></div></div>
@@ -448,6 +449,15 @@ export class HUD {
       `<span class="ic-node">⛏️${s.ore}<i>×${s.miners}</i></span><span class="ic-arrow">→</span>` +
       `<span class="ic-node">🔥${s.steel}<i>×${s.smelters}</i></span><span class="ic-arrow">→</span>` +
       `<span class="ic-node">🛠️${s.parts}<i>×${s.factories}</i></span>`;
+    // Power grid: powered/load, capacity, and an overload warning.
+    const power = this.el('industryPower');
+    const anyPower = s.powerCapacity || s.powerLoad || s.generators;
+    power.classList.toggle('hidden', !anyPower);
+    if (anyPower) {
+      power.innerHTML = s.powerOverloaded
+        ? `⚡ <span class="poll-high">OVERLOAD ${s.poweredCount}/${s.powerLoad}</span> · add power (cap ${s.powerCapacity})`
+        : `⚡ Powered ${s.poweredCount}/${s.powerLoad} · cap ${s.powerCapacity}`;
+    }
     const poll = this.el('industryPollution');
     const link = s.factories
       ? ` · 🔗 ${s.linkedFactories}/${s.factories}${s.efficiencyPct > 0 ? ` ⚡+${s.efficiencyPct}%` : ''}`

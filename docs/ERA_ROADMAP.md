@@ -135,6 +135,7 @@ identity and an automation power-fantasy, mirroring how Iron got defense depth.
 | **Production chain: ore → smelter → steel → factory → machine parts** | ✅ |
 | **Chain objective ladder + live HUD industry panel** | ✅ |
 | **Conveyor logistics: wire machines into fed supply lines for bonus output** | ✅ |
+| **Power grid: generators + power lines energize machines; overload tension** | ✅ |
 
 The final era now has its own identity: a real **automation supply chain**. Auto
 miners dig ore, smelters refine 2 ore → steel, factories assemble 2 steel →
@@ -152,8 +153,20 @@ produce bonus parts with less smog, the HUD shows `🔗 linked/total ⚡+%`, and
 "wire a factory to a smelter" objective teaches it. The analyzer keeps the world
 grid as the single source of truth, so there's no placement bookkeeping to drift.
 
-**Next & why:** add a power grid (generators + lines) so windmills become part of
-the network too — clean power as a routed resource, not just a pollution sink.
+The **power grid** adds a second, stacking network (`PowerGrid`, same read-only
+pattern): coal generators (dirty, capacity 5) and windmills (clean, capacity 2)
+feed machines through power lines. A machine is powered only when its grid's
+source capacity covers everything drawing from it — overload it and the line
+browns out, so power has to scale with the factory. Supply (conveyors) × power
+(grid) multiply, so a fully wired **and** powered line is the late-game payoff
+(up to ~+140% output). The HUD shows `⚡ powered/load · cap` with an OVERLOAD
+warning, and a "power a machine with the grid" mastery objective introduces it.
+
+**Next & why:** the Industrial Age is now mechanically deep; the best next moves
+are (a) **visual payoff** — animate belts/wires + smoke so the humming factory
+*looks* alive, and (b) a **logistics demand sink** — settlers/market consume
+machine parts (or a victory monument) so production has a purpose beyond CP.
+See "What's next" discussion below.
 
 ---
 

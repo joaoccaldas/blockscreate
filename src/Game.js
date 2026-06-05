@@ -20,6 +20,7 @@ import { SimulationAnomalyLog } from './systems/SimulationAnomalies.js';
 import { GuidanceHints } from './systems/GuidanceHints.js';
 import { SettlerManager } from './systems/Settlers.js';
 import { IndustryNetwork } from './systems/IndustryNetwork.js';
+import { PowerGrid } from './systems/PowerGrid.js';
 import { Camera } from './render/Camera.js';
 import { Renderer } from './render/Renderer.js';
 import { Particles } from './render/Particles.js';
@@ -139,7 +140,7 @@ export class Game {
         'thatch', 'brick', 'torch', 'campfire', 'clay', 'gravel',
         'farm_plot', 'wheat_seeds', 'wheat_seedling', 'wheat_green', 'wheat_ripe',
         'granary', 'market', 'caravan_post', 'gate', 'road', 'auto_miner', 'windmill', 'build_site',
-        'smelter', 'factory', 'conveyor',
+        'smelter', 'factory', 'conveyor', 'generator', 'power_line',
         'coal_ore', 'copper_ore', 'tin_ore', 'iron_ore', 'gold_ore']
         .forEach((id) => this.inventory.add(id, 99));
     } else if (this.eraId !== 'cell') {
@@ -176,6 +177,8 @@ export class Game {
     this._lastCellStage = null; // tracks First Cell evolution stage for celebrations
     this.industry = new IndustryNetwork(); // spatial logistics analyzer (read-only)
     this.industryNet = null;
+    this.power = new PowerGrid(); // energy network analyzer (read-only)
+    this.powerNet = null;
     this.resize();
     this.camera.snap(this.player);
     this._onResize = () => this.resize();
@@ -1926,18 +1929,25 @@ export class Game {
     if (this.settlers && !this.settlers.stock) this.settlers.stock = {};
     const stock = this.settlers?.stock || {};
 
-    // Re-evaluate the conveyor supply network periodically (read-only world scan).
+    // Re-evaluate the supply + power networks periodically (read-only world scan).
     this._industryTimer = (this._industryTimer || 0) + dt;
-    if (!this.industryNet || this._industryTimer >= 1.2) {
+    if (!this.industryNet || !this.powerNet || this._industryTimer >= 1.2) {
       this._industryTimer = 0;
       const cx = this.settlers?.home?.x ?? this.player.x;
       const cy = this.settlers?.home?.y ?? this.player.y;
       this.industryNet = this.industry.evaluate(this.world, cx, cy);
+      this.powerNet = this.power.evaluate(this.world, cx, cy);
     }
-    const eff = this.industryNet?.efficiency || 1;
+    // Two stacking efficiency axes: conveyor supply lines feed factories, the
+    // power grid energizes machines. A fully wired AND powered line is a beast.
+    const convEff = this.industryNet?.efficiency || 1;
+    const powerEff = 1 + 0.5 * (this.powerNet?.poweredFraction || 0);
+    const eff = convEff * powerEff;
     const fed = this.industryNet?.fedFraction || 0;
+    const generators = this.powerNet?.generators || 0;
 
-    // Windmills continuously scrub the pollution the chain produces.
+    // Generators burn fuel — a steady smog source; windmills scrub pollution.
+    if (generators) this.civ.pollution = (this.civ.pollution || 0) + dt * 0.05 * generators;
     if (windmills) this.civ.pollution = Math.max(0, (this.civ.pollution || 0) - dt * 0.025 * windmills);
 
     // Stage 1 — auto miners dig ore every 10s.
@@ -1996,8 +2006,9 @@ export class Game {
     }
 
     const net = this.industryNet || {};
+    const pw = this.powerNet || {};
     this.industryStatus = {
-      miners, smelters, factories, windmills,
+      miners, smelters, factories, windmills, generators,
       ore: Math.round(stock.ore || 0),
       steel: Math.round(stock.steel || 0),
       parts: Math.round(stock.machine_part || 0),
@@ -2005,7 +2016,12 @@ export class Game {
       conveyors: net.conveyors || 0,
       linkedFactories: net.linkedFactories || 0,
       linkedSmelters: net.linkedSmelters || 0,
-      efficiencyPct: Math.round(((net.efficiency || 1) - 1) * 100),
+      // Combined boost from supply lines × power, shown to the player as one %.
+      efficiencyPct: Math.round((eff - 1) * 100),
+      powerCapacity: pw.capacity || 0,
+      powerLoad: pw.load || 0,
+      poweredCount: pw.poweredCount || 0,
+      powerOverloaded: !!pw.overloaded,
     };
   }
 

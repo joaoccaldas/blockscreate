@@ -79,6 +79,7 @@ export class HUD {
       <div id="buildIndicator" class="build-indicator"></div>
       <div id="powerupBar" class="powerup-bar hidden"></div>
       <div id="eventBar" class="event-bar hidden"></div>
+      <div id="raidWarning" class="raid-warning hidden"></div>
       <div id="cellHint" class="cell-hint hidden"></div>
       <div id="toast" class="toast hidden"></div>
       <div id="bigToast" class="big-toast hidden"></div>
@@ -360,7 +361,19 @@ export class HUD {
     this.renderDiscoveries(game);
     this.renderPowerups(game);
     this.renderEvents(game);
+    this.renderRaidWarning(game);
     this.renderHotbar(game);
+  }
+
+  renderRaidWarning(game) {
+    const bar = this.el('raidWarning');
+    const s = game.raidStatus;
+    bar.classList.toggle('hidden', !s);
+    if (!s) return;
+    bar.innerHTML =
+      `📯 <b>Raid incoming — ${s.secondsLeft}s</b>` +
+      `<span class="raid-sub"> · ${s.count} raider${s.count === 1 ? '' : 's'} · rally at your town</span>` +
+      `<span class="raid-meter"><i style="width:${Math.round((s.fraction || 0) * 100)}%"></i></span>`;
   }
 
   renderCellStatus(game) {

@@ -195,4 +195,52 @@ assert.strictEqual(civ.trade, tradeBefore - 2, 'losing a caravan post removes it
 assert.strictEqual(civ.placed.caravan_post || 0, 0, 'lost structure drops from the placed tally');
 ok('Civilization.onStructureLost reverses a building’s contribution');
 
+// ---- Raid telegraph: a muster window before the siege lands ----------------
+const gt = newGame();
+gt.newWorld('iron', MODE.SURVIVAL);
+gt.settlers.setHome(Math.round(gt.player.x), Math.round(gt.player.y));
+const mobsBefore = gt.mobs.length;
+assert.ok(gt.telegraphRaid({ type: 'bandit', count: 3, delay: 14 }), 'telegraphRaid schedules a raid');
+assert.ok(gt.pendingRaid, 'a raid is pending after the telegraph');
+assert.strictEqual(gt.mobs.length, mobsBefore, 'a telegraphed raid does not spawn immediately');
+gt._updateRaidTelegraph(1);
+assert.ok(gt.raidStatus && gt.raidStatus.secondsLeft > 0 && gt.raidStatus.secondsLeft <= 14, 'HUD shows a muster countdown');
+for (let i = 0; i < 20 && gt.pendingRaid; i++) gt._updateRaidTelegraph(1); // player is at home → mustered
+assert.ok(!gt.pendingRaid, 'the pending raid resolves once the muster window closes');
+assert.ok(gt.mobs.length > mobsBefore, 'the raid spawns when the window closes');
+assert.ok(gt.rallyBuff > 0, 'mustering at the town grants a rally buff');
+ok('raids are telegraphed with a muster window, then arrive');
+
+// Rally buff makes guards hit harder.
+const gr = newGame();
+gr.newWorld('iron', MODE.SURVIVAL);
+gr.settlers.setHome(Math.round(gr.player.x), Math.round(gr.player.y));
+gr.settlers.stock = { food: 0, wheat: 0, ore: 0, wood: 0 };
+gr.townGuards = 1;
+const r1 = new Mob('bandit', gr.settlers.home.x + 0.5, gr.settlers.home.y);
+gr.mobs = [r1]; gr.rallyBuff = 0;
+const hp0 = r1.health;
+gr._updateRaiders(0.8);
+const dmgNoBuff = hp0 - r1.health;
+const r2 = new Mob('bandit', gr.settlers.home.x + 0.5, gr.settlers.home.y);
+gr.mobs = [r2]; gr.rallyBuff = 18;
+const hp1 = r2.health;
+gr._updateRaiders(0.8);
+const dmgBuff = hp1 - r2.health;
+assert.ok(dmgBuff > dmgNoBuff, 'a rallied defense makes guards hit harder');
+ok('mustering rallies the militia to fight at full strength');
+
+// The siege world-event telegraphs instead of ambushing.
+const ge = newGame();
+ge.newWorld('iron', MODE.SURVIVAL);
+ge.settlers.setHome(Math.round(ge.player.x), Math.round(ge.player.y));
+ge.dayFactor = () => 0.3;
+ge.events.cooldowns.siege_raid = 0;
+ge.events.cooldowns.raider_scouts = 999;
+const em = ge.mobs.length;
+ge.events.update(ge, 0.1);
+assert.ok(ge.pendingRaid, 'the siege world-event schedules a telegraphed raid');
+assert.strictEqual(ge.mobs.length, em, 'the siege world-event does not spawn raiders before the muster window');
+ok('the siege world-event telegraphs the raid instead of ambushing');
+
 console.log(`\nAll ${passed} siege checks passed.`);

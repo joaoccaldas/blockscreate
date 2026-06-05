@@ -159,6 +159,9 @@ export class Game {
     });
     this.invOpen = false;
     this.craftOpen = false;
+    this.pendingRaid = null; // telegraphed siege awaiting its muster window
+    this.raidStatus = null;  // HUD countdown banner state
+    this.rallyBuff = 0;      // seconds of boosted guard damage after a mustered defense
     this.resize();
     this.camera.snap(this.player);
     this._onResize = () => this.resize();
@@ -523,6 +526,7 @@ export class Game {
     this._spawnMobs(dt);
     this._updateSettlers(dt);
     this._updateTownEconomy(dt);
+    this._updateRaidTelegraph(dt);
     this._updateRaiders(dt);
     this._updateAutomation(dt);
     this.powerups.update(dt);
@@ -1643,6 +1647,53 @@ export class Game {
   }
 
   /**
+   * Telegraph an incoming siege: sound the horn, raise a HUD warning, and open a
+   * short muster window before the raiders actually arrive — so defending becomes
+   * an active decision (rush back, raise walls, light the gate) instead of a
+   * surprise. Returns true if a raid was scheduled.
+   */
+  telegraphRaid({ type = 'bandit', count = 3, delay = 14 } = {}) {
+    if (this.mode !== MODE.SURVIVAL || this.pendingRaid) return false;
+    this.pendingRaid = { type, count, timer: delay, total: delay };
+    this.audio?.play('horn');
+    if (!this.reduceMotion) this.hud?.shake?.();
+    this.hud?.bigToast(
+      `📯 <b>Raiders sighted!</b><br><small>~${Math.round(delay)}s to muster — raise walls, light the gate, and rally at your town.</small>`,
+      3200,
+    );
+    return true;
+  }
+
+  /** Count down a telegraphed raid; spawn it (with a rally bonus) when it lands. */
+  _updateRaidTelegraph(dt) {
+    if (this.rallyBuff > 0) this.rallyBuff = Math.max(0, this.rallyBuff - dt);
+    const pr = this.pendingRaid;
+    if (!pr) { this.raidStatus = null; return; }
+    pr.timer -= dt;
+    if (pr.timer > 0) {
+      this.raidStatus = { secondsLeft: Math.ceil(pr.timer), count: pr.count, fraction: 1 - pr.timer / pr.total };
+      return;
+    }
+    // The raid arrives. Mustering at the town (player near home) rallies the
+    // militia: guards fight at doubled strength for a window.
+    this.pendingRaid = null;
+    this.raidStatus = null;
+    const home = this.settlers?.home;
+    const mustered = home && Math.abs(this.player.x - home.x) < 13;
+    if (mustered) this.rallyBuff = 18;
+    const spawned = this.spawnSiege(pr.type, pr.count);
+    if (spawned) {
+      this.audio?.play('horn');
+      this.hud?.bigToast(
+        mustered
+          ? '⚔️ <b>The raid is here!</b><br><small>🛡️ You rallied the town — guards fight at full strength.</small>'
+          : '⚔️ <b>The raid is here!</b><br><small>No one rallied the defense — the militia is on its own.</small>',
+        2800,
+      );
+    }
+  }
+
+  /**
    * Closes the siege loop once raiders reach the settlement: the town militia
    * (guards) sallies out to fight them within a defensive perimeter, and any
    * raider that makes it to the town center pillages — looting the stockpile and
@@ -1667,7 +1718,9 @@ export class Game {
         if (m._guardCd <= 0) {
           m._guardCd = 0.8;
           this.particles.burst(m.x, m.y - m.h / 2, '#ffd36b', 6);
-          if (m.hurt(2 + guards * 1.5)) {
+          // A rallied defense (player mustered at the town) doubles guard punch.
+          const guardPunch = (2 + guards * 1.5) * (this.rallyBuff > 0 ? 2 : 1);
+          if (m.hurt(guardPunch)) {
             this.mobs.splice(i, 1);
             this.civ.onDefeat(m.type);
             this.civ.addCP((m.def.cp || 4) * 0.5 * (this.powerups?.multiplier('cpMultiplier') || 1));

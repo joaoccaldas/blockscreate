@@ -452,6 +452,38 @@ html, body {
 }
 .event-bar.hidden { display: none; }
 
+/* Raid telegraph — prominent top-center warning with a muster countdown. */
+.raid-warning {
+  position: absolute;
+  top: calc(82px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: linear-gradient(180deg, rgba(120, 26, 26, 0.92), rgba(70, 14, 14, 0.92));
+  border: 1px solid #e0654a;
+  border-radius: 10px;
+  color: #ffe6dc;
+  font-size: 0.82rem;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  animation: raidPulse 1.1s ease-in-out infinite;
+  z-index: 6;
+  white-space: nowrap;
+}
+.raid-warning.hidden { display: none; }
+.raid-sub { color: #ffc7b3; font-weight: 400; font-size: 0.74rem; }
+.raid-meter { display: inline-block; width: 70px; height: 6px; border-radius: 4px; background: rgba(0, 0, 0, 0.35); overflow: hidden; }
+.raid-meter i { display: block; height: 100%; background: linear-gradient(90deg, #ffd36b, #ff7b4a); }
+@keyframes raidPulse { 0%, 100% { box-shadow: 0 4px 16px rgba(224, 101, 74, 0.3); } 50% { box-shadow: 0 4px 22px rgba(224, 101, 74, 0.7); } }
+.reduce-motion .raid-warning { animation: none; }
+@media (max-width: 768px) {
+  .raid-warning { font-size: 0.72rem; padding: 4px 9px; }
+  .raid-sub { display: none; }
+}
+
 /* First Cell guidance banner — bottom-center, above the hotbar. */
 .cell-hint {
   position: absolute;

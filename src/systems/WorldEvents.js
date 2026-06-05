@@ -143,8 +143,13 @@ export class WorldEventLog {
       if (game.eraId === 'iron' && this.cooldowns.siege_raid <= 0 && game.dayFactor() < 0.55) {
         this.cooldowns.siege_raid = 280;
         this._activate('siege_raid', 50);
-        if (game.spawnSiege) game.spawnSiege('bandit', game._hasTownDefense?.() ? 2 : 3);
-        else this._spawnNear(game, 'bandit');
+        // Telegraph the raid with a muster window when possible; fall back to an
+        // immediate spawn so the event still fires in minimal/headless contexts.
+        const count = game._hasTownDefense?.() ? 2 : 3;
+        if (!game.telegraphRaid?.({ type: 'bandit', count, delay: 14 })) {
+          if (game.spawnSiege) game.spawnSiege('bandit', count);
+          else this._spawnNear(game, 'bandit');
+        }
         started.push(this._markSeen('siege_raid'));
       }
     } else {

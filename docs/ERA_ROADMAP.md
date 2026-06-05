@@ -85,6 +85,7 @@ not only planting. Bronze should become the first "sustain a town" puzzle.
 | Siege raids that bypass scout deterrence | ✅ |
 | **Physical sieges: raiders march on the town & smash through walls** | ✅ |
 | **Breach stakes: raiders pillage buildings/stock; guards sally out** | ✅ |
+| **Telegraphed raids: horn + HUD muster countdown; rally bonus** | ✅ |
 
 Raiders/bandits (and industrial machines) now path toward the settlement when
 the player is away and physically batter any wall too tall to climb. Wall
@@ -99,9 +100,15 @@ stockpile and smashing buildings, which rolls back that building's bonus
 (`Civilization.onStructureLost`). Walls buy time, guards win the fight, an
 undefended breach costs you.
 
-**Next & why:** telegraph incoming raids (a horn/HUD warning + muster window) and
-let the player rally guards to a rally point, so defense becomes an active
-decision rather than a passive stat.
+Sieges are now telegraphed: the big raid sounds a **war horn**, raises a pulsing
+**HUD muster countdown**, and waits a ~14s window before the raiders arrive — time
+to rush home, raise walls, and light the gate. Being at your town when the raid
+lands **rallies the militia**, doubling guard damage for the fight. Defense is now
+an active decision, not a passive stat.
+
+**Next & why:** shift focus to the **Industrial Age** — a second production chain
+(ore → smelter → machine parts → factory output) so the final era has its own
+identity and an automation power-fantasy, mirroring how Iron got defense depth.
 
 ---
 

@@ -106,6 +106,8 @@ export class Audio {
       case 'jump':   this._tone(330, 0.1, { type: 'square', vol: 0.15, slideTo: 520 }); break;
       case 'objective': this._arp([523, 659, 784], 0.09, 0.28); break;
       case 'unlock': this._arp([523, 659, 784, 1047, 1319], 0.1, 0.32); break;
+      case 'horn':   this._tone(150, 0.5, { type: 'sawtooth', vol: 0.32, slideTo: 120 });
+                     setTimeout(() => this._tone(120, 0.6, { type: 'sawtooth', vol: 0.3, slideTo: 95 }), 260); break;
       case 'ui':     this._tone(660, 0.05, { type: 'square', vol: 0.18 }); break;
       default: break;
     }

@@ -400,13 +400,20 @@ export class HUD {
 
     // Persistent, stage-aware guidance so the first era teaches itself.
     const move = this.isTouch ? 'Use ◀ ▶ ▲ ▼ to swim' : 'Swim with WASD / arrows';
-    hint.innerHTML = status.ready
+    const guide = status.ready
       ? '✨ Cell complete! Press <b>Enter Portal</b> to evolve into the 🦖 Age of Dinosaurs →'
       : stage >= 3
         ? '🧬 So close! Keep absorbing and build <b>lipid membranes</b> to finish your cell'
         : status.gradient && status.gradient !== 'quiet chemistry'
           ? `🫧 ${move} into the glowing <b>${status.gradient}</b>${distance} to absorb it`
           : `🫧 ${move} to find glowing <b>nutrients</b> &amp; warm <b>vents</b> — absorb them to grow`;
+    // The cell panel (with its pip track) is hidden on mobile/collapsed, so carry
+    // a compact evolution header in this always-visible banner.
+    const pips = Array.from({ length: 5 }, (_, i) =>
+      `<span class="cell-pip${i <= stage ? ' on' : ''}"></span>`).join('');
+    hint.innerHTML =
+      `<div class="cell-hint-evo"><span class="cell-hint-stage">🧬 ${(status.stageName || '').replace(/^a /, '')}</span>` +
+      `<span class="cell-stages cell-hint-pips">${pips}</span></div>${guide}`;
   }
 
   renderDinoStatus(game) {

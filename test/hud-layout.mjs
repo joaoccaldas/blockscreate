@@ -32,6 +32,12 @@ const RECTS = {
   touchQuick: [VW - 8 - 44, 54, 44, 96],    // right:8 w:44
 };
 
+// The toast is transient (not in the always-visible overlap set), but the
+// crowded screenshot was a toast landing on the stat bars. Guard its mobile
+// box explicitly: below the topbar + objectives, and clear of the quick column.
+const TOAST_W = Math.round(VW * 0.70);
+const toastRect = [Math.round((VW - TOAST_W) / 2), 110, TOAST_W, 34];
+
 let passed = 0;
 const ok = (m) => { console.log(`  ✓ ${m}`); passed++; };
 
@@ -64,5 +70,12 @@ ok('no two default mobile HUD panels overlap (screen is not crowded)');
 assert.ok(!overlaps(RECTS.objPanel, RECTS.touchQuick),
   'objectives panel clears the quick inventory/craft column');
 ok('objectives panel clears the quick-action column');
+
+// Toasts must not land on the stat bars, the objectives, or the quick column.
+for (const name of ['topbar', 'objPanel', 'touchQuick']) {
+  assert.ok(!overlaps(toastRect, RECTS[name]), `toast must not overlap ${name}`);
+}
+assert.ok(toastRect[0] >= 0 && toastRect[0] + toastRect[2] <= VW, 'toast fits the viewport width');
+ok('toast clears the topbar, objectives, and quick column');
 
 console.log(`\nAll ${passed} HUD layout checks passed.`);

@@ -512,7 +512,10 @@ html, body {
   pointer-events: none;
 }
 .cell-hint.hidden { display: none; }
-@media (max-width: 760px) { .cell-hint { font-size: 0.76rem; bottom: calc(132px + var(--safe-b)); } }
+.cell-hint-evo { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 4px; }
+.cell-hint-stage { font-size: 0.74rem; font-weight: bold; color: #b8fff2; white-space: nowrap; }
+.cell-hint-pips { width: 96px; margin: 0; }
+@media (max-width: 760px) { .cell-hint { font-size: 0.76rem; bottom: calc(132px + var(--safe-b)); } .cell-hint-pips { width: 76px; } }
 .event-chip {
   background: rgba(142, 107, 214, 0.2);
   border: 1px solid rgba(217, 199, 255, 0.42);
@@ -524,7 +527,7 @@ html, body {
 
 .toast {
   position: absolute;
-  top: 14px;
+  top: 54px;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.82);
@@ -534,6 +537,7 @@ html, body {
   font-weight: bold;
   max-width: 80vw;
   text-align: center;
+  z-index: 5;
 }
 .toast.hidden { display: none; }
 
@@ -736,6 +740,14 @@ html, body {
      the era is clear from the world + shown on the intro/journal, so drop it. */
   #topbar .era-badge { display: none; }
   .obj-panel { width: 150px; top: calc(48px + env(safe-area-inset-top, 0px)); }
+  /* Toasts sit BELOW the topbar + compact objectives (they used to land on the
+     health/hunger bars), and stay narrow enough to clear the right quick column. */
+  .toast {
+    top: calc(110px + env(safe-area-inset-top, 0px));
+    max-width: 70vw;
+    font-size: 0.78rem;
+    padding: 6px 12px;
+  }
   .discovery-panel { display: none; }
   /* Expanded (📊) stat overlays stack down the left edge. */
   .powerup-bar { left: 8px; top: calc(152px + env(safe-area-inset-top, 0px)); max-width: 70vw; }

@@ -204,7 +204,7 @@ g.mode = MODE.SURVIVAL;
 const json = SaveManager.toJSON(g);
 if (!('objectives' in json) || !('crafted' in json)) throw new Error('save missing new fields');
 if (!('eraStage' in json)) throw new Error('save missing era stage');
-for (const key of ['structures', 'discoveries', 'clues', 'powerups', 'events', 'anomalies', 'timeline', 'market', 'guidance']) {
+for (const key of ['structures', 'discoveries', 'clues', 'powerups', 'events', 'anomalies', 'timeline', 'market', 'simulation', 'guidance']) {
   if (!(key in json)) throw new Error(`save missing ${key}`);
 }
 if (!json.world.chunks?.generated?.length) throw new Error('save missing generated chunk metadata');
@@ -395,6 +395,16 @@ gTl._updateTimeline(1);
 if (!(gTl.civ.cp > cpBeforeRift)) throw new Error('rift crossover did not pay its windfall');
 if (gTl.timeline.crossovers !== 1) throw new Error('crossover was not recorded');
 ok('Timeline branches events and stages reality crossovers (multiverse layer)');
+
+// Nested-simulation revelations fire through the game loop and deepen the
+// journal's reality map as the player progresses.
+const gSim = newGame();
+gSim.newWorld('cell', MODE.SURVIVAL);
+gSim._simTimer = 99; // force the throttled check
+gSim._updateSimulation(1);
+if ((gSim.simulation.depth || 0) < 1) throw new Error('first revelation did not fire in the opening era');
+if (!gSim.simulation.layers().some((l) => l.revealed)) throw new Error('reality map did not reveal a layer');
+ok('Nested-simulation arc reveals across play and feeds the journal reality map');
 
 // Era market: tokens earned through play buy era-relevant goods, and limited
 // relics are one-time.

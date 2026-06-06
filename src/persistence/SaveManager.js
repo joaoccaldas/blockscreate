@@ -30,6 +30,7 @@ export const SaveManager = {
       anomalies: game.anomalies ? game.anomalies.serialize() : {},
       timeline: game.timeline ? game.timeline.serialize() : {},
       market: game.market ? game.market.serialize() : {},
+      simulation: game.simulation ? game.simulation.serialize() : {},
       guidance: game.guidance ? game.guidance.serialize() : {},
       settlers: game.settlers ? game.settlers.serialize() : null,
       animalPeaceTime: game.animalPeaceTime || 0,
@@ -86,6 +87,7 @@ export const SaveManager = {
     save.anomalies = save.anomalies || {};
     save.timeline = save.timeline || {};
     save.market = save.market || {};
+    save.simulation = save.simulation || {};
     save.guidance = save.guidance || {};
     save.grazerBondTime = save.grazerBondTime || 0;
     save.eraStage = save.eraStage || 0;

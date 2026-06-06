@@ -786,8 +786,20 @@ export class HUD {
       `<div class="jr-row"><span class="jr-ic">${b.icon}</span>
         <div><b>${b.name}</b><small>${b.desc}</small></div></div>`).join('');
 
+    // The nested-reality map: revealed layers + the next one as a redacted lure.
+    const simLayers = game.simulation?.layers?.() || [];
+    const shownLayers = simLayers.filter((l) => l.revealed || l.edge);
+    const layerRows = shownLayers.map((l, i) => {
+      const indent = `style="margin-left:${i * 14}px"`;
+      return l.revealed
+        ? `<div class="jr-row sim" ${indent}><span class="jr-ic">⊂</span><div><b>${l.label}</b><small>${l.note}</small></div></div>`
+        : `<div class="jr-row sim locked" ${indent}><span class="jr-ic">▓</span><div><b>███████</b><small>Something contains this. Not yet understood.</small></div></div>`;
+    }).join('');
+    const revealedCount = simLayers.filter((l) => l.revealed).length;
+
     this.el('journalBody').innerHTML =
       section('🔎 Clues', clues.length, game.clues?.count?.() || 0, clueRows) +
+      (revealedCount > 1 ? section('∞ Nested Reality', simLayers.length, revealedCount, layerRows) : '') +
       (badges.length ? section('🏅 Relics', badges.length, badges.length, badgeRows) : '') +
       section('🏛️ Structures', structs.length, structs.filter((s) => game.structures.has(s.id)).length, structRows) +
       section('✨ Discoveries', discos.length, discos.filter((d) => game.discoveries.has(d.id)).length, discoRows) +

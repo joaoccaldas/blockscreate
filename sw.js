@@ -8,7 +8,7 @@
  * The list is intentionally explicit (no build step) so what ships is what we
  * cache. Missing entries still work — they just fetch from network.
  */
-const CACHE = 'blockscreate-v5.35.0';
+const CACHE = 'blockscreate-v5.36.0';
 
 const ASSETS = [
   './',
@@ -39,6 +39,7 @@ const ASSETS = [
   './src/systems/PowerGrid.js',
   './src/systems/Timeline.js',
   './src/systems/EraMarket.js',
+  './src/systems/Simulation.js',
   './src/systems/Discoveries.js',
   './src/systems/HistoricalClues.js',
   './src/systems/Structures.js',

@@ -179,6 +179,7 @@ See "What's next" discussion below.
 | Journal (clues/discoveries/branches) | ✅ | per-era lore pages |
 | **Branching realities (multiverse)** | ✅ framework + Observer arc — see below | tangible bleeds (glitch tiles, doppelgängers), enterable rifts, branch-tree screen |
 | **Era market (in-game economy)** | ✅ per-era shop, themed currency, limited relics — see below | era-signature currency *sources*; restock/limited-time rotations |
+| **Nested simulations (meta-narrative)** | ✅ progressive personalized revelation arc — see below | enterable rifts, New Game+ "descend a layer", live glitch staging |
 | Save/persistence (+ chunk metadata) | ✅ | true chunk streaming |
 | Audio | ✅ SFX + ambient | per-era music themes |
 | Accessibility | ✅ reduce-motion, focus, landing settings | colorblind palette, font scale |
@@ -209,6 +210,33 @@ players a reason to keep earning and a way to accelerate.
 **Next & why:** give each era a distinct token *source* (a market/caravan/
 factory output that mints its currency) and time-limited rotating stock, so the
 shop becomes a living part of each economy rather than a flat menu.
+
+---
+
+## ∞ Nested simulations (the meta-narrative)
+The throughline tying the eras together: the player is in a simulation, inside a
+simulation, inside a simulation — and is never told, only shown.
+
+- **A slow, personalized dawning.** `systems/Simulation.js` fires revelation
+  beats gated by *age reached* and *Timeline divergence*, spaced ~6s apart so
+  each lands as a moment. They escalate: "a late frame" (cell) → "something keeps
+  score" (dinosaurs) → "this world has a seed: N" (bronze) → "the branches you
+  split are still running, each with a you" (iron) → "you are a simulation inside
+  a simulation" (industrial) → **The Stack** (rift-level + a crossover): "depth
+  recorded: N layers and climbing." Each beat is written from the player's real
+  run — their world seed, branch count, divergence — so the discovery is theirs.
+- **A map of the nesting.** The Journal gains an **∞ Nested Reality** section: a
+  layer stack (This World ⊂ The Render ⊂ The Garden ⊂ The Branch-Tree ⊂ The
+  Stack) that de-redacts exactly as far as the player understands, with the next
+  layer shown as a redacted lure.
+- **Built on the evidence already in place.** Timeline = the branches, Observer
+  anomalies = the impossible glimpses, Simulation = the understanding. Pure logic
+  (the Game stages presentation), saved, covered by `test/simulation.mjs` (6) +
+  integration.
+
+**Next & why:** make the layers *traversable* — a New Game+ that literally
+"descends a layer" carrying a relic forward (so the stack is felt, not just
+read), plus enterable rifts into a branch and live in-world glitch staging.
 
 ## Why this order
 The game's promise is **civilization across time**. Each era's "next" item is

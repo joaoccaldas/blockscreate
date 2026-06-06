@@ -19,6 +19,7 @@ import { WorldEventLog } from './systems/WorldEvents.js';
 import { SimulationAnomalyLog } from './systems/SimulationAnomalies.js';
 import { Timeline, DIVERGENCE } from './systems/Timeline.js';
 import { EraMarket } from './systems/EraMarket.js';
+import { Simulation } from './systems/Simulation.js';
 import { GuidanceHints } from './systems/GuidanceHints.js';
 import { SettlerManager } from './systems/Settlers.js';
 import { IndustryNetwork } from './systems/IndustryNetwork.js';
@@ -97,6 +98,7 @@ export class Game {
     this.anomalies = new SimulationAnomalyLog();
     this.timeline = new Timeline();
     this.market = new EraMarket();
+    this.simulation = new Simulation();
     this.guidance = new GuidanceHints();
     this.settlers = new SettlerManager();
     this.mobs = [];
@@ -128,6 +130,7 @@ export class Game {
     this.anomalies = new SimulationAnomalyLog(save.anomalies || {});
     this.timeline = new Timeline(save.timeline || {});
     this.market = new EraMarket(save.market || {});
+    this.simulation = new Simulation(save.simulation || {});
     this.guidance = new GuidanceHints(save.guidance || {});
     this.settlers = new SettlerManager(save.settlers || null);
     this.mobs = (save.mobs || []).map((m) => Mob.load(m));
@@ -645,6 +648,7 @@ export class Game {
     this._evaluateFunSystems(dt);
     this._updateSimulationAnomalies(dt);
     this._updateTimeline(dt);
+    this._updateSimulation(dt);
     this._updateGuidanceHints(dt);
 
     // Era advancement.
@@ -1371,6 +1375,32 @@ export class Game {
         3600,
       );
     }
+  }
+
+  /**
+   * The nested-simulation revelation arc: spaced out so each beat lands as a
+   * moment, and gated by Simulation against the player's real run (era reached,
+   * how far the Timeline has bent, their world seed). This is the slow dawning
+   * that the world is a layer in a deeper stack.
+   */
+  _updateSimulation(dt) {
+    if (this.mode !== MODE.SURVIVAL || !this.simulation || !this.timeline) return;
+    this._simTimer = (this._simTimer || 0) + dt;
+    if (this._simTimer < 6) return;
+    this._simTimer = 0;
+    const ctx = {
+      eraOrder: getEra(this.eraId)?.order ?? 0,
+      divergence: this.timeline.divergence || 0,
+      crossovers: this.timeline.crossovers || 0,
+      branches: this.timeline.divergedCount?.() || 0,
+      clues: this.clues?.count?.() || 0,
+      seed: this.world?.seed ?? 0,
+    };
+    const rev = this.simulation.update(ctx);
+    if (!rev) return;
+    this.audio?.play('unlock');
+    this.particles.fountain(this.player.x, this.player.y - 1, ['#7be4ff', '#b388ff', '#cfd0ff', '#fff'], 30);
+    this.hud?.bigToast(`${rev.icon} <b>${rev.title}</b><br><small>${rev.text}</small>`, 5200);
   }
 
   _updateGuidanceHints(dt) {

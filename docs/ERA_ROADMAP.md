@@ -210,6 +210,17 @@ larger possibility space, and a hidden **divergence** meter climbs as they play
   appears once reality has begun to branch, with divergence/branch/crossover
   detail on hover.
 
+**The Observer arc (discovery hooks).** Layered on top: an escalating thread of
+cryptic anomalies that reward *investigation*. Early signals surface from
+ordinary play (a phantom settler at 3+ population, a premonition recipe after
+crafting widely); deeper ones only appear once the timeline has branched
+(`divergence ≥ 2.5`), and a capstone ("The Observer Replies") resolves only after
+deep divergence **and** finding its two prerequisite signals. Each anomaly is a
+fleeting "impossible observation" with a matching journal clue (lore + CP), and
+the Journal lists the undiscovered ones as redacted `█████████` slots — a
+collection to chase. Investigating also nudges divergence, so the mystery and the
+multiverse feed each other. Covered by `test/fun-systems.mjs`.
+
 **Next & why:** make the bleeds *tangible* — glitches that drop an out-of-era
 tile or a doppelgänger mob, **enterable rifts** that take you to a short parallel
 slice for loot, and a **branch-tree journal screen** so players can see the

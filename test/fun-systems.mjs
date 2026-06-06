@@ -10,7 +10,8 @@ import { DiscoveryLog } from '../src/systems/Discoveries.js';
 import { PowerupManager } from '../src/systems/Powerups.js';
 import { HistoricalClueLog } from '../src/systems/HistoricalClues.js';
 import { WorldEventLog } from '../src/systems/WorldEvents.js';
-import { SimulationAnomalyLog } from '../src/systems/SimulationAnomalies.js';
+import { SimulationAnomalyLog, ANOMALIES } from '../src/systems/SimulationAnomalies.js';
+import { CLUES } from '../src/systems/HistoricalClues.js';
 import { GuidanceHints } from '../src/systems/GuidanceHints.js';
 import { Civilization } from '../src/systems/Civilization.js';
 
@@ -117,6 +118,28 @@ const observerFound = observerDiscoveries.evaluate({
 });
 assert.ok(observerFound.some((d) => d.id === 'observer_pattern'), 'two observer clues unlock a hidden pattern');
 ok('simulation anomalies are gated, one-shot, and feed the journal mystery');
+
+// --- Observer arc integrity: every anomaly resolves to a real clue ---
+for (const a of ANOMALIES) {
+  assert.ok(CLUES[a.clue], `anomaly ${a.id} references a defined clue (${a.clue})`);
+}
+assert.ok(ANOMALIES.length >= 10, 'the discovery layer has grown into a real collection to chase');
+ok('every anomaly maps to a journal clue (no dangling mystery)');
+
+// --- The arc capstone is properly gated: it needs deep divergence AND the two
+// prerequisite signals, so it can only resolve after real investigation. ---
+const reply = ANOMALIES.find((a) => a.id === 'observer_reply');
+assert.ok(reply, 'the Observer capstone exists');
+const shallow = { timeline: { divergence: 5 }, clues: new HistoricalClueLog() };
+assert.strictEqual(reply.check(shallow), false, 'capstone stays hidden without the prerequisite clues');
+const armedClues = new HistoricalClueLog();
+armedClues.discover('divergent_echo');
+armedClues.discover('chorus_of_worlds');
+assert.ok(reply.check({ timeline: { divergence: 4 }, clues: armedClues }),
+  'capstone resolves once divergence is deep and both prerequisites are found');
+assert.strictEqual(reply.check({ timeline: { divergence: 3.9 }, clues: armedClues }), false,
+  'capstone still needs divergence past the rift threshold');
+ok('the Observer arc capstone only reveals after deep multiverse investigation');
 
 // --- Guidance hints ---
 const guidance = new GuidanceHints({ cooldown: 0 });

@@ -77,6 +77,62 @@ export const CLUES = {
     branch: 'observer',
     reward: 30,
   },
+
+  // The Observer arc (revealed by the matching anomalies in SimulationAnomalies).
+  phantom_settler: {
+    id: 'phantom_settler',
+    icon: '☻',
+    label: 'Phantom Settler',
+    era: 'hidden',
+    text: 'The town remembers a citizen who was never born. Population is a number that can be edited.',
+    branch: 'observer',
+    reward: 20,
+  },
+  compiler_warning: {
+    id: 'compiler_warning',
+    icon: '⎘',
+    label: 'Premonition Recipe',
+    era: 'hidden',
+    text: 'Knowledge arrives out of order here. The future leaks backward into the recipe book.',
+    branch: 'observer',
+    reward: 22,
+  },
+  unwritten_gate: {
+    id: 'unwritten_gate',
+    icon: '⧉',
+    label: 'Unwritten Gate',
+    era: 'hidden',
+    text: 'The next age already exists, finished, waiting for you to catch up to it.',
+    branch: 'observer',
+    reward: 24,
+  },
+  divergent_echo: {
+    id: 'divergent_echo',
+    icon: '⟁',
+    label: 'Divergent Echo',
+    era: 'hidden',
+    text: 'Every choice you skip is still being played — by someone wearing your shape.',
+    branch: 'observer',
+    reward: 26,
+  },
+  chorus_of_worlds: {
+    id: 'chorus_of_worlds',
+    icon: '≋',
+    label: 'Chorus of Worlds',
+    era: 'hidden',
+    text: 'The worlds are not separate. They share one ledger, and it is being audited.',
+    branch: 'observer',
+    reward: 28,
+  },
+  observer_reply: {
+    id: 'observer_reply',
+    icon: '✶',
+    label: 'The Observer Replies',
+    era: 'hidden',
+    text: 'You were never the experiment. You are the message the experiment was written to send.',
+    branch: 'observer',
+    reward: 40,
+  },
 };
 
 export class HistoricalClueLog {

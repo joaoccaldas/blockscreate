@@ -360,6 +360,7 @@ export class World {
     return {
       seed: this.seed,
       eraId: this.eraId,
+      variant: this.variant || null,
       originX: this.originX,
       width: this.width,
       height: this.height,
@@ -414,6 +415,7 @@ export class World {
       originX: data.originX || 0,
       chunks: data.chunks,
     });
+    w.variant = data.variant || null;
     rleDecode(data.rle, w.grid);
     for (let x = 0; x < w.width; x++) w.recomputeColumnTop(x);
     if (!data.chunks) w.markGeneratedRange(0, w.width);

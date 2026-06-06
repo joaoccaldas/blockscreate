@@ -106,6 +106,17 @@ gCell.update(0.016);
 if (!gCell.canAdvance()) throw new Error('cell era did not unlock evolution after mandatory goals');
 if (!gCell._advanceEra() || gCell.eraId !== 'stone') throw new Error('cell era did not evolve into dinosaurs');
 if (!gCell.realityPath.length || gCell.realityPath[0].to !== 'stone') throw new Error('era graph did not record the route taken');
+
+// Reality variant: each world picks a variant; it persists across save/load.
+const gVar = newGame();
+gVar.newWorld('cell', MODE.SURVIVAL);
+if (!gVar.world.variant) throw new Error('first era did not pick a reality variant');
+const variantJson = SaveManager.toJSON(gVar);
+if (variantJson.world.variant !== gVar.world.variant) throw new Error('variant not serialized');
+const gVar2 = newGame();
+gVar2.loadSave(variantJson);
+if (gVar2.world.variant !== gVar.world.variant) throw new Error('reality variant lost across save/load');
+ok('worlds pick a reality variant that persists across save/load');
 ok('first-cell era evolves into Age of Dinosaurs');
 
 // Cell feeding range grows with evolution stage (a tangible power read).

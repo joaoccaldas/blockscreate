@@ -118,3 +118,25 @@ Crossings are realized by the existing `Timeline` glitch/rift staging and the
 Because routing always falls back to the prime spine when a branch destination
 isn't implemented yet, **partial graphs are always playable** — the future is
 encoded but never blocks the present.
+
+## Reality variants (the modular asset/skin layer)
+
+Each era × branch (× future universe) can look and feel distinct via **variants**
+— a data-only "skin" layer in `src/core/eraTheme.js` (`ERA_VARIANTS`), guarded by
+`test/variants.mjs`. A variant is a *partial* theme: any field it sets (tint,
+accent, weather, decorations, and later sky/sprites/world-gen flavor) overrides
+the base era theme; everything else is inherited. So a new reality's look is just
+a data entry — no engine changes.
+
+- **Chosen by `pickVariant(eraId, { branch, seed })`:** a branch-named variant
+  when the player routed in via that branch; otherwise a *seed-derived* one, so
+  even the **first era differs every run** and is shareable ("I got the Abyssal
+  start"). The choice is saved on the world (`world.variant`) and persists.
+- **Shipped variants today:** First Cell — Hydrothermal Vents / Sunlit Shallows /
+  Abyssal Dark; Dinosaurs — Saurian Echo / Firekeepers. Other eras stay on their
+  base look until variants are added (incremental adoption).
+- **Surfaced to the player:** the era-intro names the reality ("Sunlit Shallows
+  — drifting in bright, oxygen-rich shallows"), so each start has identity.
+
+To add a reality look: add an `ERA_VARIANTS[era][id]` entry (and, optionally,
+branch a route to it / key world-gen off `world.variant`). That's it.

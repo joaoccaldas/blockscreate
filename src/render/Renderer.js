@@ -581,7 +581,7 @@ export class Renderer {
    * reloads. Drawn on top of the surface tile of each visible column.
    */
   drawDecorations(world, era, camera, T, x0, x1) {
-    const theme = getEraTheme(world.eraId);
+    const theme = getEraTheme(world.eraId, world.variant);
     if (!theme.decorations || !theme.decorations.length) return;
     const ctx = this.ctx;
     for (let tx = x0; tx <= x1; tx++) {

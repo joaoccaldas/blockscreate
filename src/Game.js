@@ -33,7 +33,7 @@ import { SaveManager } from './persistence/SaveManager.js';
 import { getBlock, dropsOf, isSolid, AIR, blockId, minTierOf, fallsOf } from './core/blocks.js';
 import { getItem, isPlaceable } from './core/items.js';
 import { getEra, nextEra, chooseNextEra } from './core/eras.js';
-import { getEraTheme, weightedPick } from './core/eraTheme.js';
+import { getEraTheme, weightedPick, pickVariant, variantInfo } from './core/eraTheme.js';
 
 // Buildings a raider will smash when it breaches the town (drives _pillageTown).
 const TOWN_BUILDINGS = new Set(['granary', 'market', 'caravan_post', 'windmill', 'auto_miner', 'gate']);
@@ -77,13 +77,16 @@ export class Game {
 
   // ---- lifecycle ----
 
-  newWorld(eraId, mode) {
+  newWorld(eraId, mode, { branch = null } = {}) {
     this.dead = false;
     this.showIntro = true; // fresh era entry → show the era-reveal on start
     this.mode = mode;
     this.eraId = eraId;
     this.clock = C.DAY_LENGTH * 0.3;
     this.world = new World({ seed: (Math.random() * 1e9) | 0, eraId });
+    // Pick this run's reality variant — branch-flavored when routed in via a
+    // branch, else seed-derived so every fresh start has its own look.
+    this.world.variant = pickVariant(eraId, { branch, seed: this.world.seed });
     this.world.generate();
     this.player = new Player(this.world.spawn.x + 0.5, this.world.spawn.y);
     this._applyEraPlayerForm();
@@ -254,10 +257,11 @@ export class Game {
       this.showIntro = false;
       this.paused = true;
       const route = (this.realityPath || []).slice(-1)[0] || null;
+      const variant = variantInfo(this.eraId, this.world?.variant);
       this.hud.showEraIntro(getEra(this.eraId), () => {
         this.paused = false;
         this._maybeOnboard();
-      }, route);
+      }, route, variant);
     } else {
       this._maybeOnboard();
     }
@@ -713,7 +717,7 @@ export class Game {
     this.unlocked.unlock(nxt.id);
     SaveManager.save(this);
     this._teardownView();
-    this.newWorld(nxt.id, MODE.SURVIVAL); // sets showIntro + rebuilds HUD/input
+    this.newWorld(nxt.id, MODE.SURVIVAL, { branch }); // branch flavors the new reality
     this.realityPath = [...priorPath, route]; // each reality's path is its own
     this.audio?.play('unlock');
     SaveManager.save(this);
@@ -966,7 +970,7 @@ export class Game {
 
   _ambientWeather(dt) {
     if (this.reduceMotion) return; // accessibility: no drifting particles
-    const theme = getEraTheme(this.eraId);
+    const theme = getEraTheme(this.eraId, this.world?.variant);
     if (!theme.weather || theme.weather === 'none' || !theme.weatherRate) return;
     this._weatherAccum = (this._weatherAccum || 0) + dt * theme.weatherRate;
     while (this._weatherAccum >= 1) {
@@ -1009,7 +1013,7 @@ export class Game {
    * (shelter helps), reinforcing the "survive the extinction" fantasy.
    */
   _updateMeteors(dt) {
-    const theme = getEraTheme(this.eraId);
+    const theme = getEraTheme(this.eraId, this.world?.variant);
     if (!theme.asteroidEvent || this.mode !== MODE.SURVIVAL) { this.meteors = this.meteors || []; return; }
     this.meteors = this.meteors || [];
 
@@ -1781,7 +1785,7 @@ export class Game {
     if (this.mobTimer > 0 || this.mobs.length >= 9) return;
     this.mobTimer = 4 + Math.random() * 3;
 
-    const theme = getEraTheme(this.eraId);
+    const theme = getEraTheme(this.eraId, this.world?.variant);
     const isDay = this.dayFactor() > 0.4;
 
     // Decide passive vs hostile. Hostiles come out at night (or any time in
@@ -2241,7 +2245,7 @@ export class Game {
       particles: this.particles,
       powerups: this.powerups,
       dayFactor: this.dayFactor(),
-      tint: getEraTheme(this.eraId).tint,
+      tint: getEraTheme(this.eraId, this.world?.variant).tint,
       meteors: this.meteors,
       hover: this.hover,
       ghost: this.ghost,

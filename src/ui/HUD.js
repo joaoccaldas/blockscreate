@@ -840,11 +840,15 @@ export class HUD {
    * the core progression beat land instead of a tiny toast: name, story, and
    * what this age is about. `done` resumes play.
    */
-  showEraIntro(era, done, route = null) {
+  showEraIntro(era, done, route = null, variant = null) {
     const m = era.manifest || {};
     this.el('eraIntroIcon').textContent = era.icon || '🌀';
     this.el('eraIntroTitle').textContent = m.title || era.name;
-    this.el('eraIntroSub').textContent = m.subtitle || era.blurb || '';
+    // The reality variant names this run's flavor of the age (e.g. "Sunlit
+    // Shallows") so each start feels distinct and shareable.
+    this.el('eraIntroSub').textContent = variant
+      ? `${variant.name} — ${variant.blurb || m.subtitle || era.blurb || ''}`
+      : (m.subtitle || era.blurb || '');
     const loop = (m.coreLoop || []).slice(0, 4).join(' · ');
     const hazards = (m.hazards || []).slice(0, 3).join(', ');
     // The reality the player arrived through — each route colors the age.

@@ -94,8 +94,69 @@ export const ERA_THEME = {
   },
 };
 
-export function getEraTheme(id) {
-  return ERA_THEME[id] || ERA_THEME.stone;
+export function getEraTheme(id, variant = null) {
+  const base = ERA_THEME[id] || ERA_THEME.stone;
+  if (!variant) return base;
+  const v = ERA_VARIANTS[id]?.[variant];
+  return v ? { ...base, ...v } : base;
+}
+
+/**
+ * Reality variants — a modular "skin" layer over the base era theme so each
+ * era × branch (× future universe) combination can look and feel distinct by
+ * editing data only. A variant is a *partial* theme: any field it sets overrides
+ * the base; everything else is inherited. Adding a new reality = adding an entry
+ * here (plus, if you want, world-gen flavor keyed off `world.variant`).
+ *
+ * Variants are chosen by `pickVariant`: a branch-named variant when the player
+ * routed in via that branch, otherwise a seed-derived one so even the very first
+ * era differs run to run (and is shareable: "I got the Abyssal start").
+ */
+export const ERA_VARIANTS = {
+  cell: {
+    hydrothermal: {
+      name: 'Hydrothermal Vents', blurb: 'Born in scalding mineral plumes near the seafloor.',
+      tint: 'rgba(255, 120, 50, 0.13)', accent: '#ff8a4a', weather: 'embers', weatherRate: 2.2,
+      decorations: [{ kind: 'vent', chance: 0.03 }, { kind: 'bubble', chance: 0.06 }],
+    },
+    sunlit: {
+      name: 'Sunlit Shallows', blurb: 'Drifting in bright, oxygen-rich shallows.',
+      tint: 'rgba(120, 230, 255, 0.12)', accent: '#7be4ff', weather: 'bubbles', weatherRate: 2.6,
+      decorations: [{ kind: 'bubble', chance: 0.12 }, { kind: 'vent', chance: 0.008 }],
+    },
+    abyssal: {
+      name: 'Abyssal Dark', blurb: 'Adrift in the crushing, lightless deep.',
+      tint: 'rgba(40, 50, 130, 0.22)', accent: '#6a7bff', weather: 'bubbles', weatherRate: 1.0,
+      decorations: [{ kind: 'vent', chance: 0.022 }, { kind: 'bubble', chance: 0.05 }],
+    },
+  },
+  stone: {
+    saurian_echo: { name: 'Saurian Echo', tint: 'rgba(120, 90, 40, 0.10)', accent: '#8a6f3a' },
+    firekeepers: { name: 'Firekeepers', tint: 'rgba(200, 90, 40, 0.10)', accent: '#e0762a', weather: 'embers', weatherRate: 1.8 },
+  },
+};
+
+/** Variant ids available for an era (excluding the implicit prime/base). */
+export function variantsFor(id) { return Object.keys(ERA_VARIANTS[id] || {}); }
+
+/** Display info for a variant, or null for the prime/base look. */
+export function variantInfo(id, variant) {
+  const v = variant && ERA_VARIANTS[id]?.[variant];
+  return v ? { id: variant, name: v.name, blurb: v.blurb || '' } : null;
+}
+
+/**
+ * Choose a reality variant for a fresh world. A branch-named variant wins when
+ * the player routed in via that branch; otherwise the era's variants are sampled
+ * deterministically from the world seed (so a run's look is fixed + shareable).
+ * Returns a variant id or null (the prime/base look).
+ */
+export function pickVariant(id, { branch = null, seed = 0 } = {}) {
+  const variants = variantsFor(id);
+  if (!variants.length) return null;
+  if (branch && variants.includes(branch)) return branch;
+  // Deterministic seed pick so the same seed always yields the same reality.
+  return variants[Math.abs(seed >>> 0) % variants.length];
 }
 
 /** Pick a weighted key from a [[key, weight], ...] table. */

@@ -18,6 +18,7 @@ import { PowerupManager } from './systems/Powerups.js';
 import { WorldEventLog } from './systems/WorldEvents.js';
 import { SimulationAnomalyLog } from './systems/SimulationAnomalies.js';
 import { Timeline, DIVERGENCE } from './systems/Timeline.js';
+import { EraMarket } from './systems/EraMarket.js';
 import { GuidanceHints } from './systems/GuidanceHints.js';
 import { SettlerManager } from './systems/Settlers.js';
 import { IndustryNetwork } from './systems/IndustryNetwork.js';
@@ -95,6 +96,7 @@ export class Game {
     this.events = new WorldEventLog();
     this.anomalies = new SimulationAnomalyLog();
     this.timeline = new Timeline();
+    this.market = new EraMarket();
     this.guidance = new GuidanceHints();
     this.settlers = new SettlerManager();
     this.mobs = [];
@@ -125,6 +127,7 @@ export class Game {
     this.events = new WorldEventLog(save.events || {});
     this.anomalies = new SimulationAnomalyLog(save.anomalies || {});
     this.timeline = new Timeline(save.timeline || {});
+    this.market = new EraMarket(save.market || {});
     this.guidance = new GuidanceHints(save.guidance || {});
     this.settlers = new SettlerManager(save.settlers || null);
     this.mobs = (save.mobs || []).map((m) => Mob.load(m));
@@ -270,6 +273,7 @@ export class Game {
       onToggleInventory: () => this._toggleInventory(),
       onToggleCrafting: () => this._toggleCrafting(),
       onToggleJournal: () => this._toggleJournal(),
+      onToggleMarket: () => this._toggleMarket(),
       onToggleBuild: () => { this.buildMode = !this.buildMode; },
       onCompanionCommand: () => this._cycleCompanionCommand(),
       onToggleMount: () => this._toggleMountCompanion(),
@@ -284,6 +288,8 @@ export class Game {
       onToggleInventory: () => this._toggleInventory(),
       onToggleCrafting: () => this._toggleCrafting(),
       onToggleJournal: () => this._toggleJournal(),
+      onToggleMarket: () => this._toggleMarket(),
+      onBuyOffer: (id) => this._buyOffer(id),
       onCraft: (r) => this._craft(r),
       onPickSlot: (i) => {
         const s = this.inventory.slots[i];
@@ -351,9 +357,11 @@ export class Game {
   _toggleInventory() {
     this.invOpen = !this.invOpen;
     this.craftOpen = false;
+    this.marketOpen = false;
     if (this.invOpen) this.hud.renderInventory(this);
     this.hud.showInventory(this.invOpen);
     this.hud.showCrafting(false);
+    this.hud.showMarket(false);
     this.hud.showPause(false);
     this.paused = false;
     this.audio?.play('ui');
@@ -362,9 +370,11 @@ export class Game {
   _toggleCrafting() {
     this.craftOpen = !this.craftOpen;
     this.invOpen = false;
+    this.marketOpen = false;
     if (this.craftOpen) this.hud.renderCrafting(this);
     this.hud.showCrafting(this.craftOpen);
     this.hud.showInventory(false);
+    this.hud.showMarket(false);
     this.hud.showPause(false);
     this.paused = false;
     this.audio?.play('ui');
@@ -374,20 +384,23 @@ export class Game {
     this.journalOpen = !this.journalOpen;
     this.invOpen = false;
     this.craftOpen = false;
+    this.marketOpen = false;
     if (this.journalOpen) this.hud.renderJournal(this);
     this.hud.showJournal(this.journalOpen);
     this.hud.showInventory(false);
     this.hud.showCrafting(false);
+    this.hud.showMarket(false);
     this.hud.showPause(false);
     this.paused = this.journalOpen; // pause behind the journal, like other menus
     this.audio?.play('ui');
   }
 
   _closeMenus() {
-    this.invOpen = this.craftOpen = this.journalOpen = false;
+    this.invOpen = this.craftOpen = this.journalOpen = this.marketOpen = false;
     this.hud.showInventory(false);
     this.hud.showCrafting(false);
     this.hud.showJournal(false);
+    this.hud.showMarket(false);
   }
 
   _craft(recipe) {
@@ -401,6 +414,60 @@ export class Game {
     } else {
       this.hud.toast('Missing materials');
     }
+  }
+
+  _toggleMarket() {
+    this.marketOpen = !this.marketOpen;
+    this.invOpen = false;
+    this.craftOpen = false;
+    this.journalOpen = false;
+    if (this.marketOpen) this.hud.renderMarket(this);
+    this.hud.showMarket(this.marketOpen);
+    this.hud.showInventory(false);
+    this.hud.showCrafting(false);
+    this.hud.showJournal(false);
+    this.hud.showPause(false);
+    this.paused = this.marketOpen; // pause behind the shop, like other menus
+    this.audio?.play('ui');
+  }
+
+  /** Buy an era-market offer: spend tokens, then apply its effect. */
+  _buyOffer(offerId) {
+    const offer = this.market.find(this.eraId, offerId);
+    if (!offer) return;
+    if (this.market.isClaimed(offer)) { this.hud.toast('Already owned'); return; }
+    if (!this.civ.spendTokens(offer.cost)) {
+      const cur = this.market.currency(this.eraId);
+      this.hud.toast(`Not enough ${cur.icon} ${cur.name}`);
+      this.audio?.play('error');
+      return;
+    }
+    this._applyOffer(offer);
+    this.market.claim(offer);
+    this.audio?.play(offer.kind === 'badge' ? 'unlock' : 'craft');
+    if (offer.kind === 'badge') {
+      this.particles.fountain(this.player.x, this.player.y - 1, ['#f4d24a', '#fff0a8', '#ffd6ff'], 30);
+      this.hud.bigToast(`${offer.icon} <b>${offer.name}</b><br><small>Limited relic claimed — a mark of this age.</small>`, 3200);
+    } else {
+      this.hud.toast(`${offer.icon} Bought ${offer.name}`);
+    }
+    this.hud.renderMarket(this);
+  }
+
+  /** Apply a purchased offer's effect (grant items / boosts / stock / badge). */
+  _applyOffer(offer) {
+    const p = offer.payload || {};
+    if (offer.kind === 'item') {
+      this.inventory.add(p.id, p.n || 1);
+    } else if (offer.kind === 'powerup') {
+      this.powerups.grant(p.id, p.seconds);
+    } else if (offer.kind === 'stock') {
+      if (this.settlers) {
+        this.settlers.stock = this.settlers.stock || {};
+        this.settlers.stock[p.key] = (this.settlers.stock[p.key] || 0) + (p.n || 0);
+      }
+    }
+    // 'badge' is pure prestige, recorded via market.claim().
   }
 
   hasStation(itemId) {

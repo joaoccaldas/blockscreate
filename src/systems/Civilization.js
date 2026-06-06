@@ -33,6 +33,10 @@ export class Civilization {
   constructor(eraId) {
     this.eraId = eraId;
     this.cp = 0;
+    // Spendable era-market currency, earned as a byproduct of CP gains so it
+    // never competes with the CP you need to advance. Displayed with an
+    // era-themed name/icon (Biomass, Bone Tokens, Credits …) by the market.
+    this.tokens = 0;
     this.population = 1;
     this.totalMined = 0;
     this.totalCrafted = 0;
@@ -51,9 +55,18 @@ export class Civilization {
 
   addCP(amount) {
     this.cp += amount;
+    // Earn market tokens alongside CP (positive gains only).
+    if (amount > 0) this.tokens += amount * 0.6;
     // Population grows with a soft curve off accumulated CP.
     const target = 1 + Math.floor(Math.sqrt(this.cp) / 3);
     if (target > this.population) this.population = target;
+  }
+
+  /** Spend market tokens if affordable. Returns true on success. */
+  spendTokens(amount) {
+    if ((this.tokens || 0) < amount) return false;
+    this.tokens -= amount;
+    return true;
   }
 
   onMine(_itemId = null, y = 0) {
@@ -147,7 +160,7 @@ export class Civilization {
 
   serialize() {
     return {
-      eraId: this.eraId, cp: this.cp, population: this.population,
+      eraId: this.eraId, cp: this.cp, tokens: this.tokens, population: this.population,
       totalMined: this.totalMined, totalCrafted: this.totalCrafted, totalBuilt: this.totalBuilt,
       housing: this.housing, light: this.light, placed: this.placed, defeated: this.defeated,
       defense: this.defense, storage: this.storage, trade: this.trade, pollution: this.pollution,
@@ -157,6 +170,7 @@ export class Civilization {
 
   load(d) {
     if (d) Object.assign(this, d);
+    this.tokens ??= 0;
     this.housing ??= 0;
     this.light ??= 0;
     this.placed ??= {};

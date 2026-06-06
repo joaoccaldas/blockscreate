@@ -45,6 +45,7 @@ export class HUD {
         <div id="eraStory" class="era-story"></div>
         <div class="civ-row"><span>🏛️ Population</span><b id="popVal">1</b></div>
         <div class="civ-row"><span>✨ Civ Points</span><b id="cpVal">0</b></div>
+        <div class="civ-row"><span id="tokenLabel">🪙 Tokens</span><b id="tokenVal">0</b></div>
         <div class="civ-row"><span>🏘️ Settlement</span><b id="settleVal">0</b></div>
         <div class="civ-row"><span>🔎 Clues</span><b id="clueVal">0</b></div>
         <div class="civ-row"><span>🧭 Era Stage</span><b id="eraStageVal">0/3</b></div>
@@ -90,6 +91,7 @@ export class HUD {
       <div id="desktopActions" class="desktop-actions">
         <button id="invBtn" class="action-btn" title="Inventory (E)">🎒 <span>Bag</span></button>
         <button id="craftBtn" class="action-btn" title="Crafting (C)">🔨 <span>Craft</span></button>
+        <button id="marketBtn" class="action-btn" title="Era market — spend tokens on boosts & relics (B)">🛒 <span>Market</span></button>
         <button id="journalBtn" class="action-btn" title="Journal of clues & discoveries">📖 <span>Journal</span></button>
       </div>`}
       <div id="powerupBar" class="powerup-bar hidden"></div>
@@ -124,6 +126,7 @@ export class HUD {
             <button id="resumeBtn" class="btn primary">▶ Resume</button>
             <button id="pInv" class="btn">🎒 Inventory</button>
             <button id="pCraft" class="btn">🔨 Crafting</button>
+            <button id="pMarket" class="btn">🛒 Market</button>
             <button id="pJournal" class="btn">📖 Journal</button>
           </div>
           <div class="settings-block">
@@ -153,6 +156,15 @@ export class HUD {
         </div>
         <div id="journalBody"></div>
         <button class="close-btn" id="journalClose">Close</button>
+      </div>
+
+      <div id="marketPanel" class="panel hidden">
+        <div class="panel-head">
+          <h2 id="marketTitle">🛒 Market</h2>
+          <span id="marketWallet" class="muted small"></span>
+        </div>
+        <div id="marketBody"></div>
+        <button class="close-btn" id="marketClose">Close</button>
       </div>
 
       <div id="eraIntro" class="overlay hidden">
@@ -217,11 +229,14 @@ export class HUD {
     if (!this.isTouch) {
       this.el('invBtn').onclick = () => this.h.onToggleInventory?.();
       this.el('craftBtn').onclick = () => this.h.onToggleCrafting?.();
+      this.el('marketBtn').onclick = () => this.h.onToggleMarket?.();
       this.el('journalBtn').onclick = () => this.h.onToggleJournal?.();
     }
+    this.el('marketClose').onclick = () => this.h.onToggleMarket?.();
     this.el('resumeBtn').onclick = () => this.h.onResume?.();
     this.el('pInv').onclick = () => this.h.onToggleInventory?.();
     this.el('pCraft').onclick = () => this.h.onToggleCrafting?.();
+    this.el('pMarket').onclick = () => this.h.onToggleMarket?.();
     this.el('pJournal').onclick = () => this.h.onToggleJournal?.();
     this.el('journalClose').onclick = () => this.h.onToggleJournal?.();
 
@@ -266,6 +281,7 @@ export class HUD {
       <div class="touch-quick">
         <button class="tbtn small" data-act="inv" aria-label="Inventory">🎒</button>
         <button class="tbtn small" data-act="craft" aria-label="Crafting">🔨</button>
+        <button class="tbtn small" data-act="market" aria-label="Era market">🛒</button>
         ${this.eraId === 'stone' ? '<button class="tbtn small" data-act="companion" aria-label="Companion command">🌿</button>' : ''}
         ${this.eraId === 'stone' ? '<button class="tbtn small" data-act="mount" aria-label="Mount companion">🐾</button>' : ''}
         ${this.eraId === 'stone' ? '<button class="tbtn small" data-act="cargo" aria-label="Companion cargo">📦</button>' : ''}
@@ -301,6 +317,8 @@ export class HUD {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleInventory?.(); });
       } else if (act === 'craft') {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleCrafting?.(); });
+      } else if (act === 'market') {
+        btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleMarket?.(); });
       } else if (act === 'companion') {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onCompanionCommand?.(); });
       } else if (act === 'mount') {
@@ -360,6 +378,9 @@ export class HUD {
         `Town stock — food ${Math.floor(st.food || 0)}, wheat ${Math.floor(st.wheat || 0)}, wood ${Math.floor(st.wood || 0)}, ore ${Math.floor(st.ore || 0)}`;
     }
     this.el('cpVal').textContent = Math.floor(game.civ.cp);
+    const cur = game.market?.currency?.(game.eraId) || { name: 'Tokens', icon: '🪙' };
+    this.el('tokenLabel').textContent = `${cur.icon} ${cur.name}`;
+    this.el('tokenVal').textContent = Math.floor(game.civ.tokens || 0);
     this.el('settleVal').textContent = game.civ.settlementScore();
     this.el('clueVal').textContent = game.clues?.count?.() || 0;
     const stage = game.objectives?.stageProgress?.() || { stage: 0, label: 'Dormant', percent: 0 };
@@ -675,6 +696,38 @@ export class HUD {
   showCrafting(show) { this.el('craftPanel').classList.toggle('hidden', !show); }
   showPause(show) { this.el('pauseMenu').classList.toggle('hidden', !show); }
   showJournal(show) { this.el('journalPanel').classList.toggle('hidden', !show); }
+  showMarket(show) { this.el('marketPanel').classList.toggle('hidden', !show); }
+
+  /**
+   * The era market: spend era-themed tokens on relevant accelerants and
+   * one-time limited relics. Stock + currency are pulled from EraMarket so each
+   * age reads of-its-place (Biomass in the sea, Credits in the factory).
+   */
+  renderMarket(game) {
+    const m = game.market;
+    if (!m) return;
+    const cur = m.currency(game.eraId);
+    const tokens = Math.floor(game.civ?.tokens || 0);
+    this.el('marketTitle').textContent = `🛒 ${getEra(game.eraId)?.name || 'Era'} Market`;
+    this.el('marketWallet').textContent = `${cur.icon} ${tokens} ${cur.name}`;
+    const offers = m.offersFor(game.eraId);
+    this.el('marketBody').innerHTML = offers.length ? offers.map((o) => {
+      const claimed = m.isClaimed(o);
+      const afford = m.canBuy(o, tokens);
+      const badge = o.limited ? '<span class="mk-limited">LIMITED</span>' : '';
+      const btn = claimed
+        ? '<button class="mk-buy owned" disabled>Owned ✓</button>'
+        : `<button class="mk-buy${afford ? '' : ' poor'}" data-offer="${o.id}"${afford ? '' : ' disabled'}>${cur.icon} ${o.cost}</button>`;
+      return `<div class="mk-row${o.limited ? ' limited' : ''}${claimed ? ' claimed' : ''}">
+        <span class="mk-ic">${o.icon}</span>
+        <div class="mk-info"><b>${o.name}${badge}</b><small>${o.desc}</small></div>
+        ${btn}</div>`;
+    }).join('') : '<p class="muted small">No market in this era yet.</p>';
+    // Wire the buy buttons (re-rendered each open / after a purchase).
+    for (const b of this.el('marketBody').querySelectorAll('.mk-buy[data-offer]')) {
+      b.onclick = () => this.h.onBuyOffer?.(b.dataset.offer);
+    }
+  }
 
   /**
    * The Journal gives the clue/discovery/structure data a browsable home and
@@ -727,8 +780,15 @@ export class HUD {
         <div><b>${got ? a.label : '█████████'}</b><small>${got ? a.text : 'An unexplained reading. Not yet observed.'}</small></div></div>`;
     }).join('');
 
+    // Limited market relics earned, as a small trophy case.
+    const badges = game.market?.badges?.() || [];
+    const badgeRows = badges.map((b) =>
+      `<div class="jr-row"><span class="jr-ic">${b.icon}</span>
+        <div><b>${b.name}</b><small>${b.desc}</small></div></div>`).join('');
+
     this.el('journalBody').innerHTML =
       section('🔎 Clues', clues.length, game.clues?.count?.() || 0, clueRows) +
+      (badges.length ? section('🏅 Relics', badges.length, badges.length, badgeRows) : '') +
       section('🏛️ Structures', structs.length, structs.filter((s) => game.structures.has(s.id)).length, structRows) +
       section('✨ Discoveries', discos.length, discos.filter((d) => game.discoveries.has(d.id)).length, discoRows) +
       (anomalies.length ? section('⩗ Anomalies', anomalies.length, anomalies.filter((a) => game.anomalies.has(a.id)).length, anomalyRows) : '');

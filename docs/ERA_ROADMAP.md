@@ -177,11 +177,38 @@ See "What's next" discussion below.
 | Intra-era progression | ✅ 3-stage era evolution with HUD progress and animated stage-up moments | richer per-era stage names/rewards |
 | Settlers / population | ✅ roles + economy; builders raise village blocks and complete planned build sites; gatherers seek + harvest trees/ore; farmers tend visible crop plots | richer pathing; recognizable house plans |
 | Journal (clues/discoveries/branches) | ✅ | per-era lore pages |
-| **Branching realities (multiverse)** | ✅ framework — see below | tangible bleeds (glitch tiles, doppelgängers), enterable rifts, branch-tree screen |
+| **Branching realities (multiverse)** | ✅ framework + Observer arc — see below | tangible bleeds (glitch tiles, doppelgängers), enterable rifts, branch-tree screen |
+| **Era market (in-game economy)** | ✅ per-era shop, themed currency, limited relics — see below | era-signature currency *sources*; restock/limited-time rotations |
 | Save/persistence (+ chunk metadata) | ✅ | true chunk streaming |
 | Audio | ✅ SFX + ambient | per-era music themes |
 | Accessibility | ✅ reduce-motion, focus, landing settings | colorblind palette, font scale |
 | Balance | 🚧 | playtest predator/drought/absorption pacing |
+
+---
+
+## 🛒 Era market (in-game economy)
+Each age has a shop whose stock is *specific and relevant to that era*, giving
+players a reason to keep earning and a way to accelerate.
+
+- **Themed currency, one wallet.** You earn spendable **tokens** as a byproduct
+  of CP (so spending never blocks era advancement), shown per-era as Biomass
+  (cell) → Bone Tokens (dinosaurs) → Trade Beads (bronze) → War Spoils (iron) →
+  Credits (industrial).
+- **Relevant accelerants.** Cell sells nutrient/membrane kits + a metabolic
+  surge; dinosaurs sell rations, ember/fossil charms, stone; bronze sells seeds,
+  bronze billets, merchant favor; iron sells iron, rampart ore stock, a meteor
+  pick; industrial sells steel, machine parts, power line, an output surge.
+- **Limited-edition relics.** Each era has exactly one one-time prestige relic
+  (Primordial Spark, Saurian Crest, Golden Idol, Hero's Aegis, Founder's Plaque)
+  that lands in a 🏅 Relics trophy case in the Journal — a reason to splurge.
+- **Reachable everywhere.** 🛒 button in the desktop action column, the touch
+  quick-row, and the pause menu; `B` on desktop. `systems/EraMarket.js` is pure
+  catalog + claim bookkeeping (the Game applies effects), covered by
+  `test/market.mjs` + integration.
+
+**Next & why:** give each era a distinct token *source* (a market/caravan/
+factory output that mints its currency) and time-limited rotating stock, so the
+shop becomes a living part of each economy rather than a flat menu.
 
 ## Why this order
 The game's promise is **civilization across time**. Each era's "next" item is

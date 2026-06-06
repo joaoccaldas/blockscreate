@@ -204,7 +204,7 @@ g.mode = MODE.SURVIVAL;
 const json = SaveManager.toJSON(g);
 if (!('objectives' in json) || !('crafted' in json)) throw new Error('save missing new fields');
 if (!('eraStage' in json)) throw new Error('save missing era stage');
-for (const key of ['structures', 'discoveries', 'clues', 'powerups', 'events', 'anomalies', 'timeline', 'guidance']) {
+for (const key of ['structures', 'discoveries', 'clues', 'powerups', 'events', 'anomalies', 'timeline', 'market', 'guidance']) {
   if (!(key in json)) throw new Error(`save missing ${key}`);
 }
 if (!json.world.chunks?.generated?.length) throw new Error('save missing generated chunk metadata');
@@ -395,6 +395,29 @@ gTl._updateTimeline(1);
 if (!(gTl.civ.cp > cpBeforeRift)) throw new Error('rift crossover did not pay its windfall');
 if (gTl.timeline.crossovers !== 1) throw new Error('crossover was not recorded');
 ok('Timeline branches events and stages reality crossovers (multiverse layer)');
+
+// Era market: tokens earned through play buy era-relevant goods, and limited
+// relics are one-time.
+const gMkt = newGame();
+gMkt.newWorld('cell', MODE.SURVIVAL);
+gMkt.civ.tokens = 0; gMkt.civ.addCP(100); // earning CP also fills the token wallet
+if (!(gMkt.civ.tokens > 0)) throw new Error('tokens did not accrue alongside CP');
+gMkt.civ.tokens = 50;
+const nutrientsBefore = gMkt.inventory.count('nutrient_blob');
+const tokensBefore = gMkt.civ.tokens;
+gMkt._buyOffer('c_nutrients'); // item offer
+if (!(gMkt.inventory.count('nutrient_blob') > nutrientsBefore)) throw new Error('market item purchase did not grant goods');
+if (!(gMkt.civ.tokens < tokensBefore)) throw new Error('purchase did not spend tokens');
+gMkt._buyOffer('c_spark'); // limited relic
+if (!gMkt.market.isClaimed(gMkt.market.find('cell', 'c_spark'))) throw new Error('limited relic was not claimed');
+const tokensAfterRelic = gMkt.civ.tokens;
+gMkt._buyOffer('c_spark'); // second attempt must be a no-op
+if (gMkt.civ.tokens !== tokensAfterRelic) throw new Error('a claimed relic was wrongly re-purchased');
+gMkt.civ.tokens = 0;
+const ventBefore = gMkt.inventory.count('mineral_vent');
+gMkt._buyOffer('c_vent'); // cannot afford
+if (gMkt.inventory.count('mineral_vent') !== ventBefore) throw new Error('purchase succeeded without tokens');
+ok('Era market: tokens accrue, buy era goods, and limited relics are one-time');
 
 // Asteroid event: a meteor impact carves a crater and hurts a nearby player.
 const g3 = newGame();

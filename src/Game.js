@@ -20,6 +20,7 @@ import { SimulationAnomalyLog } from './systems/SimulationAnomalies.js';
 import { Timeline, DIVERGENCE } from './systems/Timeline.js';
 import { EraMarket } from './systems/EraMarket.js';
 import { Simulation } from './systems/Simulation.js';
+import { AchievementLog } from './systems/Achievements.js';
 import { GuidanceHints } from './systems/GuidanceHints.js';
 import { SettlerManager } from './systems/Settlers.js';
 import { IndustryNetwork } from './systems/IndustryNetwork.js';
@@ -104,6 +105,7 @@ export class Game {
     this.timeline = new Timeline();
     this.market = new EraMarket();
     this.simulation = new Simulation();
+    this.achievements = new AchievementLog();
     this.guidance = new GuidanceHints();
     this.settlers = new SettlerManager();
     this.mobs = [];
@@ -137,6 +139,7 @@ export class Game {
     this.timeline = new Timeline(save.timeline || {});
     this.market = new EraMarket(save.market || {});
     this.simulation = new Simulation(save.simulation || {});
+    this.achievements = new AchievementLog(save.achievements || {});
     this.guidance = new GuidanceHints(save.guidance || {});
     this.settlers = new SettlerManager(save.settlers || null);
     this.mobs = (save.mobs || []).map((m) => Mob.load(m));
@@ -684,6 +687,7 @@ export class Game {
     this._updateSimulationAnomalies(dt);
     this._updateTimeline(dt);
     this._updateSimulation(dt);
+    this._updateAchievements(dt);
     this._updateGuidanceHints(dt);
 
     // Era advancement.
@@ -1462,6 +1466,20 @@ export class Game {
     this.audio?.play('unlock');
     this.particles.fountain(this.player.x, this.player.y - 1, ['#7be4ff', '#b388ff', '#cfd0ff', '#fff'], 30);
     this.hud?.bigToast(`${rev.icon} <b>${rev.title}</b><br><small>${rev.text}</small>`, 5200);
+  }
+
+  /** Award achievements (throttled) and celebrate each unlock. */
+  _updateAchievements(dt) {
+    if (!this.achievements) return;
+    this._achTimer = (this._achTimer || 0) + dt;
+    if (this._achTimer < 1.5) return;
+    this._achTimer = 0;
+    const newly = this.achievements.evaluate(this);
+    for (const a of newly) {
+      this.audio?.play('unlock');
+      this.particles.fountain(this.player.x, this.player.y - 1, ['#f4d24a', '#fff0a8', '#6fc04e', '#fff'], 26);
+      this.hud?.bigToast?.(`🏆 <b>${a.name}</b><br><small>${a.desc}</small>`, 2800);
+    }
   }
 
   _updateGuidanceHints(dt) {

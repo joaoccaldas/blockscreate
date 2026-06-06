@@ -799,8 +799,18 @@ export class HUD {
     }).join('');
     const revealedCount = simLayers.filter((l) => l.revealed).length;
 
+    // Achievements: unlocked shown bright, locked dimmed, secret ones redacted.
+    const achs = game.achievements?.all?.() || [];
+    const achRows = achs.map((a) => {
+      const got = game.achievements.has(a.id);
+      const hidden = a.secret && !got;
+      return `<div class="jr-row ${got ? 'ach-got' : 'locked'}"><span class="jr-ic">${got ? a.icon : (hidden ? '❔' : '🔒')}</span>
+        <div><b>${got ? a.name : (hidden ? '???' : a.name)}</b><small>${got ? a.desc : (hidden ? 'A secret achievement.' : a.desc)}</small></div></div>`;
+    }).join('');
+
     this.el('journalBody').innerHTML =
       section('🔎 Clues', clues.length, game.clues?.count?.() || 0, clueRows) +
+      (achs.length ? section('🏆 Achievements', game.achievements.total(), game.achievements.count(), achRows) : '') +
       (revealedCount > 1 ? section('∞ Nested Reality', simLayers.length, revealedCount, layerRows) : '') +
       (badges.length ? section('🏅 Relics', badges.length, badges.length, badgeRows) : '') +
       section('🏛️ Structures', structs.length, structs.filter((s) => game.structures.has(s.id)).length, structRows) +

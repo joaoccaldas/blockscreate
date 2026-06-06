@@ -66,6 +66,7 @@ export class Civilization {
   spendTokens(amount) {
     if ((this.tokens || 0) < amount) return false;
     this.tokens -= amount;
+    this.tokensSpent = (this.tokensSpent || 0) + amount; // for achievements/stats
     return true;
   }
 
@@ -160,7 +161,7 @@ export class Civilization {
 
   serialize() {
     return {
-      eraId: this.eraId, cp: this.cp, tokens: this.tokens, population: this.population,
+      eraId: this.eraId, cp: this.cp, tokens: this.tokens, tokensSpent: this.tokensSpent || 0, population: this.population,
       totalMined: this.totalMined, totalCrafted: this.totalCrafted, totalBuilt: this.totalBuilt,
       housing: this.housing, light: this.light, placed: this.placed, defeated: this.defeated,
       defense: this.defense, storage: this.storage, trade: this.trade, pollution: this.pollution,
@@ -171,6 +172,7 @@ export class Civilization {
   load(d) {
     if (d) Object.assign(this, d);
     this.tokens ??= 0;
+    this.tokensSpent ??= 0;
     this.housing ??= 0;
     this.light ??= 0;
     this.placed ??= {};

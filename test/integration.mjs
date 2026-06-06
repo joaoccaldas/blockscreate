@@ -131,6 +131,16 @@ if (gFriend.world.seed !== gShare.world.seed) throw new Error('shared reality ha
 if (gFriend.world.variant !== gShare.world.variant) throw new Error('shared reality has a different look');
 if (gFriend.realityCode() !== code) throw new Error('shared reality does not reproduce the same code');
 ok('a reality code reproduces the same world for a friend');
+
+// Achievements unlock from real play through the game loop.
+const gAch = newGame();
+gAch.newWorld('stone', MODE.SURVIVAL);
+gAch.civ.totalBuilt = 6; gAch.civ.totalCrafted = 1;
+gAch._achTimer = 99;
+gAch._updateAchievements(1);
+if (!gAch.achievements.has('first_build')) throw new Error('Builder achievement did not unlock from play');
+if (!gAch.achievements.has('evolved')) throw new Error('It Lives! should unlock once past the cell era');
+ok('achievements unlock through the game loop and persist');
 ok('first-cell era evolves into Age of Dinosaurs');
 
 // Cell feeding range grows with evolution stage (a tangible power read).
@@ -230,7 +240,7 @@ g.mode = MODE.SURVIVAL;
 const json = SaveManager.toJSON(g);
 if (!('objectives' in json) || !('crafted' in json)) throw new Error('save missing new fields');
 if (!('eraStage' in json)) throw new Error('save missing era stage');
-for (const key of ['structures', 'discoveries', 'clues', 'powerups', 'events', 'anomalies', 'timeline', 'market', 'simulation', 'guidance']) {
+for (const key of ['structures', 'discoveries', 'clues', 'powerups', 'events', 'anomalies', 'timeline', 'market', 'simulation', 'achievements', 'guidance']) {
   if (!(key in json)) throw new Error(`save missing ${key}`);
 }
 if (!json.world.chunks?.generated?.length) throw new Error('save missing generated chunk metadata');

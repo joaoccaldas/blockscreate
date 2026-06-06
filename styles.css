@@ -966,6 +966,7 @@ button:focus-visible, input:focus-visible, .era-card:focus-visible {
 .jr-row.sim { border-left: 2px solid rgba(179, 136, 255, 0.4); padding-left: 8px; }
 .jr-row.sim b { color: #c8b6ff; }
 .jr-row.sim .jr-ic { color: #b388ff; }
+.jr-row.ach-got b { color: var(--gold); }
 .jr-ic { font-size: 1.3rem; width: 1.6rem; text-align: center; flex: 0 0 auto; }
 .jr-row b { display: block; font-size: 0.92rem; }
 .jr-row small { color: var(--muted); font-size: 0.76rem; line-height: 1.35; }

@@ -51,13 +51,15 @@ const CELL_STAGE_NAMES = [
 ];
 
 export class Game {
-  constructor({ canvas, hudRoot, sprites, progress, settings, audio, onExit }) {
+  constructor({ canvas, hudRoot, sprites, progress, settings, audio, onExit, onDailyComplete }) {
     this.canvas = canvas;
     this.sprites = sprites;
     this.unlocked = progress;
     this.settings = settings;
     this.audio = audio;
     this.onExit = onExit;
+    this.onDailyComplete = onDailyComplete;
+    this.daily = null; // set when launched as the daily challenge
     this.renderer = new Renderer(canvas);
     this.renderer.setSprites(sprites);
     this.hudRoot = hudRoot;
@@ -691,6 +693,7 @@ export class Game {
     this._updateTimeline(dt);
     this._updateSimulation(dt);
     this._updateAchievements(dt);
+    this._updateDaily(dt);
     this._updateGuidanceHints(dt);
 
     // Era advancement.
@@ -1470,6 +1473,21 @@ export class Game {
     this.audio?.play('unlock');
     this.particles.fountain(this.player.x, this.player.y - 1, ['#7be4ff', '#b388ff', '#cfd0ff', '#fff'], 30);
     this.hud?.bigToast(`${rev.icon} <b>${rev.title}</b><br><small>${rev.text}</small>`, 5200);
+  }
+
+  /** Detect completion of the daily challenge goal and celebrate it once. */
+  _updateDaily(dt) {
+    const d = this.daily;
+    if (!d || d._done || this.mode !== MODE.SURVIVAL) return;
+    if (!d.goal?.done?.(this)) return;
+    d._done = true;
+    const streak = this.onDailyComplete?.(d.dateKey) || 0;
+    this.audio?.play('unlock');
+    this.particles.fountain(this.player.x, this.player.y - 1, ['#f4d24a', '#6fc04e', '#7be4ff', '#fff'], 44);
+    this.hud?.bigToast?.(
+      `🗓️ <b>Daily Challenge complete!</b><br><small>${d.goal.text}${streak > 1 ? ` · 🔥 ${streak}-day streak` : ''}</small>`,
+      4200,
+    );
   }
 
   /** Award achievements (throttled) and celebrate each unlock. */

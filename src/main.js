@@ -9,6 +9,7 @@ import { Progress } from './persistence/Progress.js';
 import { Settings } from './persistence/Settings.js';
 import { SaveManager } from './persistence/SaveManager.js';
 import { parseRealityFromUrl } from './core/RealityCode.js';
+import { dailyChallenge } from './core/DailyChallenge.js';
 import { getEra } from './core/eras.js';
 import { variantInfo } from './core/eraTheme.js';
 import { Audio } from './systems/Audio.js';
@@ -65,7 +66,7 @@ function show(id) {
   }
 }
 
-function startGame({ eraId, mode, save, reality }) {
+function startGame({ eraId, mode, save, reality, daily }) {
   if (game) game.stop();
   audio.resume(); // unlock audio from the click that launched the game
   game = new Game({
@@ -76,12 +77,14 @@ function startGame({ eraId, mode, save, reality }) {
     settings,
     audio,
     onExit: () => { game = null; refreshLanding(); show('landing'); },
+    onDailyComplete: (key) => progress.completeDaily(key),
   });
   if (save) game.loadSave(save);
   else if (reality) {
-    // Land the player in a friend's exact world (same seed → same terrain/look).
+    // Land the player in a fixed world (a friend's link, or the daily).
     game.newWorld(reality.era, reality.mode, { seed: reality.seed, variant: reality.variant });
   } else game.newWorld(eraId, mode);
+  if (daily) game.daily = daily; // attach the goal so completion is tracked
   show('game');
   game.start();
 }
@@ -91,6 +94,29 @@ function refreshLanding() {
   const has = SaveManager.hasSave();
   cont.classList.toggle('disabled', !has);
   cont.disabled = !has;
+  renderDailyCard();
+}
+
+function renderDailyCard() {
+  const host = document.getElementById('dailyCard');
+  if (!host) return;
+  const ch = dailyChallenge();
+  const era = getEra(ch.era);
+  const v = variantInfo(ch.era, ch.variant);
+  const done = progress.hasDailyDone(ch.dateKey);
+  const streak = progress.streak || 0;
+  host.innerHTML = `
+    <div class="daily-head">🗓️ Daily Challenge ${done ? '<span class="daily-done">✓ done</span>' : ''}${streak > 1 ? `<span class="daily-streak">🔥 ${streak}</span>` : ''}</div>
+    <div class="daily-body">
+      <span class="daily-era">${era.icon}</span>
+      <div><b>${v ? v.name : era.name}</b><small>${ch.goal.icon} ${ch.goal.text}</small></div>
+      <button id="dailyPlay" class="btn ${done ? '' : 'primary'} daily-play">${done ? 'Replay' : '▶ Play'}</button>
+    </div>`;
+  const btn = document.getElementById('dailyPlay');
+  if (btn) btn.onclick = () => {
+    audio.resume(); audio.play('ui');
+    startGame({ reality: { seed: ch.seed, era: ch.era, variant: ch.variant, mode: ch.mode }, daily: ch });
+  };
 }
 
 function buildPortals() {

@@ -141,6 +141,19 @@ gAch._updateAchievements(1);
 if (!gAch.achievements.has('first_build')) throw new Error('Builder achievement did not unlock from play');
 if (!gAch.achievements.has('evolved')) throw new Error('It Lives! should unlock once past the cell era');
 ok('achievements unlock through the game loop and persist');
+
+// Daily challenge: completing the goal fires the completion callback once.
+const { dailyChallenge } = await import('../src/core/DailyChallenge.js');
+const gDaily = newGame();
+gDaily.newWorld('stone', MODE.SURVIVAL);
+let dailyDoneKey = null;
+gDaily.onDailyComplete = (key) => { dailyDoneKey = key; return 3; };
+const ch = dailyChallenge();
+gDaily.daily = { ...ch, goal: { ...ch.goal, done: () => true } }; // force the goal met
+gDaily._updateDaily(0.1);
+if (dailyDoneKey !== ch.dateKey) throw new Error('daily completion did not fire with the date key');
+gDaily._updateDaily(0.1); // must not double-fire
+ok('daily challenge completion fires once through the game loop');
 ok('first-cell era evolves into Age of Dinosaurs');
 
 // Cell feeding range grows with evolution stage (a tangible power read).

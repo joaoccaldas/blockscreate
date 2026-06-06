@@ -114,6 +114,17 @@ html, body {
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.72);
 }
 .menu-buttons { display: flex; flex-direction: column; gap: 0.8rem; max-width: 320px; margin: 0; }
+
+/* Daily challenge card on the landing — the come-back-tomorrow hook. */
+.daily-card { max-width: 320px; margin: 0.9rem 0 0; background: rgba(10, 16, 34, 0.55); border: 1px solid rgba(124, 228, 255, 0.3); border-radius: 12px; padding: 0.7rem 0.8rem; }
+.daily-head { font-size: 0.8rem; font-weight: bold; color: #cfe6ff; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.daily-done { color: #6fc04e; font-size: 0.72rem; }
+.daily-streak { margin-left: auto; color: #ffb14a; font-size: 0.78rem; }
+.daily-body { display: flex; align-items: center; gap: 0.6rem; }
+.daily-era { font-size: 1.8rem; line-height: 1; }
+.daily-body b { display: block; font-size: 0.9rem; }
+.daily-body small { color: var(--muted); font-size: 0.74rem; }
+.daily-play { margin-left: auto; padding: 0.45rem 0.8rem; font-size: 0.85rem; white-space: nowrap; }
 .version {
   color: #b8fff2;
   margin-top: 1.3rem;

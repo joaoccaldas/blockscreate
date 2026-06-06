@@ -8,6 +8,9 @@ import { ERAS } from './core/eras.js';
 import { Progress } from './persistence/Progress.js';
 import { Settings } from './persistence/Settings.js';
 import { SaveManager } from './persistence/SaveManager.js';
+import { parseRealityFromUrl } from './core/RealityCode.js';
+import { getEra } from './core/eras.js';
+import { variantInfo } from './core/eraTheme.js';
 import { Audio } from './systems/Audio.js';
 import { LandingScene } from './ui/LandingScene.js';
 import { Game } from './Game.js';
@@ -62,7 +65,7 @@ function show(id) {
   }
 }
 
-function startGame({ eraId, mode, save }) {
+function startGame({ eraId, mode, save, reality }) {
   if (game) game.stop();
   audio.resume(); // unlock audio from the click that launched the game
   game = new Game({
@@ -75,7 +78,10 @@ function startGame({ eraId, mode, save }) {
     onExit: () => { game = null; refreshLanding(); show('landing'); },
   });
   if (save) game.loadSave(save);
-  else game.newWorld(eraId, mode);
+  else if (reality) {
+    // Land the player in a friend's exact world (same seed → same terrain/look).
+    game.newWorld(reality.era, reality.mode, { seed: reality.seed, variant: reality.variant });
+  } else game.newWorld(eraId, mode);
   show('game');
   game.start();
 }
@@ -152,7 +158,20 @@ function wire() {
 
   const click = (id, fn) => { const e = document.getElementById(id); if (e) e.onclick = () => { audio.resume(); audio.play('ui'); fn(); }; };
 
-  click('playBtn', () => { buildPortals(); show('portal'); });
+  // A shared reality link (?r=CODE) turns Play into a one-tap jump into that
+  // exact world — the friend-sharing loop.
+  const shared = parseRealityFromUrl();
+  const playBtn = document.getElementById('playBtn');
+  if (shared && playBtn) {
+    const era = getEra(shared.era);
+    const v = variantInfo(shared.era, shared.variant);
+    playBtn.textContent = `▶ Play shared reality`;
+    const sub = document.querySelector('.subtitle');
+    if (sub) sub.textContent = `A friend shared a reality: ${era.icon} ${v ? v.name : era.name}. Press Play to enter their exact world.`;
+    click('playBtn', () => startGame({ reality: shared }));
+  } else {
+    click('playBtn', () => { buildPortals(); show('portal'); });
+  }
   click('continueBtn', () => {
     const save = SaveManager.load();
     if (save) startGame({ save });

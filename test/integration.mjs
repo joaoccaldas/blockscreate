@@ -117,6 +117,20 @@ const gVar2 = newGame();
 gVar2.loadSave(variantJson);
 if (gVar2.world.variant !== gVar.world.variant) throw new Error('reality variant lost across save/load');
 ok('worlds pick a reality variant that persists across save/load');
+
+// Reality codes: a shared code recreates the same seed/era/variant world.
+const { decodeReality } = await import('../src/core/RealityCode.js');
+const gShare = newGame();
+gShare.newWorld('cell', MODE.SURVIVAL);
+const code = gShare.realityCode();
+const decoded = decodeReality(code);
+if (!decoded || decoded.seed !== gShare.world.seed) throw new Error('reality code did not capture the seed');
+const gFriend = newGame();
+gFriend.newWorld(decoded.era, decoded.mode, { seed: decoded.seed, variant: decoded.variant });
+if (gFriend.world.seed !== gShare.world.seed) throw new Error('shared reality has a different seed');
+if (gFriend.world.variant !== gShare.world.variant) throw new Error('shared reality has a different look');
+if (gFriend.realityCode() !== code) throw new Error('shared reality does not reproduce the same code');
+ok('a reality code reproduces the same world for a friend');
 ok('first-cell era evolves into Age of Dinosaurs');
 
 // Cell feeding range grows with evolution stage (a tangible power read).

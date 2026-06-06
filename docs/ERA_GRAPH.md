@@ -140,3 +140,19 @@ a data entry — no engine changes.
 
 To add a reality look: add an `ERA_VARIANTS[era][id]` entry (and, optionally,
 branch a route to it / key world-gen off `world.variant`). That's it.
+
+## Reality codes (sharing a world with friends)
+
+Because a reality is fully deterministic (seed → terrain, era → age, variant →
+look), it compresses to a short, copy-pasteable code:
+
+```
+R1.<seed base36>.<era>.<variant|->.<mode s|c>      e.g. R1.2gk4f9.cell.sunlit.s
+```
+
+`src/core/RealityCode.js` (guarded by `test/reality-code.mjs`) encodes/decodes it
+and builds a share URL (`?r=CODE`). In game, the pause menu's **🔗 Share this
+reality** copies the link; opening a `?r=` link turns the landing **Play** button
+into "Play shared reality", dropping the friend into the *same* world. Decoding is
+tolerant (unknown/unimplemented eras → null; stale variants dropped), so codes
+stay valid as the graph grows.

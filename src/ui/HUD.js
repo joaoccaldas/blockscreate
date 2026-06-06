@@ -139,6 +139,7 @@ export class HUD {
             <label class="toggle"><span>♿ Reduce motion</span>
               <input type="checkbox" id="setReduceMotion" ${s?.get('reduceMotion') ? 'checked' : ''}></label>
           </div>
+          <button id="pShare" class="btn">🔗 Share this reality</button>
           <div class="pause-actions">
             <button id="pSave" class="btn">💾 Save</button>
             <button id="pExport" class="btn">⬇ Export</button>
@@ -246,6 +247,7 @@ export class HUD {
     this.el('setReduceMotion').onchange = (e) => this.h.onSetReduceMotion?.(e.target.checked);
 
     this.el('pSave').onclick = () => { this.h.onSave?.(); this.toast('Game saved'); };
+    this.el('pShare').onclick = () => this.h.onShareReality?.();
     this.el('pExport').onclick = () => this.h.onExport?.();
     this.el('pImport').onclick = () => this.el('importInput').click();
     this.el('importInput').onchange = (e) => {

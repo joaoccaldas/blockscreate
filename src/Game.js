@@ -34,6 +34,7 @@ import { getBlock, dropsOf, isSolid, AIR, blockId, minTierOf, fallsOf } from './
 import { getItem, isPlaceable } from './core/items.js';
 import { getEra, nextEra, chooseNextEra } from './core/eras.js';
 import { getEraTheme, weightedPick, pickVariant, variantInfo } from './core/eraTheme.js';
+import { encodeReality, realityUrl } from './core/RealityCode.js';
 
 // Buildings a raider will smash when it breaches the town (drives _pillageTown).
 const TOWN_BUILDINGS = new Set(['granary', 'market', 'caravan_post', 'windmill', 'auto_miner', 'gate']);
@@ -77,16 +78,17 @@ export class Game {
 
   // ---- lifecycle ----
 
-  newWorld(eraId, mode, { branch = null } = {}) {
+  newWorld(eraId, mode, { branch = null, seed = null, variant = null } = {}) {
     this.dead = false;
     this.showIntro = true; // fresh era entry → show the era-reveal on start
     this.mode = mode;
     this.eraId = eraId;
     this.clock = C.DAY_LENGTH * 0.3;
-    this.world = new World({ seed: (Math.random() * 1e9) | 0, eraId });
+    this.world = new World({ seed: seed != null ? (seed >>> 0) : ((Math.random() * 1e9) | 0), eraId });
     // Pick this run's reality variant — branch-flavored when routed in via a
-    // branch, else seed-derived so every fresh start has its own look.
-    this.world.variant = pickVariant(eraId, { branch, seed: this.world.seed });
+    // branch, else seed-derived so every fresh start has its own look. An
+    // explicit variant (from a shared reality code) wins, for an exact match.
+    this.world.variant = variant || pickVariant(eraId, { branch, seed: this.world.seed });
     this.world.generate();
     this.player = new Player(this.world.spawn.x + 0.5, this.world.spawn.y);
     this._applyEraPlayerForm();
@@ -321,6 +323,7 @@ export class Game {
       onSetZoom: (v) => { this.settings?.set('zoomPref', v); this.resize(); },
       onSetReduceMotion: (v) => { this.settings?.set('reduceMotion', v); this._applyReduceMotion(); },
       onSave: () => SaveManager.save(this),
+      onShareReality: () => this._shareReality(),
       onExport: () => SaveManager.exportFile(this),
       onImport: (f) => this._import(f),
       onMainMenu: () => this.hud.confirm('Return to the main menu?', 'Your game is saved automatically.', () => this.exit()),
@@ -478,6 +481,31 @@ export class Game {
       }
     }
     // 'badge' is pure prestige, recorded via market.claim().
+  }
+
+  /** The shareable code for this exact world (seed + era + variant + mode). */
+  realityCode() {
+    return encodeReality({
+      seed: this.world?.seed ?? 0,
+      era: this.eraId,
+      variant: this.world?.variant || null,
+      mode: this.mode,
+    });
+  }
+
+  /** Copy a shareable link to this reality to the clipboard, with a fallback. */
+  _shareReality() {
+    const code = this.realityCode();
+    const url = realityUrl(code);
+    const done = () => this.hud.toast(`🔗 Reality link copied · ${code}`, 3400);
+    try {
+      const p = navigator.clipboard?.writeText?.(url);
+      if (p && p.then) p.then(done).catch(() => this.hud.toast(`🔗 Your reality: ${code}`, 5000));
+      else done();
+    } catch (e) {
+      this.hud.toast(`🔗 Your reality: ${code}`, 5000);
+    }
+    this.audio?.play('ui');
   }
 
   hasStation(itemId) {

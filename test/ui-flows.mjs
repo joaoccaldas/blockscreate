@@ -59,6 +59,13 @@ const beforeMode=g5.buildMode;g5.hud.h.onToggleBuild();
 if(g5.buildMode===beforeMode)throw new Error('build toggle did not flip build mode');
 ok('HUD Mine/Build toggle is wired (clickable build for trackpad users)');
 
+// Desktop Inventory/Craft/Journal are reachable as clickable HUD actions, not
+// keyboard-only — the same discoverability fix as the build button.
+for(const h of ['onToggleInventory','onToggleCrafting','onToggleJournal']){
+  if(typeof g5.hud.h[h]!=='function')throw new Error('HUD missing handler '+h+' for desktop action buttons');
+}
+ok('Desktop Inventory/Craft/Journal actions are wired to HUD handlers');
+
 // First-cell guidance names the exact next action — including HOW to build, the
 // step where new (and Mac) players were getting stuck.
 const g6=mk();g6.newWorld('cell',MODE.SURVIVAL);g6.hud.showEraIntro=(era,done)=>done();g6.start();

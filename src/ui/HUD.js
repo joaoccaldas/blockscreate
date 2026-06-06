@@ -86,6 +86,12 @@ export class HUD {
       <button id="pauseBtn" class="icon-btn" title="Menu (Esc)">☰</button>
       <button id="infoBtn" class="icon-btn info-btn" title="Toggle stats panels">📊</button>
       <button id="buildIndicator" class="build-indicator" title="Switch between Mine and Build (right-click the world, or press Q)"></button>
+      ${this.isTouch ? '' : `
+      <div id="desktopActions" class="desktop-actions">
+        <button id="invBtn" class="action-btn" title="Inventory (E)">🎒 <span>Bag</span></button>
+        <button id="craftBtn" class="action-btn" title="Crafting (C)">🔨 <span>Craft</span></button>
+        <button id="journalBtn" class="action-btn" title="Journal of clues & discoveries">📖 <span>Journal</span></button>
+      </div>`}
       <div id="powerupBar" class="powerup-bar hidden"></div>
       <div id="eventBar" class="event-bar hidden"></div>
       <div id="raidWarning" class="raid-warning hidden"></div>
@@ -206,6 +212,13 @@ export class HUD {
     // Clickable Mine/Build toggle — the discoverable way to build for players
     // without an easy right-click (e.g. Mac trackpads).
     this.el('buildIndicator').onclick = () => this.h.onToggleBuild?.();
+    // Desktop quick-action column (touch has its own 🎒🔨 cluster): make
+    // Inventory / Crafting / Journal clickable, not keyboard-only.
+    if (!this.isTouch) {
+      this.el('invBtn').onclick = () => this.h.onToggleInventory?.();
+      this.el('craftBtn').onclick = () => this.h.onToggleCrafting?.();
+      this.el('journalBtn').onclick = () => this.h.onToggleJournal?.();
+    }
     this.el('resumeBtn').onclick = () => this.h.onResume?.();
     this.el('pInv').onclick = () => this.h.onToggleInventory?.();
     this.el('pCraft').onclick = () => this.h.onToggleCrafting?.();

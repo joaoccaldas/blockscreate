@@ -27,7 +27,7 @@ const RECTS = {
   // top-right cluster. CSS positions by distance-from-right, so left = VW - right - width.
   pauseBtn: [VW - 8 - 38, 8, 38, 38],       // right:8  w:38
   infoBtn: [VW - 54 - 38, 8, 38, 38],       // right:54 w:38
-  buildIndicator: [VW - 100 - 60, 8, 60, 34], // right:100 w~60
+  buildIndicator: [VW - 100 - 100, 8, 100, 34], // right:100, wider clickable Mine⇄Build toggle
   // quick inventory/craft column, top-right under the menu button
   touchQuick: [VW - 8 - 44, 54, 44, 96],    // right:8 w:44
 };

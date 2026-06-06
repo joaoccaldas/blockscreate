@@ -85,7 +85,7 @@ export class HUD {
 
       <button id="pauseBtn" class="icon-btn" title="Menu (Esc)">☰</button>
       <button id="infoBtn" class="icon-btn info-btn" title="Toggle stats panels">📊</button>
-      <div id="buildIndicator" class="build-indicator"></div>
+      <button id="buildIndicator" class="build-indicator" title="Switch between Mine and Build (right-click the world, or press Q)"></button>
       <div id="powerupBar" class="powerup-bar hidden"></div>
       <div id="eventBar" class="event-bar hidden"></div>
       <div id="raidWarning" class="raid-warning hidden"></div>
@@ -203,6 +203,9 @@ export class HUD {
     this.el('craftClose').onclick = () => this.h.onToggleCrafting?.();
     this.el('pauseBtn').onclick = () => this.h.onPause?.();
     this.el('infoBtn').onclick = () => this.root.classList.toggle('info-collapsed');
+    // Clickable Mine/Build toggle — the discoverable way to build for players
+    // without an easy right-click (e.g. Mac trackpads).
+    this.el('buildIndicator').onclick = () => this.h.onToggleBuild?.();
     this.el('resumeBtn').onclick = () => this.h.onResume?.();
     this.el('pInv').onclick = () => this.h.onToggleInventory?.();
     this.el('pCraft').onclick = () => this.h.onToggleCrafting?.();
@@ -365,7 +368,9 @@ export class HUD {
       : 'Final era reached';
     this.el('advanceBtn').classList.toggle('hidden', !(survival && nxt && status.ready));
 
-    this.el('buildIndicator').textContent = game.buildMode ? '🧱 Build' : '⛏ Mine';
+    // Label doubles as the affordance: a tap-target that names the current mode
+    // and the action the tap will switch to.
+    this.el('buildIndicator').textContent = game.buildMode ? '🧱 Build ⇄ Mine' : '⛏ Mine ⇄ Build';
     this.el('buildIndicator').classList.toggle('build-on', game.buildMode);
 
     if (survival) this.renderObjectives(game);
@@ -385,6 +390,31 @@ export class HUD {
       `📯 <b>Raid incoming — ${s.secondsLeft}s</b>` +
       `<span class="raid-sub"> · ${s.count} raider${s.count === 1 ? '' : 's'} · rally at your town</span>` +
       `<span class="raid-meter"><i style="width:${Math.round((s.fraction || 0) * 100)}%"></i></span>`;
+  }
+
+  /**
+   * The next concrete thing to do in the First Cell era, phrased as an action +
+   * the control that performs it. Driven by the actual objective list so the
+   * banner always reflects real progress (and tells desktop players to use the
+   * on-screen 🧱 Build toggle, not just "right-click").
+   */
+  _cellNextStep(game) {
+    const obj = game.objectives;
+    if (!obj?.list) return null;
+    const craft = this.isTouch ? 'open <b>🔨 Crafting</b> (☰ menu)' : 'press <b>C</b> (or ☰ → Craft)';
+    const steps = {
+      absorb_nutrients: '🫧 Swim into glowing green <b>nutrients</b> to absorb them (3 needed)',
+      collect_minerals: '♨️ Swim into a warm <b>mineral vent</b> to collect from it',
+      make_membrane: `🟣 Now ${craft} to craft a <b>Lipid Membrane</b>`,
+      build_membrane: this.isTouch
+        ? '🧬 Select the <b>Lipid Membrane</b>, tap <b>🧱</b> to Build, then tap to place 4'
+        : '🧬 Select the <b>Lipid Membrane</b> in the hotbar, click <b>🧱 Build</b> (top-right), then click to place 4',
+      stabilize_cell: `🧫 ${craft.charAt(0).toUpperCase() + craft.slice(1)} to craft a <b>Proto-Cell</b> and stabilize`,
+    };
+    for (const o of obj.list) {
+      if (o.kind === 'mandatory' && !obj.isDone(o.id)) return steps[o.id] || null;
+    }
+    return null;
   }
 
   renderCellStatus(game) {
@@ -407,15 +437,17 @@ export class HUD {
       ? 'ready to evolve'
       : `sense: ${status.gradient}${distance}`;
 
-    // Persistent, stage-aware guidance so the first era teaches itself.
+    // Persistent guidance that names the *exact next action* (and which control
+    // performs it) so the first era teaches itself — this is what new players,
+    // especially on a trackpad with no easy right-click, were missing.
     const move = this.isTouch ? 'Use ◀ ▶ ▲ ▼ to swim' : 'Swim with WASD / arrows';
+    const step = this._cellNextStep(game);
     const guide = status.ready
       ? '✨ Cell complete! Press <b>Enter Portal</b> to evolve into the 🦖 Age of Dinosaurs →'
-      : stage >= 3
-        ? '🧬 So close! Keep absorbing and build <b>lipid membranes</b> to finish your cell'
-        : status.gradient && status.gradient !== 'quiet chemistry'
+      : step
+        || (status.gradient && status.gradient !== 'quiet chemistry'
           ? `🫧 ${move} into the glowing <b>${status.gradient}</b>${distance} to absorb it`
-          : `🫧 ${move} to find glowing <b>nutrients</b> &amp; warm <b>vents</b> — absorb them to grow`;
+          : `🫧 ${move} to find glowing <b>nutrients</b> &amp; warm <b>vents</b> — absorb them to grow`);
     // The cell panel (with its pip track) is hidden on mobile/collapsed, so carry
     // a compact evolution header in this always-visible banner.
     const pips = Array.from({ length: 5 }, (_, i) =>
@@ -752,7 +784,7 @@ export class HUD {
       : [
         { icon: '🌎', title: 'A new age', body: 'You\'ve evolved into a new era with new tools, blocks, and dangers. Gather, build, and grow your civilization.' },
         { icon: '⛏️', title: 'Mine the world', body: touch ? 'Tap a nearby block to mine it. Hold to keep mining. Some blocks need a matching tool.' : 'Hold left-click on a nearby block to mine it. Some blocks need a matching/stronger tool.' },
-        { icon: '🧱', title: 'Build & place', body: touch ? 'Tap the ⛏/🧱 button to switch to Build, then tap next to a block to place.' : 'Right-click to place the selected block (or press Q to toggle Build/Mine). Place next to existing blocks.' },
+        { icon: '🧱', title: 'Build & place', body: touch ? 'Tap the ⛏/🧱 button to switch to Build, then tap next to a block to place.' : 'Click the “⛏ Mine ⇄ Build” button (top-right) to switch to Build, then click next to a block to place. (You can also right-click the world, or press Q.)' },
         { icon: '🎒', title: 'Inventory & crafting', body: touch ? 'Use the ☰ menu for Inventory and Crafting.' : 'Press E for Inventory and C for Crafting. Numbers 1–9 pick a hotbar slot.' },
         { icon: '🎯', title: 'Complete objectives', body: 'Finish the objectives (top-right) to earn ✨ Civ Points and open the portal to the next era.' },
       ];

@@ -51,4 +51,23 @@ g4._hudHandlers().onMainMenu();
 if(!captured)throw new Error('confirm not invoked for main menu');
 captured();if(!exited)throw new Error('confirm onYes did not run exit');
 ok('destructive action routes through confirm dialog');
+// The Mine/Build toggle is reachable as a HUD action (the on-screen button that
+// players without an easy right-click — e.g. Mac trackpads — were missing).
+const g5=mk();g5.newWorld('stone',MODE.SURVIVAL);g5.hud.showEraIntro=(era,done)=>done();g5.start();
+if(typeof g5.hud.h.onToggleBuild!=='function')throw new Error('HUD has no build-toggle handler');
+const beforeMode=g5.buildMode;g5.hud.h.onToggleBuild();
+if(g5.buildMode===beforeMode)throw new Error('build toggle did not flip build mode');
+ok('HUD Mine/Build toggle is wired (clickable build for trackpad users)');
+
+// First-cell guidance names the exact next action — including HOW to build, the
+// step where new (and Mac) players were getting stuck.
+const g6=mk();g6.newWorld('cell',MODE.SURVIVAL);g6.hud.showEraIntro=(era,done)=>done();g6.start();
+let step=g6.hud._cellNextStep(g6);
+if(!/absorb/i.test(step||''))throw new Error('first cell step should be to absorb: '+step);
+g6.inventory.add('nutrient_blob',3);g6.inventory.add('mineral_vent',1);g6.crafted.add('lipid_membrane');
+g6.objectives.evaluate(g6);
+step=g6.hud._cellNextStep(g6);
+if(!/Build/.test(step||''))throw new Error('cell guidance should tell the player to Build the membrane: '+step);
+ok('First Cell guidance names the next action and the Build control');
+
 console.log(`\nAll ${pass} Tier-1 UI checks passed.`);

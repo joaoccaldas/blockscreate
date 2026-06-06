@@ -451,8 +451,16 @@ html, body {
   border-radius: 9px;
   padding: 8px 10px;
   font-weight: bold;
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, transform 0.05s;
 }
+.build-indicator:hover { background: rgba(0, 0, 0, 0.72); border-color: rgba(255, 255, 255, 0.5); }
+.build-indicator:active { transform: scale(0.96); }
 .build-indicator.build-on { background: rgba(111, 192, 78, 0.35); border-color: var(--accent); }
+.build-indicator.build-on:hover { background: rgba(111, 192, 78, 0.5); }
 
 .powerup-bar {
   position: absolute;

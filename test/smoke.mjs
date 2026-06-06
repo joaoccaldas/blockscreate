@@ -97,6 +97,18 @@ assert.ok(stoneRecipes.length < RECIPES.length, 'bronze/iron recipes gated out')
 const cellSet = new Set(['cell']);
 const cellRecipes = availableRecipes(cellSet);
 assert.ok(cellRecipes.every((r) => r.era === 'cell'), 'only cell recipes when only cell unlocked');
+
+// Regression: a returning player who has unlocked LATER eras must still only see
+// the current era's tier of recipes (no wooden pickaxe while a single cell).
+const allUnlocked = new Set(['cell', 'stone', 'bronze', 'iron', 'industrial']);
+const cellTier = availableRecipes(allUnlocked, 'cell');
+assert.ok(cellTier.length && cellTier.every((r) => r.era === 'cell'),
+  'cell era shows only cell recipes even when all eras are unlocked');
+const stoneTier = availableRecipes(allUnlocked, 'stone');
+assert.ok(stoneTier.some((r) => r.era === 'stone') && stoneTier.every((r) => ['cell', 'stone'].includes(r.era)),
+  'stone era shows cell + stone recipes, but nothing from later ages');
+assert.ok(availableRecipes(allUnlocked).length >= availableRecipes(allUnlocked, 'industrial').length,
+  'the tier gate never adds recipes beyond the unlocked set');
 const membraneRecipe = RECIPES.find((r) => r.id === 'lipid_membrane');
 const invCell = new Inventory();
 invCell.add('nutrient_blob', 2);

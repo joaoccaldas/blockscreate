@@ -663,7 +663,7 @@ export class HUD {
   renderCrafting(game) {
     const list = this.el('craftList');
     list.innerHTML = '';
-    const recipes = availableRecipes(game.unlocked.set());
+    const recipes = availableRecipes(game.unlocked.set(), game.eraId);
     for (const r of recipes) {
       const ok = canCraft(r, game.inventory, game);
       const out = getItem(r.out.id);

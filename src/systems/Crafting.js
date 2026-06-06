@@ -7,9 +7,19 @@
  * module focused.
  */
 import { recipesForEras } from '../core/recipes.js';
+import { getEra } from '../core/eras.js';
 
-export function availableRecipes(unlockedSet) {
-  return recipesForEras(unlockedSet);
+/**
+ * Recipes the player can craft right now. Gated by the CURRENT era's tier, not
+ * just the meta-unlocked set: a returning player who has unlocked later ages
+ * must still only see this era's (and earlier) recipes — e.g. no wooden pickaxe
+ * while you are a single cell. Pass `eraId` to apply the tier gate.
+ */
+export function availableRecipes(unlockedSet, eraId = null) {
+  const list = recipesForEras(unlockedSet);
+  if (!eraId) return list;
+  const maxOrder = getEra(eraId)?.order ?? 0;
+  return list.filter((r) => (getEra(r.era)?.order ?? 0) <= maxOrder);
 }
 
 export function hasStation(recipe, context) {

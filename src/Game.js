@@ -28,6 +28,7 @@ import { PowerGrid } from './systems/PowerGrid.js';
 import { Camera } from './render/Camera.js';
 import { Renderer } from './render/Renderer.js';
 import { Particles } from './render/Particles.js';
+import { FloatingTextLayer } from './systems/FloatingText.js';
 import { Input, isTouch } from './input/Input.js';
 import { HUD } from './ui/HUD.js';
 import { SaveManager } from './persistence/SaveManager.js';
@@ -64,6 +65,7 @@ export class Game {
     this.paused = false;
     this.buildMode = false;
     this.particles = new Particles();
+    this.floaters = new FloatingTextLayer();
     this.crafted = new Set();
     this.mineTarget = null;
     this.mineProgress = 0;
@@ -664,6 +666,7 @@ export class Game {
     this._updateMeteors(dt);
     this._updateCrops(dt);
     this.particles.update(dt);
+    this.floaters.update(dt);
 
     this.clock = (this.clock + dt) % C.DAY_LENGTH;
     this.world.clock = this.clock;
@@ -888,6 +891,7 @@ export class Game {
         this.world.set(x, y, AIR);
         this.inventory.add(def.item, 1);
         this.civ.addCP(def.cp * this.powerups.multiplier('cpMultiplier'));
+        this._floatText(x + 0.5, y, `+${def.cp} CP`, { color: def.color, size: 0.5, life: 0.8 });
         this.player.eat(def.item === 'nutrient_blob' ? 8 : 3);
         this.cellStability = Math.min(100, (this.cellStability ?? this.player.hunger) + (def.item === 'nutrient_blob' ? 7 : 4));
         // A little flow toward the cell sells the "absorb" read.
@@ -1748,6 +1752,12 @@ export class Game {
     return defense >= 4;
   }
 
+  /** Spawn a rising world-space label (juice). Skipped under reduce-motion. */
+  _floatText(x, y, text, opts = {}) {
+    if (this.reduceMotion || !this.floaters) return;
+    this.floaters.add(x, y, text, opts);
+  }
+
   _hitMob(mob) {
     const weapon = this.inventory.selectedItem();
     const weaponDef = weapon ? getItem(weapon.id) : null;
@@ -1755,6 +1765,7 @@ export class Game {
     const dead = mob.hurt(damage);
     this.audio?.play('hurt');
     this.particles.burst(mob.x, mob.y - mob.h / 2, mob.hostile ? '#ff7b6b' : '#cf5d6a', 8);
+    this._floatText(mob.x, mob.y - mob.h, `-${damage}`, { color: '#ffd36b', dx: (Math.random() - 0.5) * 0.4 });
     if (!dead) return;
     this.mobs.splice(this.mobs.indexOf(mob), 1);
     if (this.mode === MODE.SURVIVAL) {
@@ -1767,6 +1778,7 @@ export class Game {
     const cp = mob.def.cp || 2;
     this.civ.onDefeat(mob.type);
     this.civ.addCP(cp * (this.powerups?.multiplier('cpMultiplier') || 1));
+    this._floatText(mob.x, mob.y - mob.h, `+${cp} CP`, { color: '#9be86a', size: 0.55, life: 1.1 });
     this.hud.toast(mob.hostile ? `Defeated a ${mob.type} (+${cp} CP)` : `Caught a ${mob.type}`);
   }
 
@@ -2271,6 +2283,7 @@ export class Game {
     this.lastDamageCause = cause;
     this.audio?.play('hurt');
     this.particles.burst(this.player.x, this.player.y - this.player.h / 2, '#ff5b5b', 8);
+    this._floatText(this.player.x, this.player.y - this.player.h, `-${Math.round(amount)}`, { color: '#ff6b6b', size: 0.6 });
     if (!this.reduceMotion) this.hud?.shake?.();
     if (this.player.health <= 0) this.player.alive = false;
   }
@@ -2289,6 +2302,7 @@ export class Game {
       mobs: this.mobs,
       settlers: this.settlers?.settlers || [],
       particles: this.particles,
+      floaters: this.floaters,
       powerups: this.powerups,
       dayFactor: this.dayFactor(),
       tint: getEraTheme(this.eraId, this.world?.variant).tint,

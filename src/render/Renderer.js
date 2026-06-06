@@ -100,6 +100,7 @@ export class Renderer {
     this.drawMobs(camera, mobs, T);
     this.drawPlayer(camera, player, T);
     if (particles) this.drawParticles(camera, particles, T);
+    if (scene.floaters) this.drawFloaters(camera, scene.floaters, T);
 
     if (ghost && ghost.valid) this.drawGhost(camera, ghost, T);
     if (hover && hover.valid) this.drawHover(camera, hover, T);
@@ -862,6 +863,26 @@ export class Renderer {
       ctx.fillRect(sx - s / 2, sy - s / 2, s, s);
     }
     ctx.globalAlpha = 1;
+  }
+
+  drawFloaters(camera, floaters, T) {
+    const ctx = this.ctx;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const f of floaters.list) {
+      const { sx, sy } = camera.worldToScreen(f.x, f.y);
+      const px = Math.max(11, (f.size || 0.5) * T);
+      ctx.globalAlpha = Math.max(0, Math.min(1, f.life / f.maxLife));
+      ctx.font = `bold ${Math.round(px)}px system-ui, sans-serif`;
+      ctx.lineWidth = Math.max(2, px * 0.16);
+      ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+      ctx.strokeText(f.text, sx, sy);
+      ctx.fillStyle = f.color || '#fff';
+      ctx.fillText(f.text, sx, sy);
+    }
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
   }
 
   drawGhost(camera, ghost, T) {

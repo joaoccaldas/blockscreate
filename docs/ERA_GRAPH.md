@@ -1,0 +1,120 @@
+# The Era Graph — canonical roadmap for all ages
+
+> This document is the **single source of truth** for how the game's ages connect.
+> It is encoded as data in [`src/core/eraGraph.js`](../src/core/eraGraph.js) and
+> guarded by [`test/era-graph.mjs`](../test/era-graph.mjs). **Always follow it:**
+> adding or routing an era means editing the graph here and there together, and
+> keeping the invariants green.
+
+## Premise
+
+The game is **infinite**. Ages are not a line — they are a **directed graph of
+realities**. A run *begins* linear (the prime spine), but the branch of reality a
+player leans into can route them into **different next ages**, and high-divergence
+realities occasionally **cross** — another era's reality bleeds into the current
+one. Two players can therefore reach the same far age by different routes, or end
+up in ages the other never saw.
+
+Three edge types:
+
+- **prime** — the default spine. Every non-terminal *implemented* era has exactly
+  one prime out-edge, so a player who expresses no strong branch always advances.
+- **branch** — a route taken only when the player's **dominant reality branch**
+  (the Journal's "timeline leaning", derived from clue `branch` counts) matches,
+  *and* the destination era is implemented.
+- **cross** — a non-adjacent "realities meet" link, surfaced as a Timeline
+  crossover/rift (the bleeds in `Timeline`/`Simulation`): another reality's mobs,
+  blocks, or clues briefly intrude. Crosses never *move* the player; they enrich
+  the current age.
+
+## Reality branches
+
+Branches come from the clue/anomaly `branch` tags already in the game
+(`HistoricalClues`, `SimulationAnomalies`). Current branch ids and the lean they
+represent:
+
+| Branch id | Lean | Seeds from |
+| --- | --- | --- |
+| `saurian_echo` | beasts & deep time | fossils, meteor shards |
+| `firekeepers` | fire & culture | charcoal handprints |
+| `accurate_line` | survival → movement | migration markers |
+| `merchant_city` | trade & wealth | markets, caravans |
+| `road_empire` | infrastructure | roads |
+| `fortress_city` | defense & war | walls, gates |
+| `city_state` | dense settlement | civic density |
+| `observer` | the meta-layer | anomalies |
+
+New branches are added alongside new clues; a branch only *matters* where a route
+references it.
+
+## The graph
+
+Tiers are depth from the origin. ✅ = implemented and playable today; 🔭 = on the
+roadmap (encoded as a node with `implemented:false`, so routing skips it until it
+ships, then it activates automatically).
+
+### Prime spine (always linear by default)
+
+| Tier | Era | id | Status |
+| --- | --- | --- | --- |
+| 0 | 🫧 First Cell | `cell` | ✅ |
+| 1 | 🦖 Age of Dinosaurs | `stone` | ✅ |
+| 2 | ⚒️ Bronze Age | `bronze` | ✅ |
+| 3 | 🛡️ Iron Age | `iron` | ✅ |
+| 4 | 🏭 Industrial Age | `industrial` | ✅ |
+| 5 | ⚡ Electric Age | `electric` | 🔭 |
+| 6 | 💾 Information Age | `information` | 🔭 |
+| 7 | 🚀 Space Age | `space` | 🔭 |
+| 8 | 🧠 Synthetic Age | `synthetic` | 🔭 |
+| 9 | 🌌 Simulation Age | `simulation` | 🔭 |
+| 10 | ♾️ The Stack | `stack` | 🔭 (meta-capstone; New Game+ "descend a layer") |
+
+### Branch ages (reached via a dominant branch)
+
+| Tier | Era | id | Reached from → via branch | Rejoins | Status |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 🌿 Age of Flora | `flora` | `cell` → `photic`* | → `bronze` | 🔭 |
+| 4 | 🏛️ Trade Republic | `republic` | `iron` → `merchant_city`/`road_empire` | → `information` | 🔭 |
+| 5 | 🜨 Steam Arcanum | `arcanum` | `industrial` → `firekeepers` (clockwork) | → `information` | 🔭 |
+| 8 | 🧬 Bio-Singularity | `bio` | `information` → `saurian_echo` | → `simulation` | 🔭 |
+
+\* `photic` is a future **cell** branch (a light-seeking first cell); it ships with
+the Age of Flora.
+
+### Crossings (realities meet — no era change)
+
+| Cross | Where it can fire | What bleeds in |
+| --- | --- | --- |
+| Saurian Echo rift | `iron`+ at glitch divergence | dinosaur mobs/fossils intrude |
+| Guild rift | `industrial` with `merchant_city` lean | Trade-Republic goods/relics |
+| Garden rift | any era, rift divergence | Age-of-Flora flora + a seed-clue |
+| Observer rift | any era, rift divergence | the meta-layer (see `Simulation`) |
+
+Crossings are realized by the existing `Timeline` glitch/rift staging and the
+`Simulation` arc; new crosses are added as data here and a staging branch there.
+
+## Invariants (enforced by `test/era-graph.mjs`)
+
+1. Every **implemented** era is reachable from `cell` using only implemented routes.
+2. Every non-terminal implemented era has **exactly one `prime`** out-edge to an
+   implemented era (so default progression never dead-ends or forks ambiguously).
+3. No route targets an unknown era id.
+4. `branch` routes name a real branch id from the table above.
+5. The prime spine order matches the `tier` ordering (prime edges go strictly
+   deeper by tier).
+6. Terminal eras (no implemented out-edge) are allowed only at the deepest
+   implemented tier (today: `industrial`; later: `stack`).
+
+## How to add an era (the extensibility contract)
+
+1. Add the node to `ERA_NODES` (tier, name, icon) and at least one **inbound**
+   route (prime or branch) from an implemented era in `ERA_ROUTES`.
+2. Implement it as a real world: an entry in `src/core/eras.js`, plus its
+   blocks/recipes/objectives/manifest.
+3. Flip the node to `implemented:true`. Routing to it activates automatically and
+   the prime spine extends by one.
+4. Update this table and keep `test/era-graph.mjs` green.
+
+Because routing always falls back to the prime spine when a branch destination
+isn't implemented yet, **partial graphs are always playable** — the future is
+encoded but never blocks the present.

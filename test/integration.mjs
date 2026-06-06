@@ -105,6 +105,7 @@ ok(`first-cell visibly evolves (stage ${gCell.cellStatus.stage}: ${gCell.cellSta
 gCell.update(0.016);
 if (!gCell.canAdvance()) throw new Error('cell era did not unlock evolution after mandatory goals');
 if (!gCell._advanceEra() || gCell.eraId !== 'stone') throw new Error('cell era did not evolve into dinosaurs');
+if (!gCell.realityPath.length || gCell.realityPath[0].to !== 'stone') throw new Error('era graph did not record the route taken');
 ok('first-cell era evolves into Age of Dinosaurs');
 
 // Cell feeding range grows with evolution stage (a tangible power read).

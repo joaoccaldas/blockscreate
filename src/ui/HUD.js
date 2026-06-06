@@ -840,14 +840,23 @@ export class HUD {
    * the core progression beat land instead of a tiny toast: name, story, and
    * what this age is about. `done` resumes play.
    */
-  showEraIntro(era, done) {
+  showEraIntro(era, done, route = null) {
     const m = era.manifest || {};
     this.el('eraIntroIcon').textContent = era.icon || '🌀';
     this.el('eraIntroTitle').textContent = m.title || era.name;
     this.el('eraIntroSub').textContent = m.subtitle || era.blurb || '';
     const loop = (m.coreLoop || []).slice(0, 4).join(' · ');
     const hazards = (m.hazards || []).slice(0, 3).join(', ');
-    this.el('eraIntroBody').innerHTML =
+    // The reality the player arrived through — each route colors the age.
+    const branchName = {
+      saurian_echo: 'Saurian Echo', firekeepers: 'Firekeepers', accurate_line: 'Survivors',
+      merchant_city: 'Merchant', road_empire: 'Road Empire', fortress_city: 'Fortress',
+      city_state: 'City-State',
+    };
+    const reality = route?.branch
+      ? `<div class="ei-line"><span>🌌 Reality</span><b>arrived via the ${branchName[route.branch] || route.branch} branch</b></div>`
+      : '';
+    this.el('eraIntroBody').innerHTML = reality +
       (loop ? `<div class="ei-line"><span>🎯 Focus</span><b>${loop}</b></div>` : '') +
       (hazards ? `<div class="ei-line"><span>⚠️ Watch for</span><b>${hazards}</b></div>` : '');
     const screen = this.el('eraIntro');

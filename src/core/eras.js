@@ -11,6 +11,7 @@
  * teaches interaction before the UI and simulation broaden into later ages.
  */
 import { getEraManifest } from './eraManifests.js';
+import { primeNextId, chooseNextEra as graphChooseNextEra } from './eraGraph.js';
 
 export const ERAS = [
   {
@@ -90,7 +91,23 @@ export function getEra(id) {
   return ERA_BY_ID[id] || ERAS[0];
 }
 
+/**
+ * The default (prime-spine) successor era, as an era object — what the HUD shows
+ * and what advancement falls back to. Driven by the era graph (docs/ERA_GRAPH.md)
+ * so it stays in lockstep with the branching map; for the current implemented
+ * eras this is identical to walking `order + 1`.
+ */
 export function nextEra(id) {
-  const e = getEra(id);
-  return ERAS[e.order + 1] || null;
+  const nid = primeNextId(id);
+  return nid ? ERA_BY_ID[nid] || null : null;
+}
+
+/**
+ * The era the player actually advances into, given their dominant reality
+ * branch. Falls back to the prime spine when a branch destination isn't
+ * implemented yet. Returns an era object or null.
+ */
+export function chooseNextEra(id, ctx = {}) {
+  const nid = graphChooseNextEra(id, ctx);
+  return nid ? ERA_BY_ID[nid] || null : null;
 }

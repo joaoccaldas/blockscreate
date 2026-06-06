@@ -32,7 +32,7 @@ import { HUD } from './ui/HUD.js';
 import { SaveManager } from './persistence/SaveManager.js';
 import { getBlock, dropsOf, isSolid, AIR, blockId, minTierOf, fallsOf } from './core/blocks.js';
 import { getItem, isPlaceable } from './core/items.js';
-import { getEra, nextEra } from './core/eras.js';
+import { getEra, nextEra, chooseNextEra } from './core/eras.js';
 import { getEraTheme, weightedPick } from './core/eraTheme.js';
 
 // Buildings a raider will smash when it breaches the town (drives _pillageTown).
@@ -103,6 +103,7 @@ export class Game {
     this.settlers = new SettlerManager();
     this.mobs = [];
     this.eraStage = 0;
+    this.realityPath = []; // the route of branches taken through the era graph
     this._grantStarter();
     this._setup();
   }
@@ -137,6 +138,7 @@ export class Game {
     this.animalPeaceTime = save.animalPeaceTime || 0;
     this.grazerBondTime = save.grazerBondTime || 0;
     this.eraStage = save.eraStage || 0;
+    this.realityPath = save.realityPath || [];
     this._setup();
   }
 
@@ -251,10 +253,11 @@ export class Game {
     if (this.showIntro && this.mode === MODE.SURVIVAL) {
       this.showIntro = false;
       this.paused = true;
+      const route = (this.realityPath || []).slice(-1)[0] || null;
       this.hud.showEraIntro(getEra(this.eraId), () => {
         this.paused = false;
         this._maybeOnboard();
-      });
+      }, route);
     } else {
       this._maybeOnboard();
     }
@@ -653,7 +656,7 @@ export class Game {
 
     // Era advancement.
     if (this.mode === MODE.SURVIVAL && this.canAdvance()) {
-      const nxt = nextEra(this.eraId);
+      const nxt = this._nextEraChoice();
       if (nxt && this.unlocked.unlock(nxt.id)) {
         this.audio?.play('unlock');
         this.timeline?.note(0.5); // a leap between ages widens the possibility space
@@ -678,14 +681,40 @@ export class Game {
     this.hud.update(this);
   }
 
+  /**
+   * The reality branch the player is leaning into, from the Journal's clue
+   * tally (the "timeline leaning"). This is what routes them through the era
+   * graph — two players can reach different ages by different leans.
+   */
+  _dominantBranch() {
+    const counts = this.clues?.branchCounts?.() || {};
+    let best = null;
+    let top = 0;
+    for (const [branch, n] of Object.entries(counts)) {
+      if (branch === 'observer') continue; // the meta-branch doesn't route ages
+      if (n > top) { top = n; best = branch; }
+    }
+    return best;
+  }
+
+  /** The era the player will advance into, routed through the era graph. */
+  _nextEraChoice() {
+    return chooseNextEra(this.eraId, { branch: this._dominantBranch() }) || nextEra(this.eraId);
+  }
+
   _advanceEra() {
     if (this.mode !== MODE.SURVIVAL || !this.canAdvance()) return false;
-    const nxt = nextEra(this.eraId);
+    const branch = this._dominantBranch();
+    const nxt = this._nextEraChoice();
     if (!nxt) return false;
+    // Capture the route taken; newWorld() resets state, so re-apply it after.
+    const route = { from: this.eraId, to: nxt.id, branch: branch || null };
+    const priorPath = this.realityPath || [];
     this.unlocked.unlock(nxt.id);
     SaveManager.save(this);
     this._teardownView();
     this.newWorld(nxt.id, MODE.SURVIVAL); // sets showIntro + rebuilds HUD/input
+    this.realityPath = [...priorPath, route]; // each reality's path is its own
     this.audio?.play('unlock');
     SaveManager.save(this);
     // Reveal the new era full-screen, then resume (mirrors start()).

@@ -7,6 +7,13 @@ and why — so progression stays the spine of the game.
 
 Status legend: ✅ shipped · 🚧 partial · ⬜ planned
 
+> **The ages are a branching graph, not a line.** The canonical map of every
+> era — current and future, the prime spine, the branch ages, and where
+> realities cross — lives in **[docs/ERA_GRAPH.md](./ERA_GRAPH.md)**, encoded in
+> `src/core/eraGraph.js` and guarded by `test/era-graph.mjs`. This file details
+> each *implemented* era; the graph defines how they connect and extend to
+> infinity.
+
 ---
 
 ## 🫧 First Cell (origin)

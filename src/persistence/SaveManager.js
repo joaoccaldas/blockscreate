@@ -36,6 +36,7 @@ export const SaveManager = {
       animalPeaceTime: game.animalPeaceTime || 0,
       grazerBondTime: game.grazerBondTime || 0,
       eraStage: game.eraStage || 0,
+      realityPath: game.realityPath || [],
     };
   },
 
@@ -91,6 +92,7 @@ export const SaveManager = {
     save.guidance = save.guidance || {};
     save.grazerBondTime = save.grazerBondTime || 0;
     save.eraStage = save.eraStage || 0;
+    save.realityPath = save.realityPath || [];
     save.version = C.SAVE_VERSION;
     return save;
   },

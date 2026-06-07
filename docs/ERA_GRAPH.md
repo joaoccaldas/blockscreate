@@ -47,6 +47,13 @@ represent:
 New branches are added alongside new clues; a branch only *matters* where a route
 references it.
 
+**How routing happens in play:** `Game._dominantBranch()` blends the clue tally
+with *playstyle* signals — trade level → `merchant_city`, roads → `road_empire`,
+defense/gates → `fortress_city` — and only diverges off the prime spine when a
+lean is clearly dominant (weight ≥ 3). So a trade-heavy Iron player evolves into
+the **Trade Republic** instead of the Industrial Age; a default player stays on
+the spine.
+
 ## The graph
 
 Tiers are depth from the origin. ✅ = implemented and playable today; 🔭 = on the
@@ -74,7 +81,7 @@ ships, then it activates automatically).
 | Tier | Era | id | Reached from → via branch | Rejoins | Status |
 | --- | --- | --- | --- | --- | --- |
 | 1 | 🌿 Age of Flora | `flora` | `cell` → `photic`* | → `bronze` | 🔭 |
-| 4 | 🏛️ Trade Republic | `republic` | `iron` → `merchant_city`/`road_empire` | → `information` | 🔭 |
+| 4 | 🏛️ Trade Republic | `republic` | `iron` → `merchant_city`/`road_empire` | → `information` | ✅ |
 | 5 | 🜨 Steam Arcanum | `arcanum` | `industrial` → `firekeepers` (clockwork) | → `information` | 🔭 |
 | 8 | 🧬 Bio-Singularity | `bio` | `information` → `saurian_echo` | → `simulation` | 🔭 |
 

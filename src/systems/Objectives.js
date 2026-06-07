@@ -68,6 +68,14 @@ export const OBJECTIVES = {
     { id: 'mass_produce',  kind: 'mastery',   icon: '📦', label: 'Mastery: stockpile 10 machine parts',  reward: 60, check: (g) => ((g.settlers?.stock?.machine_part || 0) + g.inventory.count('machine_part')) >= 10 },
     { id: 'pollution',     kind: 'mastery',   icon: '🌫️', label: 'Mastery: keep a factory under 10 smog', reward: 50, check: (g) => g.civ.hasBuilt('factory') && (g.civ.pollution || 0) < 10 },
   ],
+  republic: [
+    { id: 'open_market',   kind: 'mandatory', icon: '🏺', label: 'Open a market',                        reward: 40, check: (g) => g.civ.hasBuilt('market') },
+    { id: 'send_caravan',  kind: 'mandatory', icon: '🐪', label: 'Establish a caravan post',             reward: 50, check: (g) => g.civ.hasBuilt('caravan_post') },
+    { id: 'pave_roads',    kind: 'mandatory', icon: '🛣️', label: 'Pave 6 stretches of road',             reward: 45, check: (g) => g.civ.hasBuilt('road', 6) },
+    { id: 'treasury',      kind: 'mandatory', icon: '💰', label: 'Grow the treasury to 400 Civ Points',  reward: 60, check: (g) => (g.civ.cp || 0) >= 400 },
+    { id: 'caravan_master',kind: 'mastery',   icon: '🧭', label: 'Mastery: bank 3 trade beads',          reward: 55, check: (g) => g.inventory.count('trade_bead') >= 3 },
+    { id: 'guild_charter', kind: 'mastery',   icon: '📜', label: 'Mastery: reach a trade network of 8',  reward: 60, check: (g) => (g.civ.trade || 0) >= 8 },
+  ],
 };
 
 function total(game, id) {

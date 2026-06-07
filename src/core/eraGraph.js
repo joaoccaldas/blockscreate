@@ -33,7 +33,7 @@ export const ERA_NODES = {
   stack: { tier: 10, implemented: false, name: 'The Stack', icon: '♾️' },
   // --- roadmap: branch ages ---
   flora: { tier: 1, implemented: false, name: 'Age of Flora', icon: '🌿' },
-  republic: { tier: 4, implemented: false, name: 'Trade Republic', icon: '🏛️' },
+  republic: { tier: 4, implemented: true, name: 'Trade Republic', icon: '🏛️' },
   arcanum: { tier: 5, implemented: false, name: 'Steam Arcanum', icon: '🜨' },
   bio: { tier: 8, implemented: false, name: 'Bio-Singularity', icon: '🧬' },
 };

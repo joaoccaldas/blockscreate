@@ -76,9 +76,11 @@ ok('era registry and graph agree on the prime spine');
 assert.strictEqual(chooseNextEra('cell', {}), 'stone', 'default cell route is the prime spine');
 assert.strictEqual(chooseNextEra('cell', { branch: 'photic' }), 'stone',
   'an unimplemented branch (flora) falls back to the prime spine — partial graph stays playable');
-assert.strictEqual(chooseNextEra('iron', { branch: 'merchant_city' }), 'industrial',
-  'iron merchant branch falls back to industrial until the Trade Republic ships');
-assert.strictEqual(chooseNextEra('industrial', {}), null, 'industrial is the deepest implemented era (terminal for now)');
+assert.strictEqual(chooseNextEra('iron', { branch: 'merchant_city' }), 'republic',
+  'iron merchant lean now diverges to the Trade Republic branch age');
+assert.strictEqual(chooseNextEra('iron', {}), 'industrial', 'the default iron route is still the Industrial spine');
+assert.strictEqual(chooseNextEra('industrial', {}), null, 'industrial is a deepest-tier terminal era');
+assert.strictEqual(chooseNextEra('republic', {}), null, 'the Trade Republic is a deepest-tier terminal era');
 ok('routing prefers branch, falls back to prime, and never dead-ends mid-graph');
 
 console.log(`\nAll ${passed} era-graph checks passed.`);

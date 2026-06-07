@@ -110,6 +110,25 @@ export const ERA_MANIFESTS = {
       { id: 'machine_city', label: 'Machine City', condition: 'maximize production' },
     ],
   },
+  republic: {
+    id: 'republic',
+    title: 'The Trade Republic',
+    subtitle: 'a reality where coin, caravans and roads outpace the furnace',
+    historicalNote: 'A merchant-first branch of the Iron Age: prosperity through markets, trade routes and law rather than smokestacks.',
+    accuracy: 'alternate history',
+    playerForm: 'merchant-prince',
+    coreLoop: ['markets', 'caravans', 'roads', 'banking', 'guilds'],
+    hazards: ['bandits', 'rival guilds', 'market crashes'],
+    animals: ['horse', 'cow', 'goat', 'chicken'],
+    decorations: ['market markers', 'banners', 'stone roads', 'guild seals', 'coin scales'],
+    mandatory: ['Open a market', 'Send a caravan', 'Pave trade roads', 'Grow the treasury'],
+    mastery: ['Found a guild charter', 'Master the caravans', 'Become a city of wealth'],
+    historicalClues: ['trade_bead', 'river_map', 'law_stone', 'forge_stamp'],
+    branches: [
+      { id: 'merchant_city', label: 'Merchant City', condition: 'maximize trade & coin' },
+      { id: 'road_empire', label: 'Road Empire', condition: 'connect everything with roads' },
+    ],
+  },
 };
 
 export function getEraManifest(id) {

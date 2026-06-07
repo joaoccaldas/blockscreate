@@ -92,6 +92,22 @@ export const ERA_THEME = {
       { kind: 'pipe', chance: 0.025 },
     ],
   },
+  // Branch age: a prosperous trade reality. Warmer, brighter, clean (no smog);
+  // wealth attracts bandits rather than machines.
+  republic: {
+    tint: 'rgba(214, 184, 110, 0.07)',
+    weather: 'leaves',
+    weatherRate: 0.7,
+    accent: '#d9b25a',
+    passive: [['cow', 3], ['goat', 2], ['pig', 2], ['chicken', 2]],
+    hostile: [['bandit', 3], ['raider', 1]],
+    hostileDay: false,
+    decorations: [
+      { kind: 'banner', chance: 0.025 },
+      { kind: 'lamp_post', chance: 0.018 },
+      { kind: 'pot', chance: 0.02 },
+    ],
+  },
 };
 
 export function getEraTheme(id, variant = null) {

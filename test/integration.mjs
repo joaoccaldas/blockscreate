@@ -165,6 +165,29 @@ if (!/\?r=/.test(shareText)) throw new Error('run share text missing a reality l
 if (!shareText.includes(gRun.realityCode())) throw new Error('run share link does not carry this reality');
 ok('run summary produces a shareable line with a playable reality link');
 
+// Branch divergence: a trade-leaning Iron player evolves into the Trade Republic
+// instead of the Industrial spine — two players reach different ages.
+const gDiv = newGame();
+gDiv.newWorld('iron', MODE.SURVIVAL);
+if (gDiv._nextEraChoice().id !== 'industrial') throw new Error('default iron route should be industrial');
+gDiv.civ.onBuild('market');       // +1 trade
+gDiv.civ.onBuild('caravan_post'); // +2 trade  → trade 3, merchant lean
+if (gDiv._dominantBranch() !== 'merchant_city') throw new Error(`trade play did not lean merchant: ${gDiv._dominantBranch()}`);
+if (gDiv._nextEraChoice().id !== 'republic') throw new Error('merchant-leaning iron did not diverge to the Trade Republic');
+gDiv.civ.cp = 9999;
+gDiv.objectives.completed = new Set(gDiv.objectives.mandatory().map((o) => o.id));
+if (!gDiv._advanceEra() || gDiv.eraId !== 'republic') throw new Error('did not advance into the Trade Republic');
+if (gDiv.realityPath.at(-1).to !== 'republic' || gDiv.realityPath.at(-1).branch !== 'merchant_city') throw new Error('reality path did not record the branch route');
+ok('Trade Republic: a trade-leaning Iron player diverges into the branch age');
+
+// The Trade Republic is a real, playable era with its own market + objectives.
+const { MARKET } = await import('../src/systems/EraMarket.js');
+if (!(MARKET.republic && MARKET.republic.length)) throw new Error('Trade Republic has no market');
+const repObjIds = gDiv.objectives.list.map((o) => o.id);
+for (const id of ['open_market', 'send_caravan', 'pave_roads']) if (!repObjIds.includes(id)) throw new Error(`republic objective ${id} missing`);
+if (!gDiv.world.grid.length) throw new Error('Trade Republic world did not generate terrain');
+ok('Trade Republic is a fully playable era (world, market, objectives)');
+
 // Map of Space & Time renders through the game without error and tracks state.
 const gMap = newGame();
 gMap.newWorld('cell', MODE.SURVIVAL);

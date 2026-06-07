@@ -49,14 +49,22 @@ const node = (model, id) => model.tiers.flatMap((t) => t.nodes).find((n) => n.id
   ok('the walked route is recorded and revealed on the map');
 }
 
-// --- future/branch ages stay redacted even when their route is known ---
+// --- implemented next ages (spine + built branches) are named; unbuilt stay ??? ---
 {
   const m = buildMapModel(stub({ eraId: 'iron', unlocked: { isUnlocked: (id) => ['cell', 'stone', 'bronze', 'iron'].includes(id) } }));
   const industrial = node(m, 'industrial');
-  assert.ok(industrial && industrial.state === 'known' && industrial.label !== '???', 'the implemented next age is named');
+  assert.ok(industrial && industrial.state === 'known' && industrial.label !== '???', 'the implemented spine next age is named');
   const republic = node(m, 'republic');
-  assert.ok(republic && republic.label === '???', 'the unbuilt Trade Republic branch is redacted');
-  ok('implemented next ages are named; unbuilt branches stay ???');
+  assert.ok(republic && republic.state === 'known' && republic.label !== '???', 'the now-built Trade Republic branch is named when reachable');
+  ok('implemented next ages (spine + built branches) are revealed by name');
+}
+
+// --- a still-unbuilt branch remains redacted (mystery preserved) ---
+{
+  const m = buildMapModel(stub()); // fresh cell run
+  const flora = node(m, 'flora');
+  assert.ok(flora && flora.state === 'rumored' && flora.label === '???', 'the unbuilt Age of Flora branch stays redacted');
+  ok('unbuilt branch ages stay ??? until they ship');
 }
 
 // --- the meta "leakage" layer only appears once divergence is visible ---

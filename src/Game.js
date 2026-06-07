@@ -789,19 +789,26 @@ export class Game {
   }
 
   /**
-   * The reality branch the player is leaning into, from the Journal's clue
-   * tally (the "timeline leaning"). This is what routes them through the era
-   * graph — two players can reach different ages by different leans.
+   * The reality branch the player is leaning into — what routes them through the
+   * era graph so two players reach different ages by different play. It blends
+   * the Journal's clue tally with *playstyle* signals (trade, roads, defense),
+   * since branches like merchant_city/road_empire are earned by how you build,
+   * not just what you find. Returns a branch only when a lean is clearly
+   * dominant, so divergence is intentional, not accidental.
    */
   _dominantBranch() {
-    const counts = this.clues?.branchCounts?.() || {};
+    const w = {};
+    const add = (b, n) => { if (b && b !== 'observer' && n > 0) w[b] = (w[b] || 0) + n; };
+    for (const [b, n] of Object.entries(this.clues?.branchCounts?.() || {})) add(b, n);
+    // Playstyle leans (the merchant/road/fortress identities).
+    add('merchant_city', this.civ?.trade || 0);
+    add('road_empire', (this.civ?.placed?.road || 0) * 0.5);
+    add('fortress_city', (this.civ?.defense || 0) * 0.4 + (this.civ?.placed?.gate || 0));
     let best = null;
     let top = 0;
-    for (const [branch, n] of Object.entries(counts)) {
-      if (branch === 'observer') continue; // the meta-branch doesn't route ages
-      if (n > top) { top = n; best = branch; }
-    }
-    return best;
+    for (const [b, n] of Object.entries(w)) if (n > top) { top = n; best = b; }
+    // Require a real commitment before diverging off the prime spine.
+    return top >= 3 ? best : null;
   }
 
   /** The era the player will advance into, routed through the era graph. */

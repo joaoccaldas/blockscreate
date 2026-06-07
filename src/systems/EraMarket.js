@@ -22,6 +22,7 @@ export const CURRENCY = {
   bronze: { name: 'Trade Beads', icon: '🔵' },
   iron: { name: 'War Spoils', icon: '⚔️' },
   industrial: { name: 'Credits', icon: '💷' },
+  republic: { name: 'Florins', icon: '🪙' },
 };
 
 // kind: 'item'    → payload { id, n }      grant inventory items
@@ -63,6 +64,13 @@ export const MARKET = {
     { id: 'n_grid', icon: '🔌', name: 'Grid Kit', cost: 16, kind: 'item', payload: { id: 'power_line', n: 6 }, desc: 'A reel of power line to wire the factory.' },
     { id: 'n_surge', icon: '⚡', name: 'Output Surge', cost: 22, kind: 'powerup', payload: { id: 'time_shard', seconds: 60 }, desc: 'Production momentum — CP rolls in faster.' },
     { id: 'n_plaque', icon: '🏭', name: "Founder's Plaque", cost: 60, kind: 'badge', payload: { badge: 'founders_plaque' }, limited: true, desc: 'Limited: cast for the architect of the machine age.' },
+  ],
+  republic: [
+    { id: 'r_beads', icon: '🔵', name: 'Bead Purse', cost: 12, kind: 'item', payload: { id: 'trade_bead', n: 2 }, desc: 'Trade beads to grease the caravans.' },
+    { id: 'r_rations', icon: '🥖', name: 'Caravan Rations', cost: 12, kind: 'item', payload: { id: 'food', n: 6 }, desc: 'Provisions to keep the routes moving.' },
+    { id: 'r_stone', icon: '🛣️', name: 'Road Stone', cost: 14, kind: 'item', payload: { id: 'stone', n: 16 }, desc: 'Cut stone to pave trade roads fast.' },
+    { id: 'r_favor', icon: '🏺', name: 'Guild Favor', cost: 22, kind: 'powerup', payload: { id: 'time_shard', seconds: 70 }, desc: 'Commerce momentum — coin rolls in faster.' },
+    { id: 'r_charter', icon: '📜', name: 'Charter Seal', cost: 50, kind: 'badge', payload: { badge: 'charter_seal' }, limited: true, desc: 'Limited: the founding seal of a great republic.' },
   ],
 };
 

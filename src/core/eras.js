@@ -80,6 +80,21 @@ export const ERAS = [
     starter: ['iron_pickaxe'],
     fullyPlayable: true,
   },
+  {
+    // Branch age (Iron → merchant/road lean). A wealthier, trade-first path that
+    // diverges from the Industrial spine — see docs/ERA_GRAPH.md.
+    id: 'republic',
+    order: 4,
+    name: 'Trade Republic',
+    blurb: 'Coin over coal: markets, caravans and roads build a republic of wealth.',
+    icon: '🏛️',
+    unlockCost: 1200,
+    advanceCost: Infinity,
+    sky: { day: ['#bcd6e6', '#efe0b8'], night: ['#101a30', '#2a3358'] },
+    ground: '#7a6a4a',
+    starter: ['iron_pickaxe'],
+    fullyPlayable: true,
+  },
 ];
 
 for (const e of ERAS) e.manifest = getEraManifest(e.id);

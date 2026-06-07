@@ -184,7 +184,10 @@ export class HUD {
           <h2 id="deathTitle">You Died</h2>
           <p id="deathCause" class="muted"></p>
           <div id="deathStats" class="death-stats"></div>
-          <button id="deathShare" class="btn">🔗 Share this run</button>
+          <div class="pause-actions">
+            <button id="deathShare" class="btn">🔗 Share run</button>
+            <button id="deathShareCard" class="btn">📸 Share image</button>
+          </div>
           <div class="pause-actions">
             <button id="deathRespawn" class="btn primary">⟳ Respawn</button>
             <button id="deathLoad" class="btn">📂 Load Save</button>
@@ -260,6 +263,7 @@ export class HUD {
     this.el('advanceBtn').onclick = () => this.h.onAdvanceEra?.();
 
     this.el('deathShare').onclick = () => this.h.onShareRun?.();
+    this.el('deathShareCard').onclick = () => this.h.onShareCard?.();
     this.el('deathRespawn').onclick = () => this.h.onRespawn?.();
     this.el('deathLoad').onclick = () => this.h.onDeathLoad?.();
     this.el('deathMenu').onclick = () => this.h.onDeathMenu?.();

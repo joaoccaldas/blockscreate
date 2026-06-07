@@ -37,6 +37,7 @@ import { getItem, isPlaceable } from './core/items.js';
 import { getEra, nextEra, chooseNextEra } from './core/eras.js';
 import { getEraTheme, weightedPick, pickVariant, variantInfo } from './core/eraTheme.js';
 import { encodeReality, realityUrl } from './core/RealityCode.js';
+import { shareCardData, composeShareCardCanvas, shareCardImage } from './ui/ShareCard.js';
 
 // Buildings a raider will smash when it breaches the town (drives _pillageTown).
 const TOWN_BUILDINGS = new Set(['granary', 'market', 'caravan_post', 'windmill', 'auto_miner', 'gate']);
@@ -337,6 +338,7 @@ export class Game {
       onAdvanceEra: () => this._advanceEra(),
       // Death screen
       onShareRun: () => this._shareRun(),
+      onShareCard: () => this._shareCardImage(),
       onRespawn: () => this._respawn(),
       onDeathLoad: () => this.hud.confirm('Load your last save?', 'This reloads the world from the autosave.', () => { const s = SaveManager.load(); if (s) { this.stop(); this.loadSave(s); this.start(); } }),
       onDeathMenu: () => this.exit(),
@@ -536,6 +538,19 @@ export class Game {
       else done();
     } catch (e) { this.hud.toast(`🔗 ${this.realityCode()}`, 4000); }
     this.audio?.play('ui');
+  }
+
+  /** Compose a PNG share card of this run and share/download it. */
+  _shareCardImage() {
+    try {
+      const canvas = composeShareCardCanvas(shareCardData(this));
+      if (!canvas) { this.hud.toast('🔗 Image sharing not available'); return; }
+      shareCardImage(canvas, this.runShareText());
+      this.hud.toast('📸 Share image ready!', 2600);
+      this.audio?.play('ui');
+    } catch (e) {
+      this.hud.toast('🔗 Could not make an image — try Share run');
+    }
   }
 
   hasStation(itemId) {

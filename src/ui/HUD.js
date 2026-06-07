@@ -11,6 +11,7 @@ import { getItem } from '../core/items.js';
 import { HOTBAR_SIZE } from '../systems/Inventory.js';
 import { availableRecipes, canCraft } from '../systems/Crafting.js';
 import { getEra, nextEra } from '../core/eras.js';
+import { buildMapModel } from '../systems/SpaceTimeMap.js';
 import { MODE } from '../core/constants.js';
 
 export class HUD {
@@ -92,6 +93,7 @@ export class HUD {
         <button id="invBtn" class="action-btn" title="Inventory (E)">🎒 <span>Bag</span></button>
         <button id="craftBtn" class="action-btn" title="Crafting (C)">🔨 <span>Craft</span></button>
         <button id="marketBtn" class="action-btn" title="Era market — spend tokens on boosts & relics (B)">🛒 <span>Market</span></button>
+        <button id="mapBtn" class="action-btn" title="Map of Space & Time (M)">🗺️ <span>Map</span></button>
         <button id="journalBtn" class="action-btn" title="Journal of clues & discoveries">📖 <span>Journal</span></button>
       </div>`}
       <div id="powerupBar" class="powerup-bar hidden"></div>
@@ -127,6 +129,7 @@ export class HUD {
             <button id="pInv" class="btn">🎒 Inventory</button>
             <button id="pCraft" class="btn">🔨 Crafting</button>
             <button id="pMarket" class="btn">🛒 Market</button>
+            <button id="pMap" class="btn">🗺️ Map of Space &amp; Time</button>
             <button id="pJournal" class="btn">📖 Journal</button>
           </div>
           <div class="settings-block">
@@ -166,6 +169,15 @@ export class HUD {
         </div>
         <div id="marketBody"></div>
         <button class="close-btn" id="marketClose">Close</button>
+      </div>
+
+      <div id="mapPanel" class="panel hidden">
+        <div class="panel-head">
+          <h2>🗺️ Map of Space &amp; Time</h2>
+          <span id="mapWalked" class="muted small"></span>
+        </div>
+        <div id="mapBody"></div>
+        <button class="close-btn" id="mapClose">Close</button>
       </div>
 
       <div id="eraIntro" class="overlay hidden">
@@ -235,13 +247,16 @@ export class HUD {
       this.el('invBtn').onclick = () => this.h.onToggleInventory?.();
       this.el('craftBtn').onclick = () => this.h.onToggleCrafting?.();
       this.el('marketBtn').onclick = () => this.h.onToggleMarket?.();
+      this.el('mapBtn').onclick = () => this.h.onToggleMap?.();
       this.el('journalBtn').onclick = () => this.h.onToggleJournal?.();
     }
     this.el('marketClose').onclick = () => this.h.onToggleMarket?.();
+    this.el('mapClose').onclick = () => this.h.onToggleMap?.();
     this.el('resumeBtn').onclick = () => this.h.onResume?.();
     this.el('pInv').onclick = () => this.h.onToggleInventory?.();
     this.el('pCraft').onclick = () => this.h.onToggleCrafting?.();
     this.el('pMarket').onclick = () => this.h.onToggleMarket?.();
+    this.el('pMap').onclick = () => this.h.onToggleMap?.();
     this.el('pJournal').onclick = () => this.h.onToggleJournal?.();
     this.el('journalClose').onclick = () => this.h.onToggleJournal?.();
 
@@ -290,6 +305,7 @@ export class HUD {
         <button class="tbtn small" data-act="inv" aria-label="Inventory">🎒</button>
         <button class="tbtn small" data-act="craft" aria-label="Crafting">🔨</button>
         <button class="tbtn small" data-act="market" aria-label="Era market">🛒</button>
+        <button class="tbtn small" data-act="map" aria-label="Map of Space and Time">🗺️</button>
         ${this.eraId === 'stone' ? '<button class="tbtn small" data-act="companion" aria-label="Companion command">🌿</button>' : ''}
         ${this.eraId === 'stone' ? '<button class="tbtn small" data-act="mount" aria-label="Mount companion">🐾</button>' : ''}
         ${this.eraId === 'stone' ? '<button class="tbtn small" data-act="cargo" aria-label="Companion cargo">📦</button>' : ''}
@@ -327,6 +343,8 @@ export class HUD {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleCrafting?.(); });
       } else if (act === 'market') {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleMarket?.(); });
+      } else if (act === 'map') {
+        btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleMap?.(); });
       } else if (act === 'companion') {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onCompanionCommand?.(); });
       } else if (act === 'mount') {
@@ -705,6 +723,35 @@ export class HUD {
   showPause(show) { this.el('pauseMenu').classList.toggle('hidden', !show); }
   showJournal(show) { this.el('journalPanel').classList.toggle('hidden', !show); }
   showMarket(show) { this.el('marketPanel').classList.toggle('hidden', !show); }
+  showMap(show) { this.el('mapPanel').classList.toggle('hidden', !show); }
+
+  /**
+   * The Map of Space & Time: the time axis runs top→down by age; each tier shows
+   * its realities (current pulsing, visited solid, reachable dimmed, unbuilt
+   * branches redacted ???). A "leakage" footer reveals the meta-layer only once
+   * reality has begun to bend — kept partly redacted so the mystery survives.
+   */
+  renderMap(game) {
+    const m = buildMapModel(game);
+    this.el('mapWalked').textContent = `${m.agesWalked} age${m.agesWalked === 1 ? '' : 's'} walked${m.rumoredCount ? ` · ${m.rumoredCount} path${m.rumoredCount === 1 ? '' : 's'} unexplored` : ''}`;
+    const tiers = m.tiers.map((t) => {
+      const chips = t.nodes.map((n) =>
+        `<span class="map-node map-${n.state}"><span class="map-ic">${n.icon}</span>${n.label}</span>`).join('');
+      return `<div class="map-tier"><span class="map-age">Age ${t.tier}</span><div class="map-row">${chips}</div></div>`;
+    }).join('<div class="map-link">┊</div>');
+    let leak = '';
+    if (m.leakage) {
+      const lk = m.leakage;
+      const layers = lk.layers.map((l) =>
+        `<div class="map-layer${l.revealed ? '' : ' redacted'}">⊂ <b>${l.label}</b> <small>${l.note}</small></div>`).join('');
+      leak = `<div class="map-leak">
+        <div class="map-leak-head">∿ Signal beneath the map</div>
+        <div class="map-leak-stats">✷ divergence ${lk.divergence} · ${lk.branches} branched · ${lk.crossovers} crossover${lk.crossovers === 1 ? '' : 's'}</div>
+        ${layers}
+      </div>`;
+    }
+    this.el('mapBody').innerHTML = `<div class="map-flow">${tiers}</div>${leak}`;
+  }
 
   /**
    * The era market: spend era-themed tokens on relevant accelerants and

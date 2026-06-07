@@ -164,6 +164,18 @@ if (!/BlocksCreate/.test(shareText)) throw new Error('run share text missing the
 if (!/\?r=/.test(shareText)) throw new Error('run share text missing a reality link');
 if (!shareText.includes(gRun.realityCode())) throw new Error('run share link does not carry this reality');
 ok('run summary produces a shareable line with a playable reality link');
+
+// Map of Space & Time renders through the game without error and tracks state.
+const gMap = newGame();
+gMap.newWorld('cell', MODE.SURVIVAL);
+gMap._toggleMap();
+if (!gMap.mapOpen) throw new Error('map did not open');
+gMap._toggleMap();
+if (gMap.mapOpen) throw new Error('map did not close');
+const mapModel = (await import('../src/systems/SpaceTimeMap.js')).buildMapModel(gMap);
+if (mapModel.current !== 'cell') throw new Error('map model lost the current era');
+if (!mapModel.tiers.some((t) => t.nodes.some((n) => n.state === 'current'))) throw new Error('map has no current node');
+ok('Map of Space & Time opens, closes, and models the current reality');
 ok('first-cell era evolves into Age of Dinosaurs');
 
 // Cell feeding range grows with evolution stage (a tangible power read).

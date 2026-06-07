@@ -61,6 +61,7 @@ export class Input {
       if (k === 'e') this.handlers.onToggleInventory?.();
       if (k === 'c') this.handlers.onToggleCrafting?.();
       if (k === 'b') this.handlers.onToggleMarket?.();
+      if (k === 'm') this.handlers.onToggleMap?.();
       if (k === 'f') this.state.fly = !this.state.fly;
       if (k === 'q') this.handlers.onToggleBuild?.();
       if (k === 'r') this.handlers.onCompanionCommand?.();

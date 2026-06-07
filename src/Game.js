@@ -294,6 +294,7 @@ export class Game {
       onToggleCrafting: () => this._toggleCrafting(),
       onToggleJournal: () => this._toggleJournal(),
       onToggleMarket: () => this._toggleMarket(),
+      onToggleMap: () => this._toggleMap(),
       onToggleBuild: () => { this.buildMode = !this.buildMode; },
       onCompanionCommand: () => this._cycleCompanionCommand(),
       onToggleMount: () => this._toggleMountCompanion(),
@@ -309,6 +310,7 @@ export class Game {
       onToggleCrafting: () => this._toggleCrafting(),
       onToggleJournal: () => this._toggleJournal(),
       onToggleMarket: () => this._toggleMarket(),
+      onToggleMap: () => this._toggleMap(),
       onBuyOffer: (id) => this._buyOffer(id),
       onCraft: (r) => this._craft(r),
       onPickSlot: (i) => {
@@ -380,11 +382,12 @@ export class Game {
   _toggleInventory() {
     this.invOpen = !this.invOpen;
     this.craftOpen = false;
-    this.marketOpen = false;
+    this.marketOpen = false; this.mapOpen = false;
     if (this.invOpen) this.hud.renderInventory(this);
     this.hud.showInventory(this.invOpen);
     this.hud.showCrafting(false);
     this.hud.showMarket(false);
+    this.hud.showMap(false);
     this.hud.showPause(false);
     this.paused = false;
     this.audio?.play('ui');
@@ -393,11 +396,12 @@ export class Game {
   _toggleCrafting() {
     this.craftOpen = !this.craftOpen;
     this.invOpen = false;
-    this.marketOpen = false;
+    this.marketOpen = false; this.mapOpen = false;
     if (this.craftOpen) this.hud.renderCrafting(this);
     this.hud.showCrafting(this.craftOpen);
     this.hud.showInventory(false);
     this.hud.showMarket(false);
+    this.hud.showMap(false);
     this.hud.showPause(false);
     this.paused = false;
     this.audio?.play('ui');
@@ -407,23 +411,25 @@ export class Game {
     this.journalOpen = !this.journalOpen;
     this.invOpen = false;
     this.craftOpen = false;
-    this.marketOpen = false;
+    this.marketOpen = false; this.mapOpen = false;
     if (this.journalOpen) this.hud.renderJournal(this);
     this.hud.showJournal(this.journalOpen);
     this.hud.showInventory(false);
     this.hud.showCrafting(false);
     this.hud.showMarket(false);
+    this.hud.showMap(false);
     this.hud.showPause(false);
     this.paused = this.journalOpen; // pause behind the journal, like other menus
     this.audio?.play('ui');
   }
 
   _closeMenus() {
-    this.invOpen = this.craftOpen = this.journalOpen = this.marketOpen = false;
+    this.invOpen = this.craftOpen = this.journalOpen = this.marketOpen = this.mapOpen = false;
     this.hud.showInventory(false);
     this.hud.showCrafting(false);
     this.hud.showJournal(false);
     this.hud.showMarket(false);
+    this.hud.showMap(false);
   }
 
   _craft(recipe) {
@@ -444,13 +450,30 @@ export class Game {
     this.invOpen = false;
     this.craftOpen = false;
     this.journalOpen = false;
+    this.mapOpen = false;
     if (this.marketOpen) this.hud.renderMarket(this);
     this.hud.showMarket(this.marketOpen);
     this.hud.showInventory(false);
     this.hud.showCrafting(false);
     this.hud.showJournal(false);
+    this.hud.showMap(false);
     this.hud.showPause(false);
     this.paused = this.marketOpen; // pause behind the shop, like other menus
+    this.audio?.play('ui');
+  }
+
+  _toggleMap() {
+    this.mapOpen = !this.mapOpen;
+    this.invOpen = this.craftOpen = this.journalOpen = this.marketOpen = false;
+    if (this.mapOpen) this.hud.renderMap(this);
+    this.hud.showMap(this.mapOpen);
+    this.hud.showInventory(false);
+    this.hud.showCrafting(false);
+    this.hud.showJournal(false);
+    this.hud.showMarket(false);
+    this.hud.showMap(false);
+    this.hud.showPause(false);
+    this.paused = this.mapOpen;
     this.audio?.play('ui');
   }
 

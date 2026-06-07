@@ -101,6 +101,7 @@ export class Renderer {
     this.drawPlayer(camera, player, T);
     if (particles) this.drawParticles(camera, particles, T);
     if (scene.floaters) this.drawFloaters(camera, scene.floaters, T);
+    if (scene.goal) this.drawGoalBeacon(camera, scene.goal, player, W, H, T, scene.reduceMotion);
 
     if (ghost && ghost.valid) this.drawGhost(camera, ghost, T);
     if (hover && hover.valid) this.drawHover(camera, hover, T);
@@ -883,6 +884,62 @@ export class Renderer {
     ctx.globalAlpha = 1;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
+  }
+
+  /**
+   * Goal beacon: a pulsing ring when the target is on-screen, or an edge arrow
+   * pointing toward it (with distance) when it's off-screen. Kills "what do I
+   * do?" by always showing where to head next.
+   */
+  drawGoalBeacon(camera, goal, player, W, H, T, reduceMotion) {
+    const ctx = this.ctx;
+    const dist = player ? Math.hypot(goal.x - player.x, goal.y - player.y) : 0;
+    if (dist < 2.2) return; // already there — don't clutter
+    const c = camera.worldToScreen(goal.x, goal.y);
+    const margin = 46;
+    const onScreen = c.sx > margin && c.sx < W - margin && c.sy > margin && c.sy < H - margin;
+    const pulse = reduceMotion ? 1 : 1 + Math.sin(this.t * 4) * 0.12;
+    ctx.save();
+    if (onScreen) {
+      ctx.globalAlpha = 0.85;
+      ctx.strokeStyle = '#f4d24a';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(c.sx, c.sy, 16 * pulse, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.font = '18px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(goal.icon || '🎯', c.sx, c.sy - 22);
+    } else {
+      const cx = W / 2;
+      const cy = H / 2;
+      let dx = c.sx - cx;
+      let dy = c.sy - cy;
+      const len = Math.hypot(dx, dy) || 1;
+      dx /= len; dy /= len;
+      const t = Math.min((W / 2 - margin) / Math.abs(dx || 1e-6), (H / 2 - margin) / Math.abs(dy || 1e-6));
+      const ex = cx + dx * t;
+      const ey = cy + dy * t;
+      // chevron pointing outward
+      ctx.translate(ex, ey);
+      ctx.rotate(Math.atan2(dy, dx));
+      ctx.globalAlpha = 0.5 + 0.4 * (reduceMotion ? 1 : (0.5 + 0.5 * Math.sin(this.t * 4)));
+      ctx.fillStyle = '#f4d24a';
+      ctx.beginPath();
+      ctx.moveTo(14, 0); ctx.lineTo(-8, -10); ctx.lineTo(-8, 10); ctx.closePath();
+      ctx.fill();
+      ctx.rotate(-Math.atan2(dy, dx));
+      ctx.globalAlpha = 1;
+      ctx.font = '15px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(goal.icon || '🎯', 0, -16);
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.font = 'bold 11px system-ui, sans-serif';
+      ctx.fillText(`${Math.round(dist)}m`, 0, 22);
+    }
+    ctx.restore();
+    ctx.textAlign = 'left';
   }
 
   drawGhost(camera, ghost, T) {

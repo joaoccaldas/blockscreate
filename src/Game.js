@@ -42,6 +42,16 @@ import { shareCardData, composeShareCardCanvas, shareCardImage } from './ui/Shar
 // Buildings a raider will smash when it breaches the town (drives _pillageTown).
 const TOWN_BUILDINGS = new Set(['granary', 'market', 'caravan_post', 'windmill', 'auto_miner', 'gate']);
 
+// What the goal beacon points a new player toward in each age (block names).
+const GOAL_RESOURCES = {
+  stone: ['log', 'coal_ore', 'stone'],
+  bronze: ['copper_ore', 'tin_ore', 'log', 'clay'],
+  iron: ['iron_ore', 'coal_ore', 'log'],
+  industrial: ['iron_ore', 'coal_ore'],
+  republic: ['log', 'stone', 'clay'],
+  _default: ['log', 'stone'],
+};
+
 // First Cell evolution stages — the cell visibly gains structure as it stabilizes.
 const CELL_STAGE_NAMES = [
   'a bare protocell',
@@ -760,6 +770,7 @@ export class Game {
     this._updateSimulation(dt);
     this._updateAchievements(dt);
     this._updateDaily(dt);
+    this._updateGoalBeacon(dt);
     this._updateGuidanceHints(dt);
 
     // Era advancement.
@@ -987,6 +998,47 @@ export class Game {
         return;
       }
     }
+  }
+
+  /**
+   * The current "go here" target for the goal beacon — what a new player should
+   * head toward next. Cell: the nearest nutrient/vent. Other ages: the nearest
+   * era-relevant resource. Throttled by _updateGoalBeacon; the renderer points
+   * an arrow at it so "what do I do?" never stalls a first session.
+   */
+  _goalTarget() {
+    if (this.mode !== MODE.SURVIVAL || !this.world) return null;
+    if (this.eraId === 'cell') {
+      const n = this._nearestCellResource(24);
+      return n ? { x: n.x + 0.5, y: n.y + 0.5, icon: '🫧' } : null;
+    }
+    const want = GOAL_RESOURCES[this.eraId] || GOAL_RESOURCES._default;
+    const found = this._nearestBlock(want.map((id) => blockId(id)).filter((n) => n != null), 28);
+    return found ? { x: found.x + 0.5, y: found.y + 0.5, icon: '⛏️' } : null;
+  }
+
+  _nearestBlock(idList, radius = 24) {
+    const ids = new Set(idList);
+    const px = Math.round(this.player.x);
+    const py = Math.round(this.player.y - this.player.h / 2);
+    let best = null;
+    for (let y = py - radius; y <= py + radius; y++) {
+      for (let x = px - radius; x <= px + radius; x++) {
+        if (!ids.has(this.world.get(x, y))) continue;
+        const d = Math.hypot(x + 0.5 - this.player.x, y + 0.5 - this.player.y);
+        if (d > radius || (best && d >= best.distance)) continue;
+        best = { x, y, distance: d };
+      }
+    }
+    return best;
+  }
+
+  /** Recompute the goal beacon target on a throttle (the scan is bounded). */
+  _updateGoalBeacon(dt) {
+    this._beaconTimer = (this._beaconTimer || 0) + dt;
+    if (this._beaconTimer < 0.5 && this.goalTarget !== undefined) return;
+    this._beaconTimer = 0;
+    this.goalTarget = this._goalTarget();
   }
 
   /** Bioluminescent trail behind a swimming cell — makes movement feel alive. */
@@ -2395,6 +2447,8 @@ export class Game {
       settlers: this.settlers?.settlers || [],
       particles: this.particles,
       floaters: this.floaters,
+      goal: (this.invOpen || this.craftOpen || this.journalOpen || this.marketOpen || this.mapOpen || this.paused) ? null : this.goalTarget,
+      reduceMotion: this.reduceMotion,
       powerups: this.powerups,
       dayFactor: this.dayFactor(),
       tint: getEraTheme(this.eraId, this.world?.variant).tint,

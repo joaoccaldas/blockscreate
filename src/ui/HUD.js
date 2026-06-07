@@ -184,6 +184,7 @@ export class HUD {
           <h2 id="deathTitle">You Died</h2>
           <p id="deathCause" class="muted"></p>
           <div id="deathStats" class="death-stats"></div>
+          <button id="deathShare" class="btn">🔗 Share this run</button>
           <div class="pause-actions">
             <button id="deathRespawn" class="btn primary">⟳ Respawn</button>
             <button id="deathLoad" class="btn">📂 Load Save</button>
@@ -258,6 +259,7 @@ export class HUD {
     this.el('pMenu').onclick = () => this.h.onMainMenu?.();
     this.el('advanceBtn').onclick = () => this.h.onAdvanceEra?.();
 
+    this.el('deathShare').onclick = () => this.h.onShareRun?.();
     this.el('deathRespawn').onclick = () => this.h.onRespawn?.();
     this.el('deathLoad').onclick = () => this.h.onDeathLoad?.();
     this.el('deathMenu').onclick = () => this.h.onDeathMenu?.();
@@ -835,11 +837,16 @@ export class HUD {
     if (!info) { screen.classList.add('hidden'); return; }
     this.el('deathCause').textContent = `Felled by ${info.cause}.`;
     const s = info.stats || {};
-    this.el('deathStats').innerHTML = [
-      ['🌍 Era', s.era], ['✨ Civ Points', s.cp], ['🏛️ Population', s.population],
-      ['⛏️ Blocks mined', s.mined], ['🧱 Blocks built', s.built],
+    const rows = [
+      ['🌍 Era', s.era], ['🧭 Ages traveled', s.ages], ['✨ Civ Points', s.cp],
+      ['🏛️ Population', s.population], ['⛏️ Blocks mined', s.mined], ['🧱 Blocks built', s.built],
       ['🕳️ Deepest dig', s.deepest], ['🔎 Clues found', s.clues],
-    ].map(([k, v]) => `<div class="death-stat"><span>${k}</span><b>${v ?? 0}</b></div>`).join('');
+      ['🏆 Achievements', s.achievements], ['✷ Realities branched', s.branches],
+    ];
+    if (s.daily) rows.push(['🗓️ Daily', s.daily]);
+    this.el('deathStats').innerHTML = rows
+      .filter(([, v]) => v != null)
+      .map(([k, v]) => `<div class="death-stat"><span>${k}</span><b>${v ?? 0}</b></div>`).join('');
     screen.classList.remove('hidden');
   }
 

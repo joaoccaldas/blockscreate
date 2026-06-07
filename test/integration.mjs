@@ -154,6 +154,16 @@ gDaily._updateDaily(0.1);
 if (dailyDoneKey !== ch.dateKey) throw new Error('daily completion did not fire with the date key');
 gDaily._updateDaily(0.1); // must not double-fire
 ok('daily challenge completion fires once through the game loop');
+
+// Run summary share text: a boastable one-liner + a playable reality link.
+const gRun = newGame();
+gRun.newWorld('stone', MODE.SURVIVAL);
+gRun.civ.totalMined = 12; gRun.civ.cp = 140;
+const shareText = gRun.runShareText();
+if (!/BlocksCreate/.test(shareText)) throw new Error('run share text missing the game name');
+if (!/\?r=/.test(shareText)) throw new Error('run share text missing a reality link');
+if (!shareText.includes(gRun.realityCode())) throw new Error('run share link does not carry this reality');
+ok('run summary produces a shareable line with a playable reality link');
 ok('first-cell era evolves into Age of Dinosaurs');
 
 // Cell feeding range grows with evolution stage (a tangible power read).

@@ -336,6 +336,7 @@ export class Game {
       onMainMenu: () => this.hud.confirm('Return to the main menu?', 'Your game is saved automatically.', () => this.exit()),
       onAdvanceEra: () => this._advanceEra(),
       // Death screen
+      onShareRun: () => this._shareRun(),
       onRespawn: () => this._respawn(),
       onDeathLoad: () => this.hud.confirm('Load your last save?', 'This reloads the world from the autosave.', () => { const s = SaveManager.load(); if (s) { this.stop(); this.loadSave(s); this.start(); } }),
       onDeathMenu: () => this.exit(),
@@ -515,6 +516,28 @@ export class Game {
     this.audio?.play('ui');
   }
 
+  /** A boastable one-liner about this run + a link to play the same reality. */
+  runShareText() {
+    const era = getEra(this.eraId).name;
+    const ages = (this.realityPath?.length || 0) + 1;
+    const bits = [`I reached the ${era}`, `${ages} age${ages > 1 ? 's' : ''}`, `${Math.floor(this.civ.cp)} CP`];
+    if ((this.civ.totalMined || 0) > 0) bits.push(`${this.civ.totalMined} mined`);
+    if ((this.timeline?.divergedCount?.() || 0) > 0) bits.push(`${this.timeline.divergedCount()} realities branched`);
+    return `🌍 BlocksCreate — ${bits.join(' · ')}. Play my reality: ${realityUrl(this.realityCode())}`;
+  }
+
+  /** Copy the run summary (text + reality link) to the clipboard. */
+  _shareRun() {
+    const text = this.runShareText();
+    const done = () => this.hud.toast('🔗 Run copied — paste it anywhere!', 3200);
+    try {
+      const p = navigator.clipboard?.writeText?.(text);
+      if (p && p.then) p.then(done).catch(() => this.hud.toast('🔗 Share text ready in the console', 3000));
+      else done();
+    } catch (e) { this.hud.toast(`🔗 ${this.realityCode()}`, 4000); }
+    this.audio?.play('ui');
+  }
+
   hasStation(itemId) {
     return this.mode === MODE.CREATIVE || this.civ.hasBuilt(itemId) || this.inventory.count(itemId) > 0;
   }
@@ -554,12 +577,16 @@ export class Game {
       cause,
       stats: {
         era: getEra(this.eraId).name,
+        ages: (this.realityPath?.length || 0) + 1,
         cp: Math.floor(this.civ.cp),
         population: this.civ.population,
         mined: this.civ.totalMined,
         built: this.civ.totalBuilt,
         deepest: this.civ.deepestMine,
         clues: this.clues?.count?.() || 0,
+        achievements: `${this.achievements?.count?.() || 0}/${this.achievements?.total?.() || 0}`,
+        branches: this.timeline?.divergedCount?.() || 0,
+        daily: this.daily ? (this.daily._done ? '✓ complete' : 'in progress') : null,
       },
     });
   }

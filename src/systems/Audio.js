@@ -6,6 +6,26 @@
  * Browsers block audio until a user gesture, so the context is created lazily
  * and resume() should be called from the first click/tap.
  */
+/**
+ * Per-era music palettes. `chord` = held drone tones; `scale` = pitches the
+ * sparse motif draws from; `every` = [minMs,maxMs] between motif notes. Adding
+ * an era = one entry here (defaults to the cell palette if missing).
+ */
+export const MUSIC = {
+  // First Cell — ethereal, high, slow: a warm primordial sea.
+  cell: { chord: [130.81, 196.0, 261.63], scale: [261.63, 293.66, 329.63, 392.0, 523.25], wave: 'sine', motifWave: 'sine', every: [3200, 7000], motifVol: 0.045 },
+  // Dinosaurs — low, primal, sparse.
+  stone: { chord: [98.0, 146.83, 196.0], scale: [196.0, 220.0, 261.63, 293.66], wave: 'triangle', motifWave: 'triangle', every: [3600, 8000], motifVol: 0.05 },
+  // Bronze — warm, folk, pentatonic.
+  bronze: { chord: [110.0, 164.81, 220.0], scale: [220.0, 246.94, 277.18, 329.63, 369.99], wave: 'sine', motifWave: 'triangle', every: [2800, 6000], motifVol: 0.05 },
+  // Iron — stately minor.
+  iron: { chord: [110.0, 130.81, 164.81], scale: [220.0, 261.63, 293.66, 329.63, 392.0], wave: 'sine', motifWave: 'triangle', every: [3000, 6500], motifVol: 0.05 },
+  // Industrial — lower, mechanical, steadier pulse.
+  industrial: { chord: [87.31, 130.81, 174.61], scale: [174.61, 196.0, 233.08, 261.63, 311.13], wave: 'sawtooth', motifWave: 'square', every: [2200, 4200], motifVol: 0.04 },
+  // Trade Republic — bright, lively major (festive markets).
+  republic: { chord: [130.81, 196.0, 261.63, 329.63], scale: [261.63, 293.66, 329.63, 392.0, 440.0, 523.25], wave: 'triangle', motifWave: 'sine', every: [2200, 5000], motifVol: 0.05 },
+};
+
 export class Audio {
   constructor({ sound = true, music = false } = {}) {
     this.ctx = null;
@@ -14,6 +34,8 @@ export class Audio {
     this.soundOn = sound;
     this.musicOn = music;
     this._musicNodes = null;
+    this.currentEra = 'cell';
+    this._motifTimer = null;
   }
 
   _ensure() {
@@ -119,14 +141,20 @@ export class Audio {
 
   // ---- ambient music ----
 
-  startMusic() {
+  // Per-era palettes: a drone chord (held pad) + a scale the gentle motif draws
+  // from. Mechanically one engine; each age sounds of-its-place. Frequencies are
+  // note pitches in Hz.
+  // chord = 3+ held tones; scale = notes the sparse melody picks from.
+
+  startMusic(eraId = this.currentEra) {
     this._ensure();
     if (!this.ctx || this._musicNodes) return;
+    this.currentEra = eraId || 'cell';
+    const palette = MUSIC[this.currentEra] || MUSIC.cell;
     const t = this.ctx.currentTime;
-    const freqs = [110, 164.81, 220]; // A2 / E3 / A3 drone
-    const nodes = freqs.map((f, i) => {
+    const nodes = palette.chord.map((f, i) => {
       const osc = this.ctx.createOscillator();
-      osc.type = i === 2 ? 'triangle' : 'sine';
+      osc.type = palette.wave || (i === palette.chord.length - 1 ? 'triangle' : 'sine');
       osc.frequency.value = f;
       const lfo = this.ctx.createOscillator();
       lfo.frequency.value = 0.05 + i * 0.03;
@@ -143,9 +171,49 @@ export class Audio {
     this.musicGain.gain.cancelScheduledValues(t);
     this.musicGain.gain.setValueAtTime(this.musicGain.gain.value, t);
     this.musicGain.gain.linearRampToValueAtTime(0.12, t + 2);
+    this._scheduleMotif();
+  }
+
+  /** A soft, sparse melody note from the current era's scale, then schedule the next. */
+  _scheduleMotif() {
+    clearTimeout(this._motifTimer);
+    if (!this.ctx || !this._musicNodes || !this.musicOn) return;
+    const palette = MUSIC[this.currentEra] || MUSIC.cell;
+    const scale = palette.scale;
+    const f = scale[(Math.random() * scale.length) | 0];
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = palette.motifWave || 'sine';
+    osc.frequency.value = f;
+    const vol = palette.motifVol ?? 0.05;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.08);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+    osc.connect(g);
+    g.connect(this.musicGain);
+    osc.start(t);
+    osc.stop(t + 1.7);
+    const [lo, hi] = palette.every || [2600, 6000];
+    this._motifTimer = setTimeout(() => this._scheduleMotif(), lo + Math.random() * (hi - lo));
+  }
+
+  /** Switch the music palette to a new era, crossfading the drone pitches. */
+  setEra(eraId) {
+    if (!eraId || eraId === this.currentEra) { this.currentEra = eraId || this.currentEra; return; }
+    this.currentEra = eraId;
+    if (!this.ctx || !this._musicNodes) return; // not playing yet — picked up on start
+    const palette = MUSIC[eraId] || MUSIC.cell;
+    const t = this.ctx.currentTime;
+    this._musicNodes.forEach((n, i) => {
+      const f = palette.chord[i] ?? palette.chord[palette.chord.length - 1];
+      try { n.osc.frequency.setTargetAtTime(f, t, 1.2); } catch (e) { /* ignore */ }
+    });
+    this._scheduleMotif(); // re-seed the melody from the new scale
   }
 
   stopMusic() {
+    clearTimeout(this._motifTimer);
     if (!this.ctx || !this._musicNodes) return;
     const t = this.ctx.currentTime;
     this.musicGain.gain.cancelScheduledValues(t);

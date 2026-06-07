@@ -256,6 +256,7 @@ export class Game {
     this.running = true;
     this.resize();
     this.camera.snap(this.player);
+    this.audio?.setEra?.(this.eraId); // give this age its own music palette
     this.last = performance.now();
     requestAnimationFrame(this._frame);
     this._introThenOnboard();
@@ -829,6 +830,7 @@ export class Game {
     this._teardownView();
     this.newWorld(nxt.id, MODE.SURVIVAL, { branch }); // branch flavors the new reality
     this.realityPath = [...priorPath, route]; // each reality's path is its own
+    this.audio?.setEra?.(nxt.id); // crossfade the music into the new age
     this.audio?.play('unlock');
     SaveManager.save(this);
     // Reveal the new era full-screen, then resume (mirrors start()).

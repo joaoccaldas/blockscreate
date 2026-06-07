@@ -80,7 +80,7 @@ ships, then it activates automatically).
 
 | Tier | Era | id | Reached from → via branch | Rejoins | Status |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 🌿 Age of Flora | `flora` | `cell` → `photic`* | → `bronze` | 🔭 |
+| 1 | 🌿 Age of Flora | `flora` | `cell` → `photic` (a Sunlit-Shallows start) | → `bronze` | ✅ |
 | 4 | 🏛️ Trade Republic | `republic` | `iron` → `merchant_city`/`road_empire` | → `information` | ✅ |
 | 5 | 🜨 Steam Arcanum | `arcanum` | `industrial` → `firekeepers` (clockwork) | → `information` | 🔭 |
 | 8 | 🧬 Bio-Singularity | `bio` | `information` → `saurian_echo` | → `simulation` | 🔭 |

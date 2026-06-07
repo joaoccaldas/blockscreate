@@ -104,6 +104,7 @@ if (!gCell.cellStatus.stageName) throw new Error('cell status missing stage name
 ok(`first-cell visibly evolves (stage ${gCell.cellStatus.stage}: ${gCell.cellStatus.stageName})`);
 gCell.update(0.016);
 if (!gCell.canAdvance()) throw new Error('cell era did not unlock evolution after mandatory goals');
+gCell.world.variant = 'hydrothermal'; // pin a non-sunlit start → prime route to dinosaurs
 if (!gCell._advanceEra() || gCell.eraId !== 'stone') throw new Error('cell era did not evolve into dinosaurs');
 if (!gCell.realityPath.length || gCell.realityPath[0].to !== 'stone') throw new Error('era graph did not record the route taken');
 
@@ -164,6 +165,21 @@ if (!/BlocksCreate/.test(shareText)) throw new Error('run share text missing the
 if (!/\?r=/.test(shareText)) throw new Error('run share text missing a reality link');
 if (!shareText.includes(gRun.realityCode())) throw new Error('run share link does not carry this reality');
 ok('run summary produces a shareable line with a playable reality link');
+
+// Branch divergence #2 (earliest): a Sunlit-Shallows cell evolves into the Age
+// of Flora instead of the Dinosaurs — the starting biome decides the path.
+const gFlo = newGame();
+gFlo.newWorld('cell', MODE.SURVIVAL);
+gFlo.world.variant = 'hydrothermal';
+if (gFlo._dominantBranch() === 'photic') throw new Error('a non-sunlit cell should not lean photic');
+gFlo.world.variant = 'sunlit';
+if (gFlo._dominantBranch() !== 'photic') throw new Error('a sunlit cell did not lean photic');
+if (gFlo._nextEraChoice().id !== 'flora') throw new Error('sunlit cell did not diverge into the Age of Flora');
+gFlo.civ.cp = 9999;
+gFlo.objectives.completed = new Set(gFlo.objectives.mandatory().map((o) => o.id));
+if (!gFlo._advanceEra() || gFlo.eraId !== 'flora') throw new Error('did not advance into the Age of Flora');
+if (gFlo.realityPath.at(-1).branch !== 'photic') throw new Error('flora route did not record the photic branch');
+ok('Age of Flora: a Sunlit-Shallows cell diverges into the plant-first branch');
 
 // Branch divergence: a trade-leaning Iron player evolves into the Trade Republic
 // instead of the Industrial spine — two players reach different ages.

@@ -815,6 +815,9 @@ export class Game {
     const w = {};
     const add = (b, n) => { if (b && b !== 'observer' && n > 0) w[b] = (w[b] || 0) + n; };
     for (const [b, n] of Object.entries(this.clues?.branchCounts?.() || {})) add(b, n);
+    // The First Cell's starting biome decides its evolutionary branch: a cell
+    // born in the Sunlit Shallows leans photic → the Age of Flora.
+    if (this.eraId === 'cell' && this.world?.variant === 'sunlit') add('photic', 5);
     // Playstyle leans (the merchant/road/fortress identities).
     add('merchant_city', this.civ?.trade || 0);
     add('road_empire', (this.civ?.placed?.road || 0) * 0.5);

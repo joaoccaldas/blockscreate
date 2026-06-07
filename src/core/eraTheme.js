@@ -51,6 +51,22 @@ export const ERA_THEME = {
       { kind: 'shrub', chance: 0.03 },
     ],
   },
+  // Branch age: a lush, overgrown world. Deep green, heavy foliage, herbivores
+  // roam by day; thorny beasts are the threat.
+  flora: {
+    tint: 'rgba(80, 200, 110, 0.10)',
+    weather: 'leaves',
+    weatherRate: 2.0,
+    accent: '#4fd06a',
+    passive: [['stego', 3], ['trike', 3], ['goat', 2], ['chicken', 2]],
+    hostile: [['boar', 2], ['raptor', 1]],
+    hostileDay: true,
+    decorations: [
+      { kind: 'fern', chance: 0.12 },
+      { kind: 'shrub', chance: 0.08 },
+      { kind: 'standing_stone', chance: 0.008 },
+    ],
+  },
   bronze: {
     tint: 'rgba(210, 170, 90, 0.06)',
     weather: 'dust',

@@ -24,6 +24,8 @@ export const MUSIC = {
   industrial: { chord: [87.31, 130.81, 174.61], scale: [174.61, 196.0, 233.08, 261.63, 311.13], wave: 'sawtooth', motifWave: 'square', every: [2200, 4200], motifVol: 0.04 },
   // Trade Republic — bright, lively major (festive markets).
   republic: { chord: [130.81, 196.0, 261.63, 329.63], scale: [261.63, 293.66, 329.63, 392.0, 440.0, 523.25], wave: 'triangle', motifWave: 'sine', every: [2200, 5000], motifVol: 0.05 },
+  // Age of Flora — verdant, gentle, organic (a lush major with soft motion).
+  flora: { chord: [123.47, 185.0, 246.94], scale: [246.94, 277.18, 329.63, 369.99, 493.88], wave: 'sine', motifWave: 'triangle', every: [3000, 6500], motifVol: 0.05 },
 };
 
 export class Audio {

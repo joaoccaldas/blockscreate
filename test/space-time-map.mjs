@@ -31,7 +31,7 @@ const node = (model, id) => model.tiers.flatMap((t) => t.nodes).find((n) => n.id
   const stone = node(m, 'stone');
   assert.ok(stone && stone.state === 'known' && stone.label !== '???', 'the next implemented age is revealed as known');
   const flora = node(m, 'flora');
-  assert.ok(flora && flora.state === 'rumored' && flora.label === '???', 'an unbuilt branch age is shown redacted (mystery preserved)');
+  assert.ok(flora && flora.state === 'known' && flora.label !== '???', 'the built Flora branch is reachable + named from the cell');
   assert.strictEqual(node(m, 'industrial'), undefined, 'far ages are fogged out entirely');
   assert.strictEqual(m.agesWalked, 1, 'one age walked so far');
   assert.strictEqual(m.leakage, null, 'no meta-leakage before reality bends');
@@ -61,9 +61,10 @@ const node = (model, id) => model.tiers.flatMap((t) => t.nodes).find((n) => n.id
 
 // --- a still-unbuilt branch remains redacted (mystery preserved) ---
 {
-  const m = buildMapModel(stub()); // fresh cell run
-  const flora = node(m, 'flora');
-  assert.ok(flora && flora.state === 'rumored' && flora.label === '???', 'the unbuilt Age of Flora branch stays redacted');
+  // At the Industrial Age, the unbuilt Steam Arcanum branch should be a redacted lure.
+  const m = buildMapModel(stub({ eraId: 'industrial', unlocked: { isUnlocked: (id) => ['cell', 'stone', 'bronze', 'iron', 'industrial'].includes(id) } }));
+  const arcanum = node(m, 'arcanum');
+  assert.ok(arcanum && arcanum.state === 'rumored' && arcanum.label === '???', 'the unbuilt Steam Arcanum branch stays redacted');
   ok('unbuilt branch ages stay ??? until they ship');
 }
 

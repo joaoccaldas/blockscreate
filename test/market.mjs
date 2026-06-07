@@ -10,7 +10,7 @@ import { POWERUPS } from '../src/systems/Powerups.js';
 let passed = 0;
 const ok = (m) => { console.log(`  ✓ ${m}`); passed++; };
 
-const ERAS = ['cell', 'stone', 'bronze', 'iron', 'industrial', 'republic'];
+const ERAS = ['cell', 'stone', 'bronze', 'iron', 'industrial', 'republic', 'flora'];
 
 // --- every era has a themed currency and a full, valid catalog ---
 for (const era of ERAS) {

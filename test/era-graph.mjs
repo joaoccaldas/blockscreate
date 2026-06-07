@@ -74,8 +74,10 @@ ok('era registry and graph agree on the prime spine');
 
 // Routing: a matching, implemented branch wins; else prime; future branch falls back.
 assert.strictEqual(chooseNextEra('cell', {}), 'stone', 'default cell route is the prime spine');
-assert.strictEqual(chooseNextEra('cell', { branch: 'photic' }), 'stone',
-  'an unimplemented branch (flora) falls back to the prime spine — partial graph stays playable');
+assert.strictEqual(chooseNextEra('cell', { branch: 'photic' }), 'flora',
+  'a photic (sunlit) cell now diverges into the Age of Flora branch');
+assert.strictEqual(chooseNextEra('cell', { branch: 'no_such_branch' }), 'stone',
+  'an unknown branch still falls back to the prime spine — partial graph stays playable');
 assert.strictEqual(chooseNextEra('iron', { branch: 'merchant_city' }), 'republic',
   'iron merchant lean now diverges to the Trade Republic branch age');
 assert.strictEqual(chooseNextEra('iron', {}), 'industrial', 'the default iron route is still the Industrial spine');

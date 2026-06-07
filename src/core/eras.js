@@ -42,6 +42,21 @@ export const ERAS = [
     fullyPlayable: true,
   },
   {
+    // Branch age (First Cell → photic/Sunlit lean). A lush, plant-first reality
+    // that diverges from the Dinosaurs spine and rejoins at the Bronze Age.
+    id: 'flora',
+    order: 1,
+    name: 'Age of Flora',
+    blurb: 'Sunlight wins: a verdant world of giant plants, grazers and the first gardens.',
+    icon: '🌿',
+    unlockCost: 80,
+    advanceCost: 250,
+    sky: { day: ['#9fe0a6', '#dff6c0'], night: ['#0c2418', '#1c3a2a'] },
+    ground: '#3f7a3a',
+    starter: ['wood_pickaxe', 'wood_axe'],
+    fullyPlayable: true,
+  },
+  {
     id: 'bronze',
     order: 2,
     name: 'Bronze Age',

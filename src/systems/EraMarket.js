@@ -23,6 +23,7 @@ export const CURRENCY = {
   iron: { name: 'War Spoils', icon: '⚔️' },
   industrial: { name: 'Credits', icon: '💷' },
   republic: { name: 'Florins', icon: '🪙' },
+  flora: { name: 'Spores', icon: '🌿' },
 };
 
 // kind: 'item'    → payload { id, n }      grant inventory items
@@ -71,6 +72,13 @@ export const MARKET = {
     { id: 'r_stone', icon: '🛣️', name: 'Road Stone', cost: 14, kind: 'item', payload: { id: 'stone', n: 16 }, desc: 'Cut stone to pave trade roads fast.' },
     { id: 'r_favor', icon: '🏺', name: 'Guild Favor', cost: 22, kind: 'powerup', payload: { id: 'time_shard', seconds: 70 }, desc: 'Commerce momentum — coin rolls in faster.' },
     { id: 'r_charter', icon: '📜', name: 'Charter Seal', cost: 50, kind: 'badge', payload: { badge: 'charter_seal' }, limited: true, desc: 'Limited: the founding seal of a great republic.' },
+  ],
+  flora: [
+    { id: 'f_seeds', icon: '🌱', name: 'Seed Pouch', cost: 10, kind: 'item', payload: { id: 'wheat_seeds', n: 4 }, desc: 'Wild seeds to start your first gardens.' },
+    { id: 'f_fiber', icon: '🌾', name: 'Fiber Bundle', cost: 10, kind: 'item', payload: { id: 'fiber', n: 5 }, desc: 'Plant fiber, gathered for you.' },
+    { id: 'f_wood', icon: '🪵', name: 'Timber Stack', cost: 12, kind: 'item', payload: { id: 'log', n: 6 }, desc: 'Fallen logs to raise a grove fast.' },
+    { id: 'f_bloom', icon: '🌸', name: 'Bloom Surge', cost: 16, kind: 'powerup', payload: { id: 'time_shard', seconds: 45 }, desc: 'Growth momentum — points roll in faster.' },
+    { id: 'f_seed', icon: '🌟', name: 'World Seed', cost: 40, kind: 'badge', payload: { badge: 'world_seed' }, limited: true, desc: 'Limited: the first seed of a green world.' },
   ],
 };
 

@@ -18,6 +18,15 @@ export const OBJECTIVES = {
     { id: 'ventborn',         kind: 'mastery',   icon: '♨️', label: 'Mastery: map 3 warm vents',          reward: 20, check: (g) => total(g, 'mineral_vent') >= 3 },
     { id: 'advance',          kind: 'portal',    icon: '🦖', label: 'Evolve into the Age of Dinosaurs',   reward: 0,  check: (g) => g.canAdvance() },
   ],
+  flora: [
+    { id: 'forage_fiber', kind: 'mandatory', icon: '🌾', label: 'Forage 5 Plant Fiber',                 reward: 12, check: (g) => total(g, 'fiber') >= 5 },
+    { id: 'gather_wood',  kind: 'mandatory', icon: '🪵', label: 'Gather 3 Wood for tools',              reward: 10, check: (g) => total(g, 'log') >= 3 },
+    { id: 'cultivate',    kind: 'mandatory', icon: '🌱', label: 'Cultivate a farm plot',                reward: 22, check: (g) => g.civ.hasBuilt('farm_plot') },
+    { id: 'grow_grove',   kind: 'mandatory', icon: '🌳', label: 'Plant a grove (place 4 logs)',         reward: 20, check: (g) => g.civ.hasBuilt('log', 4) },
+    { id: 'green_world',  kind: 'mastery',   icon: '🍃', label: 'Mastery: forage 12 plant fiber',       reward: 20, check: (g) => total(g, 'fiber') >= 12 },
+    { id: 'tend_grazers', kind: 'mastery',   icon: '🦕', label: 'Mastery: tame a grazer companion',     reward: 30, check: (g) => g.mobs?.some?.((m) => m.tamed) },
+    { id: 'advance',      kind: 'portal',    icon: '🌀', label: 'Open the Early Cities portal',          reward: 0,  check: (g) => g.canAdvance() },
+  ],
   stone: [
     { id: 'gather_wood',  kind: 'mandatory', icon: '🪵', label: 'Forage: collect 3 Wood',                reward: 10, check: (g) => total(g, 'log') >= 3 },
     { id: 'make_planks',  kind: 'mandatory', icon: '🟫', label: 'Shape wood into Planks',                reward: 10, check: (g) => g.crafted.has('planks') },

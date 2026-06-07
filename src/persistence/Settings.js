@@ -9,6 +9,7 @@ const DEFAULTS = {
   music: false,
   zoomPref: 1.0, // multiplies the auto-fit zoom (0.7 .. 1.6)
   reduceMotion: false, // accessibility: skip weather/shake/decorative animation
+  haptics: true, // mobile: vibrate on key actions (no-op where unsupported)
   seenTutorial: false, // first-run onboarding coach-marks shown?
 };
 

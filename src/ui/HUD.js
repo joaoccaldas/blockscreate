@@ -141,6 +141,8 @@ export class HUD {
               <input type="range" id="setZoom" min="0.7" max="1.6" step="0.05" value="${s?.get('zoomPref') ?? 1}"></label>
             <label class="toggle"><span>♿ Reduce motion</span>
               <input type="checkbox" id="setReduceMotion" ${s?.get('reduceMotion') ? 'checked' : ''}></label>
+            <label class="toggle"><span>📳 Vibration</span>
+              <input type="checkbox" id="setHaptics" ${s?.get('haptics') ? 'checked' : ''}></label>
           </div>
           <button id="pShare" class="btn">🔗 Share this reality</button>
           <div class="pause-actions">
@@ -264,6 +266,7 @@ export class HUD {
     this.el('setMusic').onchange = (e) => this.h.onSetMusic?.(e.target.checked);
     this.el('setZoom').oninput = (e) => this.h.onSetZoom?.(parseFloat(e.target.value));
     this.el('setReduceMotion').onchange = (e) => this.h.onSetReduceMotion?.(e.target.checked);
+    this.el('setHaptics').onchange = (e) => this.h.onSetHaptics?.(e.target.checked);
 
     this.el('pSave').onclick = () => { this.h.onSave?.(); this.toast('Game saved'); };
     this.el('pShare').onclick = () => this.h.onShareReality?.();

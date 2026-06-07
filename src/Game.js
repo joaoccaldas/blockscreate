@@ -29,6 +29,7 @@ import { Camera } from './render/Camera.js';
 import { Renderer } from './render/Renderer.js';
 import { Particles } from './render/Particles.js';
 import { FloatingTextLayer } from './systems/FloatingText.js';
+import { Haptics } from './systems/Haptics.js';
 import { Input, isTouch } from './input/Input.js';
 import { HUD } from './ui/HUD.js';
 import { SaveManager } from './persistence/SaveManager.js';
@@ -79,6 +80,7 @@ export class Game {
     this.buildMode = false;
     this.particles = new Particles();
     this.floaters = new FloatingTextLayer();
+    this.haptics = new Haptics(settings?.get?.('haptics') ?? true);
     this.crafted = new Set();
     this.mineTarget = null;
     this.mineProgress = 0;
@@ -343,6 +345,7 @@ export class Game {
       onSetMusic: (v) => { this.audio?.setMusic(v); this.settings?.set('music', v); },
       onSetZoom: (v) => { this.settings?.set('zoomPref', v); this.resize(); },
       onSetReduceMotion: (v) => { this.settings?.set('reduceMotion', v); this._applyReduceMotion(); },
+      onSetHaptics: (v) => { this.settings?.set('haptics', v); this.haptics?.setEnabled(v); if (v) this.haptics?.buzz('place'); },
       onSave: () => SaveManager.save(this),
       onShareReality: () => this._shareReality(),
       onExport: () => SaveManager.exportFile(this),
@@ -448,7 +451,7 @@ export class Game {
       this.civ.onCraft();
       if (recipe.id === 'cook_food') this.civ.onCook();
       this.crafted.add(recipe.out.id);
-      this.audio?.play('craft');
+      this.audio?.play('craft'); this.haptics?.buzz('craft');
       this.hud.toast(`Crafted ${getItem(recipe.out.id)?.label || recipe.out.id}`);
       this.hud.renderCrafting(this);
     } else {
@@ -843,6 +846,7 @@ export class Game {
     this.realityPath = [...priorPath, route]; // each reality's path is its own
     this.audio?.setEra?.(nxt.id); // crossfade the music into the new age
     this.audio?.play('unlock');
+    this.haptics?.buzz('portal');
     SaveManager.save(this);
     // Reveal the new era full-screen, then resume (mirrors start()).
     this._introThenOnboard();
@@ -1221,7 +1225,7 @@ export class Game {
   }
 
   _meteorImpact(cx, cy) {
-    this.audio?.play('break');
+    this.audio?.play('break'); this.haptics?.buzz('break');
     if (!this.reduceMotion) this.hud?.shake?.();
     this.particles.fountain(cx + 0.5, cy - 0.5, ['#ff9b3b', '#ffd27a', '#ff5b3b', '#7a4a2a'], 40);
 
@@ -1352,7 +1356,7 @@ export class Game {
   _breakBlock(x, y, block) {
     this.world.set(x, y, AIR);
     if (block.colors) this.particles.burst(x + 0.5, y + 0.5, block.colors.base, 10);
-    this.audio?.play('break');
+    this.audio?.play('break'); this.haptics?.buzz('break');
     this._discoverClue(block);
     const drops = dropsOf(block.id);
     if (this.mode === MODE.SURVIVAL) {
@@ -1410,7 +1414,7 @@ export class Game {
     this._settleFalling(x, y - 1); // a block placed under floating sand re-supports it
     const b = getBlock(id);
     if (b.colors) this.particles.burst(x + 0.5, y + 0.5, b.colors.base, 5, { gravity: 8, life: 0.3 });
-    this.audio?.play('place');
+    this.audio?.play('place'); this.haptics?.buzz('place');
     this.civ.onBuild(sel.id, x, y);
     this._evaluateStructures({ x, y });
     if (this.mode === MODE.SURVIVAL) this.inventory.consumeSelected(1);
@@ -1432,7 +1436,7 @@ export class Game {
     }
     if (this._overlapsPlayer(cropX, cropY)) return false;
     this.world.set(cropX, cropY, seedling);
-    this.audio?.play('place');
+    this.audio?.play('place'); this.haptics?.buzz('place');
     this.particles.burst(cropX + 0.5, cropY + 0.5, '#9ed36a', 6, { gravity: 5, life: 0.35 });
     this.civ.onBuild('wheat_seedling', cropX, cropY);
     if (this.mode === MODE.SURVIVAL) this.inventory.consumeSelected(1);
@@ -1609,6 +1613,7 @@ export class Game {
     d._done = true;
     const streak = this.onDailyComplete?.(d.dateKey) || 0;
     this.audio?.play('unlock');
+    this.haptics?.buzz('unlock');
     this.particles.fountain(this.player.x, this.player.y - 1, ['#f4d24a', '#6fc04e', '#7be4ff', '#fff'], 44);
     this.hud?.bigToast?.(
       `🗓️ <b>Daily Challenge complete!</b><br><small>${d.goal.text}${streak > 1 ? ` · 🔥 ${streak}-day streak` : ''}</small>`,
@@ -1626,6 +1631,7 @@ export class Game {
     for (const a of newly) {
       this.audio?.play('unlock');
       this.particles.fountain(this.player.x, this.player.y - 1, ['#f4d24a', '#fff0a8', '#6fc04e', '#fff'], 26);
+      this.haptics?.buzz('unlock');
       this.hud?.bigToast?.(`🏆 <b>${a.name}</b><br><small>${a.desc}</small>`, 2800);
     }
   }
@@ -1923,6 +1929,7 @@ export class Game {
     this.civ.onDefeat(mob.type);
     this.civ.addCP(cp * (this.powerups?.multiplier('cpMultiplier') || 1));
     this._floatText(mob.x, mob.y - mob.h, `+${cp} CP`, { color: '#9be86a', size: 0.55, life: 1.1 });
+    this.haptics?.buzz('defeat');
     this.hud.toast(mob.hostile ? `Defeated a ${mob.type} (+${cp} CP)` : `Caught a ${mob.type}`);
   }
 
@@ -2428,6 +2435,7 @@ export class Game {
     this.audio?.play('hurt');
     this.particles.burst(this.player.x, this.player.y - this.player.h / 2, '#ff5b5b', 8);
     this._floatText(this.player.x, this.player.y - this.player.h, `-${Math.round(amount)}`, { color: '#ff6b6b', size: 0.6 });
+    this.haptics?.buzz('hurt');
     if (!this.reduceMotion) this.hud?.shake?.();
     if (this.player.health <= 0) this.player.alive = false;
   }

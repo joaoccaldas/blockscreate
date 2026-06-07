@@ -161,6 +161,7 @@ function syncSettingsUI() {
   set('lsSound', settings.get('sound'));
   set('lsMusic', settings.get('music'));
   set('lsReduceMotion', settings.get('reduceMotion'));
+  set('lsHaptics', settings.get('haptics'));
   set('lsZoom', settings.get('zoomPref') ?? 1, false);
 }
 
@@ -224,6 +225,7 @@ function wire() {
   bind('lsReduceMotion', 'reduceMotion', (v) => {
     try { document.body.classList.toggle('reduce-motion', v); } catch (e) { /* ignore */ }
   });
+  bind('lsHaptics', 'haptics', (v) => { try { if (v && navigator.vibrate) navigator.vibrate(10); } catch (e) { /* ignore */ } });
   bind('lsZoom', 'zoomPref');
 
   document.getElementById('modeSurvival').onclick = () => { audio.play('ui'); setMode(MODE.SURVIVAL); };

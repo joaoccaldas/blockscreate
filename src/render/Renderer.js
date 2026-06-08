@@ -113,6 +113,16 @@ export class Renderer {
       ctx.fillStyle = tint;
       ctx.fillRect(0, 0, W, H);
     }
+
+    // Alternate-timeline signature: a faint violet vignette so the world itself
+    // reads as "a story that forked" — subtle, always-on while off the prime line.
+    if (scene.alternate) {
+      const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
+      g.addColorStop(0, 'rgba(120, 70, 200, 0)');
+      g.addColorStop(1, 'rgba(120, 70, 200, 0.22)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    }
   }
 
   drawSky(era, dayFactor, camera, W, H) {

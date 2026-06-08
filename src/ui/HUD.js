@@ -12,6 +12,7 @@ import { HOTBAR_SIZE } from '../systems/Inventory.js';
 import { availableRecipes, canCraft } from '../systems/Crafting.js';
 import { getEra, nextEra } from '../core/eras.js';
 import { buildMapModel } from '../systems/SpaceTimeMap.js';
+import { chronicleOf } from '../systems/Chronicle.js';
 import { MODE } from '../core/constants.js';
 
 export class HUD {
@@ -43,6 +44,7 @@ export class HUD {
       </div>
 
       <div id="civPanel" class="civ-panel">
+        <div id="chronicle" class="chronicle"></div>
         <div id="eraStory" class="era-story"></div>
         <div class="civ-row"><span>🏛️ Population</span><b id="popVal">1</b></div>
         <div class="civ-row"><span>✨ Civ Points</span><b id="cpVal">0</b></div>
@@ -393,6 +395,14 @@ export class HUD {
     const era = getEra(game.eraId);
     this.el('eraBadge').textContent = `${era.icon} ${era.name}${survival ? '' : ' · Creative'}`;
     this.el('eraStory').textContent = era.manifest?.subtitle || era.blurb;
+    // Civilization clock: where + when, flagged when this is an alternate story.
+    const chron = chronicleOf(game);
+    const chronEl = this.el('chronicle');
+    chronEl.classList.toggle('alt', chron.alternate);
+    chronEl.innerHTML =
+      `<div class="chron-when">🕰️ ${chron.when}</div>` +
+      `<div class="chron-where">${chron.icon} ${chron.where} · <span class="chron-phase">${chron.phase}</span></div>` +
+      (chron.alternate ? `<div class="chron-alt">⟁ Alternate timeline</div>` : '');
     this.renderTimeline(game);
 
     const settlers = game.settlers?.count?.() || 0;
@@ -736,7 +746,9 @@ export class HUD {
    */
   renderMap(game) {
     const m = buildMapModel(game);
+    const chron = chronicleOf(game);
     this.el('mapWalked').textContent = `${m.agesWalked} age${m.agesWalked === 1 ? '' : 's'} walked${m.rumoredCount ? ` · ${m.rumoredCount} path${m.rumoredCount === 1 ? '' : 's'} unexplored` : ''}`;
+    const mapHead = `<div class="map-now${chron.alternate ? ' alt' : ''}">🕰️ <b>${chron.when}</b><br>${chron.icon} You are here: <b>${chron.where}</b> · ${chron.phase}<br><span class="map-reality">${chron.alternate ? '⟁ ' : '◆ '}${chron.realityLabel}</span></div>`;
     const tiers = m.tiers.map((t) => {
       const chips = t.nodes.map((n) =>
         `<span class="map-node map-${n.state}"><span class="map-ic">${n.icon}</span>${n.label}</span>`).join('');
@@ -753,7 +765,7 @@ export class HUD {
         ${layers}
       </div>`;
     }
-    this.el('mapBody').innerHTML = `<div class="map-flow">${tiers}</div>${leak}`;
+    this.el('mapBody').innerHTML = `${mapHead}<div class="map-flow">${tiers}</div>${leak}`;
   }
 
   /**

@@ -979,6 +979,20 @@ button:focus-visible, input:focus-visible, .era-card:focus-visible {
 .jr-row.sim .jr-ic { color: #b388ff; }
 .jr-row.ach-got b { color: var(--gold); }
 
+/* Civilization clock & place (top of the civ panel) */
+.chronicle { font-size: 0.72rem; line-height: 1.3; margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.chron-when { color: #cfe0ff; }
+.chron-where { color: #fff; font-weight: bold; }
+.chron-phase { color: var(--accent); font-weight: normal; }
+.chron-alt { color: #c8a8ff; font-weight: bold; letter-spacing: 0.4px; }
+.chronicle.alt { border-bottom-color: rgba(179,136,255,0.4); }
+.chronicle.alt .chron-when { color: #cdb8ff; }
+/* Map "you are here / when" header */
+.map-now { text-align: center; font-size: 0.84rem; line-height: 1.5; margin-bottom: 0.8rem; padding-bottom: 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.map-now.alt { border-bottom-color: rgba(179,136,255,0.45); }
+.map-reality { font-size: 0.74rem; color: #9fe0a6; }
+.map-now.alt .map-reality { color: #c8a8ff; }
+
 /* Map of Space & Time */
 .map-flow { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .map-tier { display: flex; align-items: center; gap: 0.5rem; width: 100%; justify-content: center; }

@@ -38,6 +38,7 @@ import { getItem, isPlaceable } from './core/items.js';
 import { getEra, nextEra, chooseNextEra } from './core/eras.js';
 import { getEraTheme, weightedPick, pickVariant, variantInfo } from './core/eraTheme.js';
 import { encodeReality, realityUrl } from './core/RealityCode.js';
+import { isAlternate } from './systems/Chronicle.js';
 import { shareCardData, composeShareCardCanvas, shareCardImage } from './ui/ShareCard.js';
 
 // Buildings a raider will smash when it breaches the town (drives _pillageTown).
@@ -2460,6 +2461,8 @@ export class Game {
       floaters: this.floaters,
       goal: (this.invOpen || this.craftOpen || this.journalOpen || this.marketOpen || this.mapOpen || this.paused) ? null : this.goalTarget,
       reduceMotion: this.reduceMotion,
+      alternate: isAlternate(this.realityPath, this.eraId), // alt-timeline scene tint
+
       powerups: this.powerups,
       dayFactor: this.dayFactor(),
       tint: getEraTheme(this.eraId, this.world?.variant).tint,

@@ -13,7 +13,7 @@
  * visible. Pure: game in → model out; the view layers render it.
  */
 import { getEra } from '../core/eras.js';
-import { primeNextId } from '../core/eraGraph.js';
+import { primeNextId, spineEraIds } from '../core/eraGraph.js';
 import { variantInfo } from '../core/eraTheme.js';
 
 // Deep-time "when" per era. Prime ages get real epochs; branch ages get uncanny,
@@ -31,22 +31,9 @@ const EPOCHS = {
   bio: 'a living machine age · a path not taken',
 };
 
-/** The prime-spine era ids, walked from the origin via prime edges. */
-function spineSet() {
-  const s = new Set(['cell']);
-  let cur = 'cell';
-  for (let i = 0; i < 64; i++) {
-    const n = primeNextId(cur);
-    if (!n || s.has(n)) break;
-    s.add(n);
-    cur = n;
-  }
-  return s;
-}
-
 /** Is this run in an alternate timeline (off the prime spine)? */
 export function isAlternate(realityPath = [], eraId = 'cell') {
-  if (!spineSet().has(eraId)) return true; // currently in a branch age
+  if (!spineEraIds().has(eraId)) return true; // currently in a branch age
   for (const step of realityPath) {
     if (step && step.to !== primeNextId(step.from)) return true; // diverged earlier
   }

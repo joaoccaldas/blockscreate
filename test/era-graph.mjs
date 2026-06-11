@@ -3,7 +3,7 @@
  * branching roadmap and the code can never silently drift apart.
  */
 import assert from 'node:assert';
-import { ERA_NODES, ERA_ROUTES, chooseNextEra, primeNextId, routeBranchIds } from '../src/core/eraGraph.js';
+import { ERA_NODES, ERA_ROUTES, chooseNextEra, primeNextId, routeBranchIds, isBranchEra, spineEraIds } from '../src/core/eraGraph.js';
 import { ERAS, ERA_BY_ID, nextEra } from '../src/core/eras.js';
 import { CLUES } from '../src/systems/HistoricalClues.js';
 
@@ -84,5 +84,17 @@ assert.strictEqual(chooseNextEra('iron', {}), 'industrial', 'the default iron ro
 assert.strictEqual(chooseNextEra('industrial', {}), null, 'industrial is a deepest-tier terminal era');
 assert.strictEqual(chooseNextEra('republic', {}), null, 'the Trade Republic is a deepest-tier terminal era');
 ok('routing prefers branch, falls back to prime, and never dead-ends mid-graph');
+
+// Branch vs spine classification (drives the portal hiding undiscovered branches).
+const spine = spineEraIds();
+for (const id of ['cell', 'stone', 'bronze', 'iron', 'industrial']) {
+  assert.ok(spine.has(id), `${id} is on the prime spine`);
+  assert.ok(!isBranchEra(id), `${id} is not a branch era`);
+}
+for (const id of ['flora', 'republic']) {
+  assert.ok(!spine.has(id), `${id} is off the prime spine`);
+  assert.ok(isBranchEra(id), `${id} is a branch era (hidden from the portal until discovered)`);
+}
+ok('spine vs branch eras are classified (portal hides undiscovered branches)');
 
 console.log(`\nAll ${passed} era-graph checks passed.`);

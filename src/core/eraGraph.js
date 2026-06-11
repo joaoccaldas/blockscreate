@@ -87,6 +87,24 @@ export function chooseNextEra(eraId, { branch } = {}) {
   return any ? any.to : null;
 }
 
+/** The prime-spine era ids, walked from the origin via prime edges. */
+export function spineEraIds() {
+  const s = new Set(['cell']);
+  let cur = 'cell';
+  for (let i = 0; i < 64; i++) {
+    const n = primeNextId(cur);
+    if (!n || s.has(n)) break;
+    s.add(n);
+    cur = n;
+  }
+  return s;
+}
+
+/** Is this a branch (off-spine) era — a surprise reached by routing, not picking? */
+export function isBranchEra(id) {
+  return !!ERA_NODES[id] && !spineEraIds().has(id);
+}
+
 /** All routes leaving an era (implemented or not) — for the roadmap/journal. */
 export function routesFrom(eraId) {
   return ERA_ROUTES[eraId] || [];

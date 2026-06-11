@@ -37,6 +37,7 @@ export class Civilization {
     // never competes with the CP you need to advance. Displayed with an
     // era-themed name/icon (Biomass, Bone Tokens, Credits …) by the market.
     this.tokens = 0;
+    this.cpMult = 1; // permanent prestige CP multiplier (New Game+)
     this.population = 1;
     this.totalMined = 0;
     this.totalCrafted = 0;

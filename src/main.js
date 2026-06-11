@@ -5,6 +5,7 @@
  */
 import { MODE } from './core/constants.js';
 import { ERAS } from './core/eras.js';
+import { isBranchEra } from './core/eraGraph.js';
 import { Progress } from './persistence/Progress.js';
 import { Settings } from './persistence/Settings.js';
 import { SaveManager } from './persistence/SaveManager.js';
@@ -123,6 +124,9 @@ function buildPortals() {
   const grid = document.getElementById('eraGrid');
   grid.innerHTML = '';
   for (const era of ERAS) {
+    // Branch ages are a surprise reached by *routing* through play, not by
+    // picking. Hide them from the portal until the player has discovered one.
+    if (isBranchEra(era.id) && !progress.isUnlocked(era.id)) continue;
     const unlocked = progress.isUnlocked(era.id);
     const playable = unlocked && (era.fullyPlayable || chosenMode === MODE.CREATIVE);
     const m = era.manifest || {};

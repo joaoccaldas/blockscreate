@@ -32,6 +32,21 @@ is absent.
 
 ---
 
+## Shipped from this roadmap (as of v5.54)
+- ✅ **#1 horizontal world** — `world.expand()` grows the strip as you walk
+  (already wired before this roadmap).
+- ✅ **#2 deep mining** (v5.52) — worlds ~150 tiles deep; deep-stone layer,
+  crystal treasure, magma hazard.
+- ✅ **#11 New Game+ / prestige** (v5.53) — "Descend a Layer" reboots from the
+  First Cell one simulation deeper, with a compounding, capped, persisted legacy.
+- ✅ **#29 (part)** minimap (v5.54) — a corner side-view to navigate the deep/wide
+  world. *Remaining #29:* civ-panel declutter + a mobile-visible clock.
+- ✅ **Audit fixes** (v5.55) — the portal no longer spoils branch ages (undiscovered
+  branches are hidden until routed into); `Civilization.cpMult` initialised.
+
+Next structural targets: **#7 named save slots**, the rest of **#29**, and
+**#15 branch-distinct mechanics**.
+
 ## The next 30 improvements (prioritized)
 
 ### A. The infinite world (structural core) — do first

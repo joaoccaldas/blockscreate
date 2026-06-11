@@ -502,6 +502,21 @@ html, body {
 .build-indicator.build-on { background: rgba(111, 192, 78, 0.35); border-color: var(--accent); }
 .build-indicator.build-on:hover { background: rgba(111, 192, 78, 0.5); }
 
+/* Corner minimap (desktop) — a downsampled side-view of the deep, wide world. */
+.minimap {
+  position: absolute;
+  right: 10px;
+  bottom: calc(10px + var(--safe-b));
+  width: 168px;
+  height: auto;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  background: rgba(10, 16, 34, 0.6);
+  image-rendering: pixelated;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
 .powerup-bar {
   position: absolute;
   top: calc(50px + env(safe-area-inset-top, 0px));

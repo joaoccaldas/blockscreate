@@ -13,6 +13,7 @@ import { availableRecipes, canCraft } from '../systems/Crafting.js';
 import { getEra, nextEra } from '../core/eras.js';
 import { buildMapModel } from '../systems/SpaceTimeMap.js';
 import { chronicleOf } from '../systems/Chronicle.js';
+import { buildMinimap } from '../systems/Minimap.js';
 import { MODE } from '../core/constants.js';
 
 export class HUD {
@@ -90,6 +91,7 @@ export class HUD {
       <button id="pauseBtn" class="icon-btn" title="Menu (Esc)">☰</button>
       <button id="infoBtn" class="icon-btn info-btn" title="Toggle stats panels">📊</button>
       <button id="buildIndicator" class="build-indicator" title="Switch between Mine and Build (right-click the world, or press Q)"></button>
+      ${this.isTouch ? '' : '<canvas id="minimap" class="minimap" aria-hidden="true"></canvas>'}
       ${this.isTouch ? '' : `
       <div id="desktopActions" class="desktop-actions">
         <button id="invBtn" class="action-btn" title="Inventory (E)">🎒 <span>Bag</span></button>
@@ -450,6 +452,7 @@ export class HUD {
     this.el('buildIndicator').classList.toggle('build-on', game.buildMode);
 
     if (survival) this.renderObjectives(game);
+    this.renderMinimap(game);
     this.renderDiscoveries(game);
     this.renderPowerups(game);
     this.renderEvents(game);
@@ -737,6 +740,36 @@ export class HUD {
   showInventory(show) { this.el('inventoryPanel').classList.toggle('hidden', !show); }
   showCrafting(show) { this.el('craftPanel').classList.toggle('hidden', !show); }
   showPause(show) { this.el('pauseMenu').classList.toggle('hidden', !show); }
+  /** Paint the corner minimap (desktop only, throttled). */
+  renderMinimap(game) {
+    if (this.isTouch) return;
+    const now = Date.now();
+    if (this._miniT && now - this._miniT < 160) return;
+    this._miniT = now;
+    const canvas = this.el('minimap');
+    if (!canvas || !canvas.getContext) return;
+    const m = buildMinimap(game.world, game.player.x, game.player.y - game.player.h / 2);
+    if (canvas.width !== m.w || canvas.height !== m.h) { canvas.width = m.w; canvas.height = m.h; }
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, m.w, m.h);
+    // Faint deep-water/sky backdrop so caves read against it.
+    ctx.fillStyle = 'rgba(10,16,34,0.55)';
+    ctx.fillRect(0, 0, m.w, m.h);
+    for (let row = 0; row < m.h; row++) {
+      for (let col = 0; col < m.w; col++) {
+        const c = m.colors[row * m.w + col];
+        if (!c) continue;
+        ctx.fillStyle = c;
+        ctx.fillRect(col, row, 1, 1);
+      }
+    }
+    // Player marker.
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(m.px - 1, m.py - 1, 3, 3);
+    ctx.fillStyle = '#ffe14a';
+    ctx.fillRect(m.px, m.py, 1, 1);
+  }
+
   showJournal(show) { this.el('journalPanel').classList.toggle('hidden', !show); }
   showMarket(show) { this.el('marketPanel').classList.toggle('hidden', !show); }
   showMap(show) { this.el('mapPanel').classList.toggle('hidden', !show); }

@@ -15,7 +15,23 @@ export class Progress {
     this.dailies = new Set();          // completed daily-challenge date keys
     this.streak = 0;                   // consecutive daily completions
     this.lastDaily = null;             // last completed daily date key
+    this.descents = 0;                 // New Game+ "descend a layer" count (prestige)
     this.load();
+  }
+
+  // --- New Game+ / prestige ---
+  /** Descend one simulation layer deeper; returns the new layer count. */
+  descend() { this.descents = (this.descents || 0) + 1; this.save(); return this.descents; }
+
+  /** Permanent legacy bonuses that carry across descents (compounding, capped). */
+  prestige() {
+    const d = this.descents || 0;
+    return {
+      layer: d,
+      cpMult: 1 + Math.min(1.5, d * 0.15),     // up to +150% CP
+      startTokens: Math.min(300, d * 30),       // a head-start wallet each layer
+      miningMult: 1 + Math.min(0.8, d * 0.08),  // faster mining over time
+    };
   }
 
   isUnlocked(eraId) {
@@ -66,6 +82,7 @@ export class Progress {
         dailies: [...this.dailies].slice(-120), // keep recent history bounded
         streak: this.streak,
         lastDaily: this.lastDaily,
+        descents: this.descents,
       }));
     } catch (e) { /* storage may be unavailable */ }
   }
@@ -83,6 +100,7 @@ export class Progress {
           this.dailies = new Set(data.dailies || []);
           this.streak = data.streak || 0;
           this.lastDaily = data.lastDaily || null;
+          this.descents = data.descents || 0;
         }
       }
       this.unlocked.add('cell');

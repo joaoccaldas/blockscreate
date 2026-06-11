@@ -54,6 +54,8 @@ export class Civilization {
   }
 
   addCP(amount) {
+    // Permanent prestige multiplier from New Game+ descents (1 = none).
+    if (amount > 0 && this.cpMult && this.cpMult !== 1) amount *= this.cpMult;
     this.cp += amount;
     // Earn market tokens alongside CP (positive gains only).
     if (amount > 0) this.tokens += amount * 0.6;
@@ -161,7 +163,7 @@ export class Civilization {
 
   serialize() {
     return {
-      eraId: this.eraId, cp: this.cp, tokens: this.tokens, tokensSpent: this.tokensSpent || 0, population: this.population,
+      eraId: this.eraId, cp: this.cp, tokens: this.tokens, tokensSpent: this.tokensSpent || 0, cpMult: this.cpMult || 1, population: this.population,
       totalMined: this.totalMined, totalCrafted: this.totalCrafted, totalBuilt: this.totalBuilt,
       housing: this.housing, light: this.light, placed: this.placed, defeated: this.defeated,
       defense: this.defense, storage: this.storage, trade: this.trade, pollution: this.pollution,
@@ -173,6 +175,7 @@ export class Civilization {
     if (d) Object.assign(this, d);
     this.tokens ??= 0;
     this.tokensSpent ??= 0;
+    this.cpMult ??= 1;
     this.housing ??= 0;
     this.light ??= 0;
     this.placed ??= {};

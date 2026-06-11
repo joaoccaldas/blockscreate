@@ -402,6 +402,7 @@ export class HUD {
     chronEl.innerHTML =
       `<div class="chron-when">🕰️ ${chron.when}</div>` +
       `<div class="chron-where">${chron.icon} ${chron.where} · <span class="chron-phase">${chron.phase}</span></div>` +
+      (chron.layer ? `<div class="chron-alt">∞ Simulation layer ${chron.layer}</div>` : '') +
       (chron.alternate ? `<div class="chron-alt">⟁ Alternate timeline</div>` : '');
     this.renderTimeline(game);
 
@@ -438,8 +439,10 @@ export class HUD {
         : null;
     this.el('advanceLabel').textContent = nxt
       ? (status.ready ? `🌀 Portal to ${nxt.name} is open!` : `${gate || `Next: ${nxt.name}`}`)
-      : 'Final era reached';
-    this.el('advanceBtn').classList.toggle('hidden', !(survival && nxt && status.ready));
+      : (status.canDescend ? '∞ Descend a layer — begin again, deeper' : 'Finish this age to descend a layer');
+    const btn = this.el('advanceBtn');
+    btn.classList.toggle('hidden', !(survival && ((nxt && status.ready) || status.canDescend)));
+    btn.textContent = status.canDescend ? `∞ Descend a Layer${status.layer ? ` (Layer ${status.layer + 1})` : ''}` : 'Enter Portal';
 
     // Label doubles as the affordance: a tap-target that names the current mode
     // and the action the tap will switch to.

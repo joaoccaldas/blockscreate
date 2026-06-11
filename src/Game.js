@@ -171,6 +171,12 @@ export class Game {
   _grantStarter() {
     const era = getEra(this.eraId);
     for (const id of era.starter || []) this.inventory.add(id, 1);
+    // New Game+ legacy head-start (only on a fresh run, never on loadSave).
+    const pr = this.unlocked?.prestige ? this.unlocked.prestige() : null;
+    if (pr && pr.layer) {
+      this.civ.cpMult = pr.cpMult;
+      if (pr.startTokens) this.civ.tokens = (this.civ.tokens || 0) + pr.startTokens;
+    }
     if (this.mode === MODE.CREATIVE) {
       ['primordial_mud', 'nutrient_blob', 'mineral_vent', 'lipid_membrane',
         'grass', 'dirt', 'stone', 'cobblestone', 'sand', 'water', 'log', 'planks', 'leaves',
@@ -270,6 +276,9 @@ export class Game {
     this.running = true;
     this.resize();
     this.camera.snap(this.player);
+    // Permanent prestige (miningMult / layer) applies to every run, incl. continue.
+    this.prestige = this.unlocked?.prestige ? this.unlocked.prestige() : null;
+    this.layer = this.prestige?.layer || 0;
     this.audio?.setEra?.(this.eraId); // give this age its own music palette
     this.last = performance.now();
     requestAnimationFrame(this._frame);
@@ -353,7 +362,7 @@ export class Game {
       onExport: () => SaveManager.exportFile(this),
       onImport: (f) => this._import(f),
       onMainMenu: () => this.hud.confirm('Return to the main menu?', 'Your game is saved automatically.', () => this.exit()),
-      onAdvanceEra: () => this._advanceEra(),
+      onAdvanceEra: () => (this.canDescend() ? this._descend() : this._advanceEra()),
       // Death screen
       onShareRun: () => this._shareRun(),
       onShareCard: () => this._shareCardImage(),
@@ -610,6 +619,8 @@ export class Game {
       masteryDone: this.objectives?.masteryDone?.() ?? 0,
       masteryTotal: this.objectives?.masteryTotal?.() ?? 0,
       ready: this.canAdvance(),
+      canDescend: this.canDescend(),
+      layer: this.layer || 0,
     };
   }
 
@@ -834,6 +845,43 @@ export class Game {
   /** The era the player will advance into, routed through the era graph. */
   _nextEraChoice() {
     return chooseNextEra(this.eraId, { branch: this._dominantBranch() }) || nextEra(this.eraId);
+  }
+
+  /**
+   * Can the player descend a simulation layer (New Game+)? True at the end of a
+   * terminal age once its mandatory goals are done — the run has nowhere deeper
+   * in *time*, so it folds inward into the next nested simulation instead.
+   */
+  canDescend() {
+    return this.mode === MODE.SURVIVAL
+      && !nextEra(this.eraId)
+      && (this.objectives?.mandatoryDone?.() ?? false);
+  }
+
+  /**
+   * Descend a layer: bank a permanent legacy (prestige), then reboot the whole
+   * journey from the First Cell one simulation deeper — the sim-within-sim loop
+   * that makes the game endless.
+   */
+  _descend() {
+    if (!this.canDescend()) return false;
+    const layer = this.unlocked.descend ? this.unlocked.descend() : 0;
+    SaveManager.clear?.(); // the old run is consumed; the legacy carries forward
+    this._teardownView();
+    this.newWorld('cell', MODE.SURVIVAL); // _grantStarter applies the legacy head-start
+    this.prestige = this.unlocked.prestige ? this.unlocked.prestige() : null;
+    this.layer = this.prestige?.layer || 0;
+    this.audio?.setEra?.('cell');
+    this.audio?.play('unlock');
+    this.haptics?.buzz('portal');
+    this.particles.fountain(this.player.x, this.player.y - 1, ['#b388ff', '#7be4ff', '#fff', '#f4d24a'], 50);
+    SaveManager.save(this);
+    this.hud?.bigToast?.(
+      `∞ <b>You descend a layer</b><br><small>Simulation layer ${layer} · your legacy carries forward. The First Cell begins again, deeper.</small>`,
+      5200,
+    );
+    this._introThenOnboard();
+    return true;
   }
 
   _advanceEra() {
@@ -1366,10 +1414,11 @@ export class Game {
   _miningSpeed(block) {
     const sel = this.inventory.selectedItem();
     const item = sel ? getItem(sel.id) : null;
+    const legacy = this.prestige?.miningMult || 1; // New Game+ permanent boost
     if (item && item.kind === 'tool' && item.tool === block.tool) {
-      return (1 + item.tier * 1.4) * this.powerups.multiplier('miningSpeed');
+      return (1 + item.tier * 1.4) * this.powerups.multiplier('miningSpeed') * legacy;
     }
-    return this.powerups.multiplier('miningSpeed');
+    return this.powerups.multiplier('miningSpeed') * legacy;
   }
 
   /** Can the currently held tool harvest this block? (minTier gating) */

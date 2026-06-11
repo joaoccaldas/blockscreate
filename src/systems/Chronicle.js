@@ -74,5 +74,6 @@ export function chronicleOf(game) {
     phase: phaseLabel(game),
     alternate,
     realityLabel: alternate ? 'Alternate timeline' : 'Prime timeline',
+    layer: game.layer || 0, // nested-simulation depth from New Game+ descents
   };
 }

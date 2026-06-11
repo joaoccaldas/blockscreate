@@ -204,6 +204,20 @@ for (const id of ['open_market', 'send_caravan', 'pave_roads']) if (!repObjIds.i
 if (!gDiv.world.grid.length) throw new Error('Trade Republic world did not generate terrain');
 ok('Trade Republic is a fully playable era (world, market, objectives)');
 
+// New Game+: finishing a terminal age lets the player descend a layer back to the
+// First Cell, carrying a permanent legacy forward.
+const gDesc = newGame();
+gDesc.newWorld('industrial', MODE.SURVIVAL); // a terminal era
+if (gDesc.canDescend()) throw new Error('should not descend before finishing the age');
+gDesc.objectives.completed = new Set(gDesc.objectives.mandatory().map((o) => o.id));
+if (!gDesc.canDescend()) throw new Error('finishing a terminal age should allow descending');
+const layerBefore = gDesc.unlocked.descents || 0;
+if (!gDesc._descend()) throw new Error('descend did not fire');
+if (gDesc.eraId !== 'cell') throw new Error('descending should restart at the First Cell');
+if ((gDesc.unlocked.descents || 0) !== layerBefore + 1) throw new Error('descent count did not increment');
+if (!(gDesc.civ.cpMult > 1)) throw new Error('a descended run did not inherit the prestige CP multiplier');
+ok('New Game+: descend a layer restarts deeper with a permanent legacy');
+
 // Map of Space & Time renders through the game without error and tracks state.
 const gMap = newGame();
 gMap.newWorld('cell', MODE.SURVIVAL);

@@ -175,6 +175,7 @@ export class World {
         if (depth <= 1) id = ID.grass;
         else if (depth <= 4) id = ID.dirt;
         else if (depth <= 6 && hash2(gx, y, this.seed + 6060) > 0.82) id = ID.gravel;
+        else if (depth > C.DEEP_START) id = ID.deepStone;
         else id = ID.stone;
       } else if (y === surf) {
         id = ID.grass;
@@ -221,18 +222,30 @@ export class World {
   carveColumn(x, ID = blockIds(), era = getEra(this.eraId)) {
     const gx = this.globalX(x);
     const surf = this.heightMap[x];
+    const magmaTop = this.height - 1 - C.MAGMA_ZONE;
     for (let y = surf + 4; y < this.height - 1; y++) {
       const i = this.idx(x, y);
-      if (this.grid[i] !== ID.stone) continue;
+      const cell = this.grid[i];
+      const isStone = cell === ID.stone;
+      const isDeep = cell === ID.deepStone;
+      if (!isStone && !isDeep) continue;
 
       const cave = fbm1D(gx * 0.12 + y * 0.09, this.seed + 777, 3);
       if (cave > 0.74 && y < this.height - 6) {
-        this.grid[i] = AIR;
+        // Deep caves near the bottom flood with magma — a glowing hazard.
+        this.grid[i] = (y >= magmaTop && hash2(gx, y, this.seed + 5151) > 0.35) ? ID.magma : AIR;
         continue;
       }
 
       const r = hash2(gx, y, this.seed + 4242);
       const depth = y - surf;
+      if (isDeep) {
+        // Deep layer: crystal is the reward, plus richer iron/gold seams.
+        if (r > 0.972 && depth > C.DEEP_START) this.grid[i] = ID.crystal;
+        else if (era.order >= 2 && r > 0.95 && r < 0.965) this.grid[i] = ID.gold;
+        else if (era.order >= 2 && r > 0.93 && r < 0.95) this.grid[i] = ID.iron;
+        continue;
+      }
       if (r > 0.985 && depth > 4) this.grid[i] = ID.coal;
       else if (era.order >= 1 && r > 0.975 && r < 0.982 && depth > 10) this.grid[i] = ID.copper;
       else if (era.order >= 1 && r > 0.969 && r < 0.974 && depth > 12) this.grid[i] = ID.tin;
@@ -450,6 +463,9 @@ function blockIds() {
     nutrient: blockId('nutrient_blob'),
     vent: blockId('mineral_vent'),
     membrane: blockId('lipid_membrane'),
+    deepStone: blockId('deep_stone'),
+    magma: blockId('magma'),
+    crystal: blockId('crystal_ore'),
   };
 }
 

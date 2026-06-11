@@ -99,6 +99,12 @@ const defs = [
   // power lines (see systems/PowerGrid.js). Windmills are the clean alternative.
   { id: 47, name: 'generator',  label: 'Coal Generator', solid: true,  hardness: 2.6, tool: 'pickaxe', minTier: 2, colors: { base: '#4a3c30', top: '#7a5a2c', side: '#2e251d' }, era: 'industrial', light: 0.45 },
   { id: 48, name: 'power_line', label: 'Power Line',     solid: false, hardness: 0.4, tool: 'pickaxe', colors: { base: '#3a2f22', top: '#e0b24a', side: '#241c12' }, era: 'industrial', light: 0.08 },
+
+  // Deep mining layer: below ~50 tiles the stone hardens, magma pools glow as a
+  // hazard, and crystal — the deep-time treasure — only forms down there.
+  { id: 49, name: 'deep_stone',  label: 'Deep Stone',  solid: true,  hardness: 3.4, tool: 'pickaxe', minTier: 2, colors: { base: '#55505c', top: '#646070', side: '#443f4c' }, era: 'stone', drops: 'cobblestone' },
+  { id: 50, name: 'magma',       label: 'Magma',       solid: false, hardness: 0,   tool: 'hand',    colors: { base: '#e0531e', top: '#ff7b29', side: '#a83a12' }, era: 'stone', liquid: true, light: 0.85, drops: [] },
+  { id: 51, name: 'crystal_ore', label: 'Crystal Ore', solid: true,  hardness: 3.8, tool: 'pickaxe', minTier: 2, colors: { base: '#5e5470', top: '#6f6485', side: '#4a425a' }, era: 'stone', drops: 'crystal', fleck: '#b388ff', light: 0.25 },
 ];
 
 // fix accidental typo above without breaking the table layout

@@ -178,6 +178,7 @@ export class Game {
         'farm_plot', 'wheat_seeds', 'wheat_seedling', 'wheat_green', 'wheat_ripe',
         'granary', 'market', 'caravan_post', 'gate', 'road', 'auto_miner', 'windmill', 'build_site',
         'smelter', 'factory', 'conveyor', 'generator', 'power_line',
+        'deep_stone', 'magma', 'crystal_ore',
         'coal_ore', 'copper_ore', 'tin_ore', 'iron_ore', 'gold_ore']
         .forEach((id) => this.inventory.add(id, 99));
     } else if (this.eraId !== 'cell') {
@@ -916,6 +917,17 @@ export class Game {
 
   _applyHazards(dt) {
     if (this.mode !== MODE.SURVIVAL) return;
+    // Deep-mining hazard: standing in magma scorches you (any era).
+    if (this.eraId !== 'cell' && this._touchingMagma()) {
+      this.player.health = Math.max(0, this.player.health - dt * 14);
+      this._magmaSpark = (this._magmaSpark || 0) + dt;
+      if (this._magmaSpark > 0.25) {
+        this._magmaSpark = 0;
+        this.particles.burst(this.player.x, this.player.y - 0.5, '#ff7b29', 6);
+        this.audio?.play('hurt');
+      }
+      if (this.player.health <= 0) { this.lastDamageCause = 'magma'; this.player.alive = false; }
+    }
     if (this.events?.isActive('drought')) {
       this.player.hunger = Math.max(0, this.player.hunger - dt * 0.12);
       const stored = (this.settlers?.stock?.food || 0) + this.inventory.count('food');
@@ -932,6 +944,18 @@ export class Game {
     this.player.hunger = Math.max(0, this.player.hunger - dt * 0.5 * ember);
     this.player.health = Math.max(0, this.player.health - dt * 0.25 * ember);
     if (this.player.health <= 0) this.player.alive = false;
+  }
+
+  /** Is the player's body overlapping a magma tile? */
+  _touchingMagma() {
+    const magma = blockId('magma');
+    const px = Math.round(this.player.x);
+    const py0 = Math.floor(this.player.y - this.player.h);
+    const py1 = Math.floor(this.player.y);
+    for (let y = py0; y <= py1; y++) {
+      if (this.world.get(px, y) === magma) return true;
+    }
+    return false;
   }
 
   _hasWarmth(radius = 6) {

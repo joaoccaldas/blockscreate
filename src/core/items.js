@@ -46,6 +46,7 @@ const materials = [
   ['clay', 'Clay', '#9a8d7a'],
   ['steel', 'Steel Beam', '#8a96a2'],
   ['machine_part', 'Machine Part', '#c8a24a'],
+  ['crystal', 'Deep Crystal', '#b388ff'],
 ];
 for (const [id, label, color] of materials) {
   add({ id, label, kind: 'material', colors: { base: color, top: color, side: color } });

@@ -15,8 +15,10 @@ export const C = {
 
   // World dimensions (in tiles)
   WORLD_W: 320,
-  WORLD_H: 110,
+  WORLD_H: 200, // deep worlds: ~150 tiles of underground below the surface
   SURFACE: 46, // average surface row (lower number = higher up)
+  DEEP_START: 50, // depth below the surface where deep stone / crystal begin
+  MAGMA_ZONE: 16, // bottom band (above bedrock) where magma pools form
 
   // Physics (in tiles, per second unless noted)
   GRAVITY: 52,

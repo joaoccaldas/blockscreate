@@ -39,6 +39,7 @@ import { getEra, nextEra, chooseNextEra } from './core/eras.js';
 import { getEraTheme, weightedPick, pickVariant, variantInfo } from './core/eraTheme.js';
 import { encodeReality, realityUrl } from './core/RealityCode.js';
 import { isAlternate } from './systems/Chronicle.js';
+import { getEraModifiers } from './core/eraModifiers.js';
 import { shareCardData, composeShareCardCanvas, shareCardImage } from './ui/ShareCard.js';
 
 // Buildings a raider will smash when it breaches the town (drives _pillageTown).
@@ -102,6 +103,7 @@ export class Game {
     this.showIntro = true; // fresh era entry → show the era-reveal on start
     this.mode = mode;
     this.eraId = eraId;
+    this.eraMods = getEraModifiers(eraId);
     this.clock = C.DAY_LENGTH * 0.3;
     this.world = new World({ seed: seed != null ? (seed >>> 0) : ((Math.random() * 1e9) | 0), eraId });
     // Pick this run's reality variant — branch-flavored when routed in via a
@@ -137,6 +139,7 @@ export class Game {
     this.dead = false;
     this.mode = save.mode;
     this.eraId = save.eraId;
+    this.eraMods = getEraModifiers(save.eraId);
     this.clock = save.clock ?? 0;
     this.world = World.deserialize(save.world);
     this.player = new Player(0, 0);
@@ -1438,6 +1441,9 @@ export class Game {
     const drops = dropsOf(block.id);
     if (this.mode === MODE.SURVIVAL) {
       for (const drop of drops) this.inventory.add(drop, 1);
+      // Branch identity: Flora's lush foliage yields extra fiber.
+      const fb = this.eraMods?.fiberBonus || 0;
+      if (fb && block.name === 'leaves' && Math.random() < fb) this.inventory.add('fiber', 1);
     }
     this.civ.onMine(block.name, y);
     // Removing a block can drop falling blocks stacked above it.
@@ -1543,7 +1549,8 @@ export class Game {
           if (id !== ids.seedling && id !== ids.green) continue;
           if (this.world.get(x, y + 1) !== ids.plot) continue;
           const nearWater = this._nearBlock(x, y, blockId('water'), 3);
-          const chance = (id === ids.seedling ? 0.45 : 0.32) * (nearWater ? 1.45 : 1) * (drought ? 0.35 : 1);
+          const crop = this.eraMods?.cropGrowth || 1; // branch identity: Flora cultivates fast
+          const chance = (id === ids.seedling ? 0.45 : 0.32) * (nearWater ? 1.45 : 1) * (drought ? 0.35 : 1) * crop;
           if (Math.random() > chance) continue;
           this.world.set(x, y, id === ids.seedling ? ids.green : ids.ripe);
           if (!this.reduceMotion && Math.random() < 0.5) {
@@ -2354,21 +2361,25 @@ export class Game {
     for (const key of ['food', 'wheat', 'wood', 'ore']) {
       if ((st[key] || 0) > storageCap) st[key] = storageCap;
     }
+    // Branch identity: the Trade Republic trades far more often, and richer.
+    const mods = this.eraMods || {};
+    const interval = 12 / (mods.tradeRate || 1);
+    const yieldMult = mods.tradeYield || 1;
     this._tradeTimer = (this._tradeTimer || 0) + dt;
-    if (this._tradeTimer < 12) return;
+    if (this._tradeTimer < interval) return;
     this._tradeTimer = 0;
     if ((this.civ.trade || 0) <= 0) return;
     if ((st.wheat || 0) >= 4 || (st.ore || 0) >= 3) {
       if ((st.wheat || 0) >= 4) st.wheat -= 4;
       else st.ore -= 3;
-      this.civ.onTrade(5 + (this.civ.trade || 0));
+      this.civ.onTrade((5 + (this.civ.trade || 0)) * yieldMult);
       this.hud?.toast('🏺 Market traded town surplus for CP', 1800);
     }
     if ((this.civ.placed?.caravan_post || 0) > 0 && ((st.food || 0) >= 5 || (st.wheat || 0) >= 6)) {
       if ((st.wheat || 0) >= 6) st.wheat -= 6;
       else st.food -= 5;
       this.inventory.add('trade_bead', 1);
-      this.civ.onTrade(10 + (this.civ.trade || 0));
+      this.civ.onTrade((10 + (this.civ.trade || 0)) * yieldMult);
       this.hud?.toast('🐪 Caravan returned with a trade bead', 2200);
     }
   }

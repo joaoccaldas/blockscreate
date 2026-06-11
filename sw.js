@@ -8,7 +8,7 @@
  * The list is intentionally explicit (no build step) so what ships is what we
  * cache. Missing entries still work — they just fetch from network.
  */
-const CACHE = 'blockscreate-v5.55.0';
+const CACHE = 'blockscreate-v5.56.0';
 
 const ASSETS = [
   './',
@@ -28,6 +28,7 @@ const ASSETS = [
   './src/core/DailyChallenge.js',
   './src/core/eraManifests.js',
   './src/core/eraTheme.js',
+  './src/core/eraModifiers.js',
   './src/core/recipes.js',
   './src/world/World.js',
   './src/world/noise.js',

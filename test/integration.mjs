@@ -181,6 +181,16 @@ if (!gFlo._advanceEra() || gFlo.eraId !== 'flora') throw new Error('did not adva
 if (gFlo.realityPath.at(-1).branch !== 'photic') throw new Error('flora route did not record the photic branch');
 ok('Age of Flora: a Sunlit-Shallows cell diverges into the plant-first branch');
 
+// Branch ages PLAY differently: the Game loads era modifiers per world.
+const gMods = newGame();
+gMods.newWorld('flora', MODE.SURVIVAL);
+if (!(gMods.eraMods.cropGrowth > 1.5)) throw new Error('Flora world did not load its cultivation modifier');
+gMods.newWorld('republic', MODE.SURVIVAL);
+if (!(gMods.eraMods.tradeRate > 1.5)) throw new Error('Republic world did not load its trade modifier');
+gMods.newWorld('iron', MODE.SURVIVAL);
+if (gMods.eraMods.cropGrowth !== 1) throw new Error('a prime era should have neutral modifiers');
+ok('branch ages load distinct gameplay modifiers (cultivation vs commerce)');
+
 // Branch divergence: a trade-leaning Iron player evolves into the Trade Republic
 // instead of the Industrial spine — two players reach different ages.
 const gDiv = newGame();

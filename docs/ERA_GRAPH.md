@@ -100,6 +100,19 @@ the Age of Flora.
 Crossings are realized by the existing `Timeline` glitch/rift staging and the
 `Simulation` arc; new crosses are added as data here and a staging branch there.
 
+## Branch ages play differently (not just reskins)
+
+Each age can declare **modifiers** in `src/core/eraModifiers.js` that bend the
+core loops, so a branch is a different *game*, not different art:
+
+- **🌿 Age of Flora** (cultivation): `cropGrowth ×2.2`, foliage drops bonus fiber,
+  grazers bond faster — building a living garden is the point.
+- **🏛️ Trade Republic** (commerce): `tradeRate ×1.9`, `tradeYield ×1.6` — wealth,
+  not war, grows the civilization.
+
+Prime ages stay neutral. Adding an identity = one entry; covered by
+`test/era-modifiers.mjs`.
+
 ## Invariants (enforced by `test/era-graph.mjs`)
 
 1. Every **implemented** era is reachable from `cell` using only implemented routes.

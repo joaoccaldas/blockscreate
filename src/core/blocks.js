@@ -105,6 +105,10 @@ const defs = [
   { id: 49, name: 'deep_stone',  label: 'Deep Stone',  solid: true,  hardness: 3.4, tool: 'pickaxe', minTier: 2, colors: { base: '#55505c', top: '#646070', side: '#443f4c' }, era: 'stone', drops: 'cobblestone' },
   { id: 50, name: 'magma',       label: 'Magma',       solid: false, hardness: 0,   tool: 'hand',    colors: { base: '#e0531e', top: '#ff7b29', side: '#a83a12' }, era: 'stone', liquid: true, light: 0.85, drops: [] },
   { id: 51, name: 'crystal_ore', label: 'Crystal Ore', solid: true,  hardness: 3.8, tool: 'pickaxe', minTier: 2, colors: { base: '#5e5470', top: '#6f6485', side: '#4a425a' }, era: 'stone', drops: 'crystal', fleck: '#b388ff', light: 0.25 },
+
+  // Buried ruins & treasure: carved chambers underground reward exploration.
+  { id: 52, name: 'ruin_brick', label: 'Ruined Brick', solid: true, hardness: 2.4, tool: 'pickaxe', colors: { base: '#6b6354', top: '#867c69', side: '#544d42' }, era: 'stone', drops: 'cobblestone' },
+  { id: 53, name: 'treasure',   label: 'Buried Cache',  solid: true, hardness: 1.2, tool: 'hand',    colors: { base: '#b8923a', top: '#f4d24a', side: '#8a6c28' }, era: 'stone', treasure: true, light: 0.3, fleck: '#fff0a8' },
 ];
 
 // fix accidental typo above without breaking the table layout

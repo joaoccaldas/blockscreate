@@ -101,9 +101,44 @@ export class World {
     }
     this.scatterTrees(ID, 0, this.width);
     this.scatterClues(ID, 0, this.width);
+    this.scatterPOIs(ID, 0, this.width);
     this.markGeneratedRange(0, this.width);
     this.modifiedChunks.clear();
     this.findSpawn();
+  }
+
+  /**
+   * Carve buried treasure chambers underground on a seeded grid, so exploring
+   * the deep, wide world is rewarded. Each is a small ruin-walled room with a
+   * Buried Cache at its heart (mine it for loot — see Game._openTreasure).
+   */
+  scatterPOIs(ID, start = 0, count = this.width) {
+    if (this.eraId === 'cell') return;
+    const SPACING = 38;
+    const end = Math.min(this.width - 4, start + count);
+    for (let x = Math.max(4, start); x < end; x++) {
+      const gx = this.globalX(x);
+      if (gx % SPACING !== 0) continue; // one candidate per grid cell
+      if (hash2(gx, 71, this.seed + 5005) > 0.55) continue; // ~45% of cells host one
+      const surf = this.heightMap[x];
+      const depth = 18 + Math.floor(hash2(gx, 73, this.seed + 6006) * Math.max(4, this.height - surf - 30));
+      const cy = Math.min(this.height - 6, surf + depth);
+      this._carveChamber(x, cy, ID);
+    }
+  }
+
+  _carveChamber(cx, cy, ID) {
+    const w = 3; const h = 2; // half-extents → ~7×5 room
+    for (let y = cy - h - 1; y <= cy + h + 1; y++) {
+      for (let x = cx - w - 1; x <= cx + w + 1; x++) {
+        if (!this.inBounds(x, y)) continue;
+        const i = this.idx(x, y);
+        if (this.grid[i] === ID.bedrock) continue;
+        const edge = (Math.abs(x - cx) > w) || (Math.abs(y - cy) > h);
+        this.grid[i] = edge ? ID.ruin : AIR; // ruin walls around an air room
+      }
+    }
+    if (this.inBounds(cx, cy + h)) this.grid[this.idx(cx, cy + h)] = ID.treasure; // cache on the floor
   }
 
   globalX(x) {
@@ -466,6 +501,8 @@ function blockIds() {
     deepStone: blockId('deep_stone'),
     magma: blockId('magma'),
     crystal: blockId('crystal_ore'),
+    ruin: blockId('ruin_brick'),
+    treasure: blockId('treasure'),
   };
 }
 

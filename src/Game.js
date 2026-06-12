@@ -1450,10 +1450,32 @@ export class Game {
       const fb = this.eraMods?.fiberBonus || 0;
       if (fb && block.name === 'leaves' && Math.random() < fb) this.inventory.add('fiber', 1);
     }
+    if (block.treasure && this.mode === MODE.SURVIVAL) this._openTreasure(x, y);
     this.civ.onMine(block.name, y);
     if (this.mode === MODE.SURVIVAL) this._comboHit(x + 0.5, y);
     // Removing a block can drop falling blocks stacked above it.
     this._settleFalling(x, y - 1);
+  }
+
+  /** Crack open a buried cache: a burst of loot + CP — the explorer's payoff. */
+  _openTreasure(x, y) {
+    const pool = ['crystal', 'gold', 'iron', 'machine_part', 'trade_bead', 'flint', 'coal'];
+    const rolls = 2 + ((Math.random() * 3) | 0); // 2–4 stacks of loot
+    const got = {};
+    for (let i = 0; i < rolls; i++) {
+      const id = pool[(Math.random() * pool.length) | 0];
+      const n = 1 + ((Math.random() * 3) | 0);
+      this.inventory.add(id, n);
+      got[id] = (got[id] || 0) + n;
+    }
+    const cp = 30 + ((Math.random() * 30) | 0);
+    this.civ.addCP(cp);
+    this.audio?.play('unlock');
+    this.haptics?.buzz('unlock');
+    this.particles.fountain(x + 0.5, y + 0.5, ['#f4d24a', '#fff0a8', '#fff', '#9be86a'], 40);
+    const items = Object.entries(got).map(([id, n]) => `${n}× ${getItem(id)?.label || id}`).join(', ');
+    this.hud?.bigToast(`🏆 <b>Buried Cache!</b><br><small>+${cp} CP and ${items}.</small>`, 3600);
+    this._floatText(x + 0.5, y, `+${cp} CP`, { color: '#f4d24a', size: 0.7, life: 1.3 });
   }
 
   /**

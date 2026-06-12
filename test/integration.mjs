@@ -217,6 +217,18 @@ for (let i = 0; i < 8 && !placed; i++) placed = gRift._placeGlitchTile();
 if (!placed) throw new Error('a glitch never placed an out-of-era tile');
 ok('matrix bleeds are tangible: rifts give loot, glitches leave out-of-era tiles');
 
+// Buried treasure: mining a cache bursts loot + CP (the explorer's payoff).
+const gPoi = newGame();
+gPoi.newWorld('iron', MODE.SURVIVAL);
+const lootPool = ['crystal', 'gold', 'iron', 'machine_part', 'trade_bead', 'flint', 'coal'];
+const poolTotal = () => lootPool.reduce((a, id) => a + gPoi.inventory.count(id), 0);
+const cpBeforePoi = gPoi.civ.cp;
+const lootBeforePoi = poolTotal();
+gPoi._openTreasure(10, 10);
+if (!(gPoi.civ.cp > cpBeforePoi)) throw new Error('opening a cache paid no CP');
+if (!(poolTotal() > lootBeforePoi)) throw new Error('opening a cache granted no loot');
+ok('buried caches burst loot + CP when opened (exploration payoff)');
+
 // Branch divergence: a trade-leaning Iron player evolves into the Trade Republic
 // instead of the Industrial spine — two players reach different ages.
 const gDiv = newGame();

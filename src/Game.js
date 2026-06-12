@@ -1674,19 +1674,55 @@ export class Game {
       this.particles.fountain(px, py, ['#b388ff', '#7be4ff', '#fff', '#ff7be4'], 46);
       const windfall = Math.round(40 * this.powerups.multiplier('cpMultiplier'));
       this.civ.addCP(windfall);
+      // A rift hands you tangible loot pulled from a parallel reality.
+      const loot = this._riftLoot();
+      if (loot) { this.inventory.add(loot.id, loot.n); this._floatText(px, py, `+${loot.n} ${loot.label}`, { color: '#b388ff', size: 0.6, life: 1.4 }); }
       this.hud?.bigToast(
-        `🌀 <b>Rift Crossover</b><br><small>${bleed.first ? 'A parallel thread opens. ' : ''}You pull +${windfall} CP across realities.</small>`,
+        `🌀 <b>Rift Crossover</b><br><small>${bleed.first ? 'A parallel thread opens. ' : ''}+${windfall} CP${loot ? ` and ${loot.n}× ${loot.label}` : ''} crosses over.</small>`,
         4200,
       );
     } else {
       this.audio?.play('mine');
       this.particles.fountain(px, py, ['#8e6bd6', '#7be4ff', '#cfd0ff'], 22);
       this.civ.addCP(8 * this.powerups.multiplier('cpMultiplier'));
+      // A glitch leaves an impossible tile from another reality nearby to find.
+      const placed = this._placeGlitchTile();
       this.hud?.bigToast(
-        `⌁ <b>Glitch in the Matrix</b><br><small>${bleed.first ? 'Two timelines overlap for a heartbeat. ' : 'Reality stutters. '}An echo bleeds through.</small>`,
+        `⌁ <b>Glitch in the Matrix</b><br><small>${bleed.first ? 'Two timelines overlap for a heartbeat. ' : 'Reality stutters. '}${placed ? 'A tile from another reality bleeds in nearby.' : 'An echo bleeds through.'}</small>`,
         3600,
       );
     }
+  }
+
+  /** Tangible loot a rift pulls across — biased to out-of-era treasures. */
+  _riftLoot() {
+    const pool = ['crystal', 'machine_part', 'steel', 'gold', 'trade_bead', 'iron'];
+    const id = pool[(Math.random() * pool.length) | 0];
+    const item = getItem(id);
+    if (!item) return null;
+    return { id, n: 1 + ((Math.random() * 2) | 0), label: item.label || id };
+  }
+
+  /** Place a single "impossible" out-of-era block on solid ground near the player. */
+  _placeGlitchTile() {
+    if (this.eraId === 'cell') return false;
+    const choices = ['crystal_ore', 'conveyor', 'standing_stone', 'fossil_bed', 'lamp_post', 'magma'];
+    const id = blockId(choices[(Math.random() * choices.length) | 0]);
+    if (id == null) return false;
+    const px = Math.round(this.player.x);
+    for (let tries = 0; tries < 24; tries++) {
+      const x = px + (((Math.random() * 16) | 0) - 8);
+      const surf = this.world.heightMap[x - this.world.originX] ?? null;
+      // Find an air tile sitting on solid ground in a small vertical scan.
+      for (let y = Math.round(this.player.y) - 6; y <= Math.round(this.player.y) + 6; y++) {
+        if (this.world.get(x, y) === AIR && isSolid(this.world.get(x, y + 1))) {
+          this.world.set(x, y, id);
+          this.particles.fountain(x + 0.5, y + 0.5, ['#8e6bd6', '#7be4ff', '#fff'], 14);
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**

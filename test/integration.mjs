@@ -203,6 +203,20 @@ gCombo._damagePlayer(5, 'a test');
 if (gCombo.combo.count !== 0) throw new Error('taking a hit did not break the combo');
 ok('combo: chained actions speed mining + pay bursts; a hit snaps the streak');
 
+// Tangible matrix bleeds: a rift hands real loot; a glitch places an out-of-era tile.
+const gRift = newGame();
+gRift.newWorld('iron', MODE.SURVIVAL);
+const loot = gRift._riftLoot();
+if (!loot || !loot.id || !(loot.n >= 1)) throw new Error('a rift produced no tangible loot');
+const lootBefore = gRift.inventory.count(loot.id);
+gRift.inventory.add(loot.id, loot.n);
+if (gRift.inventory.count(loot.id) !== lootBefore + loot.n) throw new Error('rift loot did not enter the inventory');
+// Glitch tile placement should drop an out-of-era block somewhere on the ground.
+let placed = false;
+for (let i = 0; i < 8 && !placed; i++) placed = gRift._placeGlitchTile();
+if (!placed) throw new Error('a glitch never placed an out-of-era tile');
+ok('matrix bleeds are tangible: rifts give loot, glitches leave out-of-era tiles');
+
 // Branch divergence: a trade-leaning Iron player evolves into the Trade Republic
 // instead of the Industrial spine — two players reach different ages.
 const gDiv = newGame();

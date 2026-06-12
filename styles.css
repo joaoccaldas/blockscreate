@@ -502,6 +502,30 @@ html, body {
 .build-indicator.build-on { background: rgba(111, 192, 78, 0.35); border-color: var(--accent); }
 .build-indicator.build-on:hover { background: rgba(111, 192, 78, 0.5); }
 
+/* Combo meter — the flow-state streak, bottom-centre above the hotbar. */
+.combo-meter {
+  position: absolute;
+  left: 50%;
+  bottom: calc(72px + var(--safe-b));
+  transform: translateX(-50%);
+  text-align: center;
+  background: rgba(20, 10, 4, 0.7);
+  border: 1px solid rgba(255, 179, 74, 0.6);
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-weight: bold;
+  font-size: 0.86rem;
+  color: #ffd36b;
+  pointer-events: none;
+  box-shadow: 0 0 14px rgba(255, 140, 40, 0.35);
+}
+.combo-meter.hidden { display: none; }
+.combo-bar { width: 120px; height: 4px; margin: 3px auto 0; background: rgba(255, 255, 255, 0.18); border-radius: 3px; overflow: hidden; }
+.combo-bar i { display: block; height: 100%; background: linear-gradient(90deg, #ffd36b, #ff7b29); transition: width 0.1s linear; }
+.combo-meter.combo-hot { color: #ff9a4a; border-color: #ff7b29; box-shadow: 0 0 20px rgba(255, 100, 20, 0.6); }
+.combo-meter.combo-max { color: #fff; border-color: #fff; animation: tlPulse 0.7s ease-in-out infinite; }
+.reduce-motion .combo-meter.combo-max { animation: none; }
+
 /* Corner minimap (desktop) — a downsampled side-view of the deep, wide world. */
 .minimap {
   position: absolute;

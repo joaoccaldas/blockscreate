@@ -191,6 +191,18 @@ gMods.newWorld('iron', MODE.SURVIVAL);
 if (gMods.eraMods.cropGrowth !== 1) throw new Error('a prime era should have neutral modifiers');
 ok('branch ages load distinct gameplay modifiers (cultivation vs commerce)');
 
+// Combo flow: chained mining builds a streak that speeds mining; a hit snaps it.
+const gCombo = newGame();
+gCombo.newWorld('iron', MODE.SURVIVAL);
+const cpBeforeCombo = gCombo.civ.cp;
+for (let i = 0; i < 13; i++) gCombo._comboHit(0, 0); // simulate 13 chained actions
+if (gCombo.combo.count !== 13) throw new Error('combo did not accumulate');
+if (!(gCombo.combo.multiplier() > 1)) throw new Error('combo did not boost mining speed');
+if (!(gCombo.civ.cp > cpBeforeCombo)) throw new Error('combo tier-ups did not pay a CP burst');
+gCombo._damagePlayer(5, 'a test');
+if (gCombo.combo.count !== 0) throw new Error('taking a hit did not break the combo');
+ok('combo: chained actions speed mining + pay bursts; a hit snaps the streak');
+
 // Branch divergence: a trade-leaning Iron player evolves into the Trade Republic
 // instead of the Industrial spine — two players reach different ages.
 const gDiv = newGame();

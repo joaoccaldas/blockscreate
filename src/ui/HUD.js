@@ -103,6 +103,7 @@ export class HUD {
       <div id="powerupBar" class="powerup-bar hidden"></div>
       <div id="eventBar" class="event-bar hidden"></div>
       <div id="raidWarning" class="raid-warning hidden"></div>
+      <div id="comboMeter" class="combo-meter hidden"><span id="comboText"></span><div class="combo-bar"><i id="comboFill"></i></div></div>
       <div id="cellHint" class="cell-hint hidden"></div>
       <div id="toast" class="toast hidden"></div>
       <div id="bigToast" class="big-toast hidden"></div>
@@ -452,6 +453,7 @@ export class HUD {
     this.el('buildIndicator').classList.toggle('build-on', game.buildMode);
 
     if (survival) this.renderObjectives(game);
+    this.renderCombo(game);
     this.renderMinimap(game);
     this.renderDiscoveries(game);
     this.renderPowerups(game);
@@ -740,6 +742,23 @@ export class HUD {
   showInventory(show) { this.el('inventoryPanel').classList.toggle('hidden', !show); }
   showCrafting(show) { this.el('craftPanel').classList.toggle('hidden', !show); }
   showPause(show) { this.el('pauseMenu').classList.toggle('hidden', !show); }
+  /** The flow-state combo meter (bottom-centre, above the hotbar). */
+  renderCombo(game) {
+    const c = game.combo;
+    const el = this.el('comboMeter');
+    const active = c && c.count >= 3;
+    el.classList.toggle('hidden', !active);
+    if (!active) return;
+    const tier = c.tier >= 0 ? c.tier : 0;
+    const labels = ['Combo', 'Hot Streak', 'Blazing', 'UNSTOPPABLE'];
+    const label = c.tier >= 0 ? labels[c.tier] : 'Combo';
+    this.el('comboText').textContent = `🔥 ${label} ×${c.count}`;
+    // Bar drains as the streak window runs out (4s).
+    this.el('comboFill').style.width = `${Math.max(0, 100 - (c.idle / 4) * 100)}%`;
+    el.classList.toggle('combo-hot', c.tier >= 2);
+    el.classList.toggle('combo-max', c.tier >= 3);
+  }
+
   /** Paint the corner minimap (desktop only, throttled). */
   renderMinimap(game) {
     if (this.isTouch) return;

@@ -29,6 +29,7 @@ import { Camera } from './render/Camera.js';
 import { Renderer } from './render/Renderer.js';
 import { Particles } from './render/Particles.js';
 import { FloatingTextLayer } from './systems/FloatingText.js';
+import { Combo } from './systems/Combo.js';
 import { Haptics } from './systems/Haptics.js';
 import { Input, isTouch } from './input/Input.js';
 import { HUD } from './ui/HUD.js';
@@ -82,6 +83,7 @@ export class Game {
     this.buildMode = false;
     this.particles = new Particles();
     this.floaters = new FloatingTextLayer();
+    this.combo = new Combo();
     this.haptics = new Haptics(settings?.get?.('haptics') ?? true);
     this.crafted = new Set();
     this.mineTarget = null;
@@ -764,6 +766,7 @@ export class Game {
     this._updateCrops(dt);
     this.particles.update(dt);
     this.floaters.update(dt);
+    this.combo.update(dt); // lets a streak time out when you stop acting
 
     this.clock = (this.clock + dt) % C.DAY_LENGTH;
     this.world.clock = this.clock;
@@ -1063,6 +1066,7 @@ export class Game {
         this.inventory.add(def.item, 1);
         this.civ.addCP(def.cp * this.powerups.multiplier('cpMultiplier'));
         this._floatText(x + 0.5, y, `+${def.cp} CP`, { color: def.color, size: 0.5, life: 0.8 });
+        this._comboHit(x + 0.5, y);
         this.player.eat(def.item === 'nutrient_blob' ? 8 : 3);
         this.cellStability = Math.min(100, (this.cellStability ?? this.player.hunger) + (def.item === 'nutrient_blob' ? 7 : 4));
         // A little flow toward the cell sells the "absorb" read.
@@ -1418,10 +1422,11 @@ export class Game {
     const sel = this.inventory.selectedItem();
     const item = sel ? getItem(sel.id) : null;
     const legacy = this.prestige?.miningMult || 1; // New Game+ permanent boost
+    const combo = this.combo?.multiplier?.() || 1;  // flow-state streak boost
     if (item && item.kind === 'tool' && item.tool === block.tool) {
-      return (1 + item.tier * 1.4) * this.powerups.multiplier('miningSpeed') * legacy;
+      return (1 + item.tier * 1.4) * this.powerups.multiplier('miningSpeed') * legacy * combo;
     }
-    return this.powerups.multiplier('miningSpeed') * legacy;
+    return this.powerups.multiplier('miningSpeed') * legacy * combo;
   }
 
   /** Can the currently held tool harvest this block? (minTier gating) */
@@ -1446,8 +1451,29 @@ export class Game {
       if (fb && block.name === 'leaves' && Math.random() < fb) this.inventory.add('fiber', 1);
     }
     this.civ.onMine(block.name, y);
+    if (this.mode === MODE.SURVIVAL) this._comboHit(x + 0.5, y);
     // Removing a block can drop falling blocks stacked above it.
     this._settleFalling(x, y - 1);
+  }
+
+  /**
+   * Register a combo action and celebrate when the streak crosses a tier — the
+   * flow-state juice. Each tier mines faster (read via combo.multiplier()).
+   */
+  _comboHit(fx, fy) {
+    const r = this.combo.add();
+    if (r.tierUp) {
+      const t = r.tierUp;
+      this.civ.addCP(t.bonus);
+      this.audio?.play(t.at >= 25 ? 'unlock' : 'objective');
+      this.haptics?.buzz(t.at >= 25 ? 'unlock' : 'craft');
+      this.particles.fountain(this.player.x, this.player.y - 1,
+        ['#ffd36b', '#ff7b29', '#fff', '#9be86a'], 16 + t.at);
+      this._floatText(this.player.x, this.player.y - this.player.h - 0.4,
+        `${t.label}! ×${this.combo.count}`, { color: '#ffd36b', size: 0.72, life: 1.3 });
+    } else if (this.combo.count >= 3 && fx != null) {
+      this._floatText(fx, fy, `×${this.combo.count}`, { color: '#ffe14a', size: 0.42, life: 0.6 });
+    }
   }
 
   _discoverClue(block) {
@@ -2014,6 +2040,7 @@ export class Game {
     this.civ.addCP(cp * (this.powerups?.multiplier('cpMultiplier') || 1));
     this._floatText(mob.x, mob.y - mob.h, `+${cp} CP`, { color: '#9be86a', size: 0.55, life: 1.1 });
     this.haptics?.buzz('defeat');
+    if (this.mode === MODE.SURVIVAL) this._comboHit(mob.x, mob.y - mob.h);
     this.hud.toast(mob.hostile ? `Defeated a ${mob.type} (+${cp} CP)` : `Caught a ${mob.type}`);
   }
 
@@ -2524,6 +2551,8 @@ export class Game {
     this.particles.burst(this.player.x, this.player.y - this.player.h / 2, '#ff5b5b', 8);
     this._floatText(this.player.x, this.player.y - this.player.h, `-${Math.round(amount)}`, { color: '#ff6b6b', size: 0.6 });
     this.haptics?.buzz('hurt');
+    const lost = this.combo?.breakStreak?.() || 0; // a hit snaps your flow
+    if (lost >= 12) this._floatText(this.player.x, this.player.y - this.player.h - 0.5, `Combo broken! ×${lost}`, { color: '#ff8a6b', size: 0.6, life: 1.2 });
     if (!this.reduceMotion) this.hud?.shake?.();
     if (this.player.health <= 0) this.player.alive = false;
   }

@@ -8,7 +8,7 @@
  * The list is intentionally explicit (no build step) so what ships is what we
  * cache. Missing entries still work — they just fetch from network.
  */
-const CACHE = 'blockscreate-v5.64.2';
+const CACHE = 'blockscreate-v5.64.3';
 
 const ASSETS = [
   './',

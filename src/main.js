@@ -12,7 +12,7 @@ import { SaveManager } from './persistence/SaveManager.js';
 import { parseRealityFromUrl } from './core/RealityCode.js';
 import { dailyChallenge } from './core/DailyChallenge.js';
 import { getEra } from './core/eras.js';
-import { variantInfo } from './core/eraTheme.js';
+import { getEraUI, variantInfo } from './core/eraTheme.js';
 import { Audio } from './systems/Audio.js';
 import { LandingScene } from './ui/LandingScene.js';
 import { Game } from './Game.js';
@@ -22,6 +22,7 @@ let game = null;
 let landingScene = null;
 let chosenMode = MODE.SURVIVAL;
 let introStep = 0;
+let journeyLaunch = null;
 
 const JOURNEY_INTRO = [
   {
@@ -119,7 +120,12 @@ function refreshLanding() {
   renderDailyCard();
 }
 
-function showJourneyIntro() {
+function showJourneyIntro(launch = null) {
+  journeyLaunch = launch || (() => {
+    settings.set('seenPrelife', false);
+    settings.set('seenTutorial', '');
+    startGame({ eraId: 'cell', mode: MODE.SURVIVAL });
+  });
   introStep = 0;
   renderJourneyIntro();
   show('intro');
@@ -146,9 +152,9 @@ function advanceJourneyIntro() {
   }
   // "New Journey" always replays the complete origin, while Continue preserves
   // the existing local world.
-  settings.set('seenPrelife', false);
-  settings.set('seenTutorial', '');
-  startGame({ eraId: 'cell', mode: MODE.SURVIVAL });
+  const launch = journeyLaunch;
+  journeyLaunch = null;
+  launch?.();
 }
 
 function renderDailyCard() {
@@ -190,6 +196,13 @@ function buildPortals() {
     const [skyA, skyB] = era.sky?.day || ['#456', '#234'];
     const card = document.createElement('div');
     card.className = 'era-card' + (unlocked ? '' : ' locked') + (playable ? '' : ' soon');
+    card.dataset.era = era.id;
+    const ui = getEraUI(era.id);
+    card.style.setProperty('--card-accent', ui.accent);
+    card.style.setProperty('--card-edge', ui.edge);
+    card.style.setProperty('--card-radius', ui.radius);
+    card.style.setProperty('--card-font', ui.font);
+    card.style.setProperty('--card-texture', ui.texture);
     // Paint each card with its own era's sky + ground so ages feel distinct.
     card.style.background =
       `linear-gradient(160deg, ${skyA}33, ${skyB}22), var(--panel)`;
@@ -257,12 +270,13 @@ function wire() {
     playBtn.textContent = `▶ Play shared reality`;
     const sub = document.querySelector('.subtitle');
     if (sub) sub.textContent = `A friend shared a reality: ${era.icon} ${v ? v.name : era.name}. Press Play to enter their exact world.`;
-    click('playBtn', () => startGame({ reality: shared }));
+    click('playBtn', () => showJourneyIntro(() => startGame({ reality: shared })));
   } else {
-    click('playBtn', showJourneyIntro);
+    click('playBtn', () => showJourneyIntro());
   }
   click('introNext', advanceJourneyIntro);
   click('introBack', () => show('landing'));
+  click('prologueBtn', () => showJourneyIntro());
   click('erasBtn', () => { buildPortals(); show('portal'); });
   click('continueBtn', () => {
     const save = SaveManager.load();

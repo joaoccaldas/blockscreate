@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert';
 import {
-  getEraTheme, ERA_VARIANTS, variantsFor, variantInfo, pickVariant,
+  getEraTheme, getEraUI, ERA_VARIANTS, variantsFor, variantInfo, pickVariant,
 } from '../src/core/eraTheme.js';
 
 let passed = 0;
@@ -73,5 +73,12 @@ for (const [era, variants] of Object.entries(ERA_VARIANTS)) {
   }
 }
 ok('every defined variant is named (ready to surface in UI)');
+
+const uiSigs = new Set(['cell', 'stone', 'flora', 'bronze', 'iron', 'industrial', 'republic']
+  .map((id) => JSON.stringify(getEraUI(id))));
+assert.strictEqual(uiSigs.size, 7, 'every age should expose a distinct UI presentation');
+assert.notStrictEqual(getEraUI('cell', 'abyssal').panel, getEraUI('cell', 'sunlit').panel,
+  'reality variants should alter the interface, not only the world');
+ok('each age and named reality carries its own interface art direction');
 
 console.log(`\nAll ${passed} variant checks passed.`);

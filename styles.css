@@ -155,7 +155,14 @@ html, body {
   max-width: 34rem;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.72);
 }
-.menu-buttons { display: flex; flex-direction: column; gap: 0.8rem; max-width: 320px; margin: 0; }
+.menu-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; max-width: 360px; margin: 0; }
+.menu-buttons #playBtn,
+.menu-buttons #continueBtn,
+.menu-buttons #prologueBtn,
+.menu-buttons #erasBtn { grid-column: 1 / -1; }
+.story-btn { border-color: rgba(118,247,221,.45); color: #dffff8; background: rgba(5,31,43,.68); }
+.landing-start-note { max-width: 320px; margin: .75rem 0 0; color: #b9c5e5; font-size: .72rem; line-height: 1.45; }
+.landing-start-note b { color: #76f7dd; }
 
 /* Daily challenge card on the landing — the come-back-tomorrow hook. */
 .daily-card { max-width: 320px; margin: 0.9rem 0 0; background: rgba(10, 16, 34, 0.55); border: 1px solid rgba(124, 228, 255, 0.3); border-radius: 12px; padding: 0.7rem 0.8rem; }
@@ -288,18 +295,24 @@ html, body {
 .era-card {
   background: var(--panel);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
+  border-radius: var(--card-radius, 14px);
+  border-color: var(--card-edge, rgba(255,255,255,.12));
+  font-family: var(--card-font, inherit);
+  background-image: var(--card-texture, none);
   padding: 1.2rem 1rem;
   cursor: pointer;
   transition: transform 0.12s, box-shadow 0.2s, border-color 0.2s;
 }
-.era-card:hover { transform: translateY(-4px); border-color: var(--accent); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4); }
+.era-card:hover { transform: translateY(-4px); border-color: var(--card-accent, var(--accent)); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4); }
 .era-card.locked, .era-card.soon { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.5); }
 .era-card.locked:hover, .era-card.soon:hover { transform: none; border-color: rgba(255, 255, 255, 0.12); box-shadow: none; }
 .era-icon { font-size: 2.6rem; }
 .era-card h3 { margin: 0.5rem 0 0.4rem; }
 .era-card p { color: var(--muted); font-size: 0.88rem; min-height: 3.4em; margin: 0; }
-.era-foot { margin-top: 0.8rem; font-weight: bold; color: var(--accent); }
+.era-foot { margin-top: 0.8rem; font-weight: bold; color: var(--card-accent, var(--accent)); }
+.era-card[data-era="industrial"] { text-align: left; box-shadow: inset 0 0 0 1px rgba(0,0,0,.5), 5px 5px 0 rgba(0,0,0,.3); }
+.era-card[data-era="bronze"] h3, .era-card[data-era="iron"] h3, .era-card[data-era="republic"] h3 { text-transform: uppercase; letter-spacing: .06em; }
+.era-card[data-era="flora"] { border-radius: 28px 7px 28px 7px; }
 
 /* ---- How to ---- */
 .howto-cols { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
@@ -338,6 +351,38 @@ html, body {
 /* ---- HUD (built by HUD.js) ---- */
 #hud { position: absolute; inset: 0; pointer-events: none; font-size: 14px; }
 #hud button, #hud .slot, #hud input, #hud label { pointer-events: auto; }
+#hud {
+  --ui-accent: var(--accent);
+  --ui-accent2: var(--accent2);
+  --ui-ink: var(--text);
+  --ui-panel: var(--panel);
+  --ui-edge: rgba(255,255,255,.2);
+  --ui-radius: 12px;
+  --ui-font: 'Trebuchet MS','Segoe UI',sans-serif;
+  --ui-texture: none;
+  color: var(--ui-ink);
+  font-family: var(--ui-font);
+}
+#hud .panel, #hud .overlay-card, #hud .civ-panel, #hud .obj-panel,
+#hud .discovery-panel, #hud .action-btn, #hud .era-badge, #hud .cell-hint {
+  border-color: var(--ui-edge);
+  border-radius: var(--ui-radius);
+  background-color: var(--ui-panel);
+  background-image: var(--ui-texture);
+}
+#hud .btn.primary, #hud .craft-row button { background: var(--ui-accent); }
+#hud .obj-title, #hud .chron-phase { color: var(--ui-accent); }
+#hud .slot.selected { border-color: var(--ui-accent); box-shadow: 0 0 12px color-mix(in srgb, var(--ui-accent) 60%, transparent); }
+#hud[data-era="stone"] .panel, #hud[data-era="stone"] .overlay-card,
+#hud[data-era="stone"] .civ-panel, #hud[data-era="stone"] .obj-panel { border-width: 2px; }
+#hud[data-era="bronze"] .panel-head, #hud[data-era="bronze"] .obj-title,
+#hud[data-era="iron"] .panel-head, #hud[data-era="iron"] .obj-title,
+#hud[data-era="republic"] .panel-head, #hud[data-era="republic"] .obj-title { letter-spacing: .08em; text-transform: uppercase; }
+#hud[data-era="industrial"] .panel, #hud[data-era="industrial"] .overlay-card,
+#hud[data-era="industrial"] .action-btn, #hud[data-era="industrial"] .slot { box-shadow: inset 0 0 0 1px rgba(0,0,0,.55), 4px 4px 0 rgba(0,0,0,.35); }
+#hud[data-reality="abyssal"] { filter: saturate(.78); }
+#hud[data-reality="sunlit"] .panel, #hud[data-reality="sunlit"] .obj-panel { box-shadow: 0 0 22px rgba(123,228,255,.18); }
+#hud[data-reality="hydrothermal"] .panel, #hud[data-reality="hydrothermal"] .obj-panel { box-shadow: 0 0 22px rgba(255,138,74,.16); }
 
 #topbar {
   position: absolute;
@@ -532,10 +577,11 @@ html, body {
 .origin-focus:not(.origin-building) #buildIndicator { display: none; }
 .origin-focus:not(.has-items) #hotbar { display: none; }
 .origin-focus #objPanel {
-  background: rgba(7, 20, 34, 0.78);
-  border-color: rgba(118, 247, 221, 0.42);
+  background-color: var(--ui-panel);
+  background-image: var(--ui-texture);
+  border-color: var(--ui-edge);
 }
-.origin-focus .obj-title { color: #b8fff2; }
+.origin-focus .obj-title { color: var(--ui-accent); }
 .prelife-focus #desktopActions,
 .prelife-focus #buildIndicator,
 .prelife-focus #hotbar,
@@ -543,8 +589,8 @@ html, body {
 .prelife-focus .touch-quick,
 .prelife-focus #eraBadge { display: none; }
 .prelife-focus #objPanel {
-  border-color: rgba(118,247,221,0.55);
-  box-shadow: 0 0 28px rgba(118,247,221,0.16);
+  border-color: var(--ui-edge);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--ui-accent) 18%, transparent);
 }
 .prelife-focus #topbar { display: none; }
 /* In collapsed mode the right column holds the quick 🎒🔨 buttons, so dock the
@@ -891,8 +937,10 @@ html, body {
 /* Phones / small screens: tighten the HUD. */
 @media (max-width: 760px) {
   #landing {
-    align-items: flex-end;
+    align-items: flex-start;
     justify-content: center;
+    overflow-y: auto;
+    padding-top: max(.75rem, env(safe-area-inset-top, 0px));
   }
   #landing::after {
     background:
@@ -904,17 +952,26 @@ html, body {
   .menu {
     text-align: center;
     margin: 0 0 calc(1rem + var(--safe-b));
+    padding: .7rem 1rem 1rem;
+    max-width: 100%;
   }
+  .title { font-size: clamp(2.55rem, 14vw, 4rem); }
+  .eyebrow { font-size: .62rem; margin-bottom: .25rem; }
+  .subtitle { margin: .55rem auto .9rem; font-size: .88rem; line-height: 1.42; max-width: 22rem; }
   .menu-buttons {
     margin: 0 auto;
+    gap: .5rem;
+    max-width: 330px;
   }
+  .menu-buttons .btn { padding: .68rem .7rem; font-size: .9rem; }
+  .landing-start-note { margin: .55rem auto 0; font-size: .66rem; }
   /* Keep all five eras on one tidy line on phones (no orphaned "Industry"). */
   .era-journey { justify-content: center; flex-wrap: nowrap; gap: 0.3rem 0.35rem; }
   .era-journey .ej-icon { font-size: 1.25rem; }
   .era-journey .ej-name { font-size: 0.5rem; }
   .era-journey .ej-arrow { margin-top: 0.2rem; font-size: 0.7rem; }
-  .landing-feats { align-items: center; }
-  .landing-feats li { font-size: 0.82rem; }
+  .landing-feats { display: none; }
+  .version { margin-top: .75rem; }
   #hud { font-size: 12px; }
   .civ-panel { width: 165px; }
   .era-story { display: none; }

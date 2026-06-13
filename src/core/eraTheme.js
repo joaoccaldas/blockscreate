@@ -126,6 +126,32 @@ export const ERA_THEME = {
   },
 };
 
+// Interface art direction travels with the world. These tokens change shape,
+// typography, material and color so a new age feels like a new civilization.
+export const ERA_UI = {
+  cell:       { accent: '#76f7dd', accent2: '#9f66c8', ink: '#dffff8', panel: 'rgba(5,31,43,.90)', edge: 'rgba(118,247,221,.48)', radius: '22px', font: "'Trebuchet MS','Segoe UI',sans-serif", texture: 'radial-gradient(circle at 18% 12%,rgba(118,247,221,.13),transparent 38%)' },
+  stone:      { accent: '#b8d46a', accent2: '#e0762a', ink: '#fff2cf', panel: 'rgba(34,30,18,.92)', edge: 'rgba(184,212,106,.50)', radius: '5px', font: "'Trebuchet MS','Segoe UI',sans-serif", texture: 'repeating-linear-gradient(135deg,rgba(255,255,255,.025) 0 3px,transparent 3px 9px)' },
+  flora:      { accent: '#70e28b', accent2: '#e5c95f', ink: '#efffe9', panel: 'rgba(13,42,25,.92)', edge: 'rgba(112,226,139,.48)', radius: '26px 8px 26px 8px', font: "Georgia,'Trebuchet MS',serif", texture: 'radial-gradient(ellipse at 15% 15%,rgba(112,226,139,.16),transparent 42%)' },
+  bronze:     { accent: '#e0a45d', accent2: '#59b7b0', ink: '#fff0d8', panel: 'rgba(52,31,19,.94)', edge: 'rgba(224,164,93,.55)', radius: '3px', font: "Georgia,'Times New Roman',serif", texture: 'repeating-linear-gradient(90deg,rgba(255,214,150,.025) 0 1px,transparent 1px 7px)' },
+  iron:       { accent: '#b9c4d3', accent2: '#b4463f', ink: '#f2f5fa', panel: 'rgba(24,29,38,.95)', edge: 'rgba(185,196,211,.48)', radius: '2px', font: "Georgia,'Times New Roman',serif", texture: 'linear-gradient(145deg,rgba(255,255,255,.05),transparent 35%)' },
+  industrial: { accent: '#f2b84b', accent2: '#68b7c6', ink: '#f3e9d0', panel: 'rgba(26,27,29,.96)', edge: 'rgba(242,184,75,.50)', radius: '0px', font: "'Courier New',ui-monospace,monospace", texture: 'repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 5px)' },
+  republic:   { accent: '#e2bd68', accent2: '#68a8cc', ink: '#fff7dd', panel: 'rgba(38,29,30,.95)', edge: 'rgba(226,189,104,.55)', radius: '10px 2px 10px 2px', font: "Georgia,'Times New Roman',serif", texture: 'linear-gradient(120deg,rgba(226,189,104,.08),transparent 35%,rgba(104,168,204,.05))' },
+};
+
+export const REALITY_UI = {
+  hydrothermal: { accent: '#ff8a4a', accent2: '#76f7dd', edge: 'rgba(255,138,74,.58)', texture: 'radial-gradient(circle at 20% 110%,rgba(255,110,45,.20),transparent 48%)' },
+  sunlit:       { accent: '#7be4ff', accent2: '#ffe58a', panel: 'rgba(9,42,52,.88)', edge: 'rgba(123,228,255,.60)', texture: 'linear-gradient(150deg,rgba(123,228,255,.15),transparent 42%)' },
+  abyssal:      { accent: '#8994ff', accent2: '#d4a7ff', panel: 'rgba(7,10,39,.95)', edge: 'rgba(137,148,255,.52)', radius: '14px', texture: 'radial-gradient(circle at 50% 120%,rgba(90,70,220,.18),transparent 55%)' },
+  saurian_echo: { accent: '#c5a45a', accent2: '#7fc85d', edge: 'rgba(197,164,90,.58)', radius: '3px', texture: 'repeating-linear-gradient(135deg,rgba(197,164,90,.035) 0 4px,transparent 4px 10px)' },
+  firekeepers:  { accent: '#ff8b4d', accent2: '#ffd06a', panel: 'rgba(45,20,13,.94)', edge: 'rgba(255,139,77,.60)', texture: 'radial-gradient(circle at 50% 120%,rgba(255,100,30,.18),transparent 60%)' },
+};
+
+export function getEraUI(id, variant = null) {
+  const base = ERA_UI[id] || ERA_UI.stone;
+  const reality = getEraTheme(id, variant);
+  return { ...base, ...(REALITY_UI[variant] || {}), accent: REALITY_UI[variant]?.accent || reality.accent || base.accent };
+}
+
 export function getEraTheme(id, variant = null) {
   const base = ERA_THEME[id] || ERA_THEME.stone;
   if (!variant) return base;

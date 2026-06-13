@@ -26,6 +26,7 @@ try {
 
     await page.goto(`http://127.0.0.1:${port}`, { waitUntil: 'networkidle' });
     assert(await page.locator('#dailyCard').isHidden(), `${config.name}: daily should wait until a return visit`);
+    assert(await page.locator('#prologueBtn').isVisible(), `${config.name}: story prologue must be explicit on landing`);
     await page.locator('#playBtn').click();
     assert(await page.locator('#intro').isVisible(), `${config.name}: New Journey should open the story introduction`);
     assert(await page.locator('#introTitle').textContent() === 'There were no heroes.', `${config.name}: intro should explain the premise`);

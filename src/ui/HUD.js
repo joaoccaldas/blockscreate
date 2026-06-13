@@ -15,6 +15,7 @@ import { buildMapModel } from '../systems/SpaceTimeMap.js';
 import { chronicleOf } from '../systems/Chronicle.js';
 import { buildMinimap } from '../systems/Minimap.js';
 import { MODE } from '../core/constants.js';
+import { getEraUI } from '../core/eraTheme.js';
 
 export class HUD {
   constructor(root, { handlers = {}, settings, isTouch = false, mode = MODE.SURVIVAL, eraId = 'cell' } = {}) {
@@ -392,6 +393,19 @@ export class HUD {
     const survival = game.mode === MODE.SURVIVAL;
     const originFocus = survival && game.eraId === 'cell';
     const prelife = !!game.prelife?.active;
+    const reality = game.world?.variant || 'prime';
+    const ui = getEraUI(game.eraId, game.world?.variant);
+    this.root.dataset.era = game.eraId;
+    this.root.dataset.reality = reality;
+    const set = (k, v) => this.root.style?.setProperty?.(k, v);
+    set('--ui-accent', ui.accent);
+    set('--ui-accent2', ui.accent2);
+    set('--ui-ink', ui.ink);
+    set('--ui-panel', ui.panel);
+    set('--ui-edge', ui.edge);
+    set('--ui-radius', ui.radius);
+    set('--ui-font', ui.font);
+    set('--ui-texture', ui.texture);
     const originBuilding = originFocus && (
       game.crafted?.has?.('lipid_membrane') ||
       game.inventory?.count?.('lipid_membrane') > 0 ||

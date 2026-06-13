@@ -27,8 +27,13 @@ try {
     await page.goto(`http://127.0.0.1:${port}`, { waitUntil: 'networkidle' });
     assert(await page.locator('#dailyCard').isHidden(), `${config.name}: daily should wait until a return visit`);
     await page.locator('#playBtn').click();
+    assert(await page.locator('#intro').isVisible(), `${config.name}: New Journey should open the story introduction`);
+    assert(await page.locator('#introTitle').textContent() === 'There were no heroes.', `${config.name}: intro should explain the premise`);
+    await page.locator('#introNext').click();
+    await page.locator('#introNext').click();
+    await page.locator('#introNext').click();
     assert(await page.locator('#eraIntro').isVisible(), `${config.name}: Play should open the pre-life prologue`);
-    assert(await page.locator('#eraIntroTitle').textContent() === 'Before Life', `${config.name}: prologue should begin before the First Cell`);
+    assert(await page.locator('#eraIntroTitle').textContent() === 'The Primordial Ocean', `${config.name}: prologue should begin before the First Cell`);
     await page.locator('#eraIntroGo').click();
     await page.waitForTimeout(500);
     assert(await page.locator('#civPanel').isHidden(), `${config.name}: origin HUD should stay focused`);

@@ -21,6 +21,25 @@ const screens = {};
 let game = null;
 let landingScene = null;
 let chosenMode = MODE.SURVIVAL;
+let introStep = 0;
+
+const JOURNEY_INTRO = [
+  {
+    number: 'I', icon: '🌍', kicker: 'More than four billion years ago',
+    title: 'There were no heroes.',
+    body: 'No creatures. No cities. No history. Only a young Earth, violent oceans, and chemistry waiting for one impossible accident.',
+  },
+  {
+    number: 'II', icon: '✦', kicker: 'That accident is yours',
+    title: 'Begin smaller than life.',
+    body: 'Move through the primordial ocean. Bring matter and energy together. If the conditions are right, the first living cell will exist because of you.',
+  },
+  {
+    number: 'III', icon: '🌀', kicker: 'Then the world remembers',
+    title: 'Guide what comes after.',
+    body: 'Life will evolve. Civilizations will rise. Your choices will split history into realities you cannot yet see.',
+  },
+];
 
 const progress = new Progress();
 const settings = new Settings();
@@ -95,7 +114,41 @@ function refreshLanding() {
   const has = SaveManager.hasSave();
   cont.classList.toggle('disabled', !has);
   cont.disabled = !has;
+  const eras = document.getElementById('erasBtn');
+  if (eras) eras.classList.toggle('hidden', progress.unlockedList().length <= 1);
   renderDailyCard();
+}
+
+function showJourneyIntro() {
+  introStep = 0;
+  renderJourneyIntro();
+  show('intro');
+}
+
+function renderJourneyIntro() {
+  const step = JOURNEY_INTRO[introStep];
+  document.getElementById('introNumber').textContent = step.number;
+  document.getElementById('introIcon').textContent = step.icon;
+  document.getElementById('introKicker').textContent = step.kicker;
+  document.getElementById('introTitle').textContent = step.title;
+  document.getElementById('introBody').textContent = step.body;
+  document.getElementById('introDots').innerHTML = JOURNEY_INTRO
+    .map((_, i) => `<span class="${i === introStep ? 'on' : ''}"></span>`).join('');
+  document.getElementById('introNext').textContent =
+    introStep === JOURNEY_INTRO.length - 1 ? 'Enter the primordial ocean →' : 'Continue →';
+}
+
+function advanceJourneyIntro() {
+  if (introStep < JOURNEY_INTRO.length - 1) {
+    introStep++;
+    renderJourneyIntro();
+    return;
+  }
+  // "New Journey" always replays the complete origin, while Continue preserves
+  // the existing local world.
+  settings.set('seenPrelife', false);
+  settings.set('seenTutorial', '');
+  startGame({ eraId: 'cell', mode: MODE.SURVIVAL });
 }
 
 function renderDailyCard() {
@@ -186,6 +239,7 @@ function setMode(mode) {
 
 function wire() {
   screens.landing = document.getElementById('landing');
+  screens.intro = document.getElementById('intro');
   screens.portal = document.getElementById('portal');
   screens.howto = document.getElementById('howto');
   screens.settings = document.getElementById('settings');
@@ -205,17 +259,11 @@ function wire() {
     if (sub) sub.textContent = `A friend shared a reality: ${era.icon} ${v ? v.name : era.name}. Press Play to enter their exact world.`;
     click('playBtn', () => startGame({ reality: shared }));
   } else {
-    // A brand-new player has one meaningful choice: begin. Skip the era picker
-    // until they have actually unlocked choices worth making.
-    click('playBtn', () => {
-      if (progress.unlockedList().length === 1 && !SaveManager.hasSave()) {
-        startGame({ eraId: 'cell', mode: MODE.SURVIVAL });
-      } else {
-        buildPortals();
-        show('portal');
-      }
-    });
+    click('playBtn', showJourneyIntro);
   }
+  click('introNext', advanceJourneyIntro);
+  click('introBack', () => show('landing'));
+  click('erasBtn', () => { buildPortals(); show('portal'); });
   click('continueBtn', () => {
     const save = SaveManager.load();
     if (save) startGame({ save });

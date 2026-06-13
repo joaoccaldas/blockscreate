@@ -1042,8 +1042,8 @@ export class HUD {
 
   showPrologueIntro(done, touch = false) {
     this.el('eraIntroIcon').textContent = '✦';
-    this.el('eraIntroTitle').textContent = 'Before Life';
-    this.el('eraIntroSub').textContent = 'Earth, more than four billion years ago. Oceans churn. Vents burn. Nothing is alive.';
+    this.el('eraIntroTitle').textContent = 'The Primordial Ocean';
+    this.el('eraIntroSub').textContent = 'Before the First Cell · your first playable moment';
     this.el('eraIntroBody').innerHTML =
       `<div class="ei-line"><span>🌍 Your journey</span><b>create life, guide evolution, build civilizations, and branch reality</b></div>` +
       `<div class="ei-line"><span>✦ For now</span><b>${touch ? 'use the movement buttons' : 'use WASD or arrow keys'} to bring three ingredients together</b></div>`;

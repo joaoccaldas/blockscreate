@@ -53,8 +53,9 @@
       </ol>
 
       <div class="menu-buttons">
-        <button id="playBtn" class="btn primary">▶ Play</button>
+        <button id="playBtn" class="btn primary">✦ New Journey</button>
         <button id="continueBtn" class="btn">⏳ Continue</button>
+        <button id="erasBtn" class="btn hidden">🌀 Choose an Age</button>
         <button id="howtoBtn" class="btn">❓ How to Play</button>
         <button id="settingsBtn" class="btn">⚙️ Settings</button>
       </div>
@@ -69,7 +70,22 @@
         <li><span>🏛️</span> Grow a settlement &amp; unlock new ages</li>
       </ul>
 
-      <p class="version">v5.61 · visible evolution</p>
+      <p class="version">v5.62 · the beginning</p>
+    </div>
+  </section>
+
+  <!-- Story introduction: separate from the playable Before Life tutorial. -->
+  <section id="intro" class="screen intro-screen">
+    <div class="intro-stars" aria-hidden="true"></div>
+    <div class="intro-card">
+      <div id="introNumber" class="intro-number">I</div>
+      <div id="introIcon" class="intro-icon">🌍</div>
+      <p id="introKicker" class="intro-kicker"></p>
+      <h2 id="introTitle"></h2>
+      <p id="introBody" class="intro-body"></p>
+      <div id="introDots" class="intro-dots"></div>
+      <button id="introNext" class="btn primary">Continue →</button>
+      <button id="introBack" class="btn intro-back">← Return</button>
     </div>
   </section>
 

@@ -105,6 +105,7 @@ function startGame({ eraId, mode, save, reality, daily }) {
     // Land the player in a fixed world (a friend's link, or the daily).
     game.newWorld(reality.era, reality.mode, { seed: reality.seed, variant: reality.variant });
   } else game.newWorld(eraId, mode);
+  if (thread) game.thread = thread;
   if (daily) game.daily = daily; // attach the goal so completion is tracked
   show('game');
   game.start();
@@ -144,6 +145,10 @@ function renderJourneyIntro() {
     introStep === JOURNEY_INTRO.length - 1 ? 'Enter the primordial ocean →' : 'Continue →';
 }
 
+let globeRunning = false;
+let selectedThread = 'salvador';
+let onThreadSelected = null;
+
 function advanceJourneyIntro() {
   if (introStep < JOURNEY_INTRO.length - 1) {
     introStep++;
@@ -154,7 +159,146 @@ function advanceJourneyIntro() {
   // the existing local world.
   const launch = journeyLaunch;
   journeyLaunch = null;
-  launch?.();
+  if (launch) {
+    launch();
+  } else {
+    showThreadSelection((selected) => {
+      settings.set('seenPrelife', false);
+      settings.set('seenTutorial', '');
+      startGame({ eraId: 'cell', mode: MODE.SURVIVAL, thread: selected });
+    });
+  }
+}
+
+function showThreadSelection(onSelect) {
+  onThreadSelected = onSelect;
+  selectedThread = 'salvador';
+  const salvadorCard = document.getElementById('threadSalvador');
+  const stockholmCard = document.getElementById('threadStockholm');
+  salvadorCard?.classList.add('active');
+  stockholmCard?.classList.remove('active');
+  show('threadSelect');
+  startGlobeAnimation(document.getElementById('globeCanvas'), () => selectedThread);
+}
+
+function startGlobeAnimation(canvas, getSelectedThread) {
+  if (globeRunning || !canvas) return;
+  globeRunning = true;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+  const cx = w / 2;
+  const cy = h / 2;
+  const R = 80;
+  let theta = 0;
+  
+  const blobs = [
+    { lat: 20, lon: 0, r: 28 },
+    { lat: -25, lon: 60, r: 24 },
+    { lat: 45, lon: -90, r: 18 },
+    { lat: -35, lon: -35, r: 26 },
+    { lat: 30, lon: 130, r: 20 },
+    { lat: -15, lon: -110, r: 22 },
+    { lat: 60, lon: 15, r: 16 },
+  ];
+
+  const dots = {
+    salvador: { lat: -12.97, lon: -38.51, color: '#ffab40' },
+    stockholm: { lat: 59.33, lon: 18.07, color: '#40c4ff' }
+  };
+
+  const frame = () => {
+    if (!globeRunning || !screens.threadSelect.classList.contains('active')) {
+      globeRunning = false;
+      return;
+    }
+    
+    theta += settings.get('reduceMotion') ? 0.002 : 0.008;
+    ctx.clearRect(0, 0, w, h);
+    
+    // 1) Draw ocean sphere base
+    const oceanGrad = ctx.createRadialGradient(cx - R * 0.2, cy - R * 0.2, 0, cx, cy, R);
+    oceanGrad.addColorStop(0, '#1c2d5e');
+    oceanGrad.addColorStop(1, '#0c1229');
+    ctx.fillStyle = oceanGrad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // 2) Draw continents inside clipping mask
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.clip();
+    
+    ctx.fillStyle = '#4e7355';
+    for (const b of blobs) {
+      const lonRot = b.lon - (theta * 180 / Math.PI);
+      const lonRad = (lonRot % 360) * Math.PI / 180;
+      const latRad = b.lat * Math.PI / 180;
+      const cosLon = Math.cos(lonRad);
+      
+      if (cosLon > 0) {
+        const bx = cx + R * Math.sin(lonRad) * Math.cos(latRad);
+        const by = cy - R * Math.sin(latRad);
+        ctx.beginPath();
+        ctx.arc(bx, by, b.r * (0.4 + 0.6 * cosLon), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    
+    // 3) Draw Salvador / Stockholm location dots
+    const selected = getSelectedThread();
+    for (const [key, d] of Object.entries(dots)) {
+      const lonRot = d.lon - (theta * 180 / Math.PI);
+      const lonRad = (lonRot % 360) * Math.PI / 180;
+      const latRad = d.lat * Math.PI / 180;
+      const cosLon = Math.cos(lonRad);
+      
+      if (cosLon > 0) {
+        const dx = cx + R * Math.sin(lonRad) * Math.cos(latRad);
+        const dy = cy - R * Math.sin(latRad);
+        
+        const isSel = key === selected;
+        const pulse = 1 + 0.25 * Math.sin(Date.now() * 0.008);
+        
+        ctx.shadowColor = d.color;
+        ctx.shadowBlur = isSel ? 12 : 6;
+        
+        ctx.fillStyle = d.color;
+        ctx.beginPath();
+        ctx.arc(dx, dy, isSel ? 6 * pulse : 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
+        
+        if (isSel) {
+          ctx.strokeStyle = d.color;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(dx, dy, 10 * pulse, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+    }
+    
+    ctx.restore();
+    
+    // 4) Specular radial overlay
+    const shine = ctx.createRadialGradient(cx - R * 0.35, cy - R * 0.35, 0, cx, cy, R);
+    shine.addColorStop(0, 'rgba(255, 255, 255, 0.16)');
+    shine.addColorStop(0.5, 'rgba(255, 255, 255, 0.03)');
+    shine.addColorStop(0.85, 'rgba(0, 0, 0, 0.35)');
+    shine.addColorStop(1, 'rgba(0, 0, 0, 0.7)');
+    
+    ctx.fillStyle = shine;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, 0, Math.PI * 2);
+    ctx.fill();
+    
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
 }
 
 function renderDailyCard() {
@@ -253,12 +397,33 @@ function setMode(mode) {
 function wire() {
   screens.landing = document.getElementById('landing');
   screens.intro = document.getElementById('intro');
+  screens.threadSelect = document.getElementById('threadSelect');
   screens.portal = document.getElementById('portal');
   screens.howto = document.getElementById('howto');
   screens.settings = document.getElementById('settings');
   screens.game = document.getElementById('game');
 
   const click = (id, fn) => { const e = document.getElementById(id); if (e) e.onclick = () => { audio.resume(); audio.play('ui'); fn(); }; };
+
+  const salvadorCard = document.getElementById('threadSalvador');
+  const stockholmCard = document.getElementById('threadStockholm');
+  const selectThread = (id) => {
+    selectedThread = id;
+    salvadorCard?.classList.toggle('active', id === 'salvador');
+    stockholmCard?.classList.toggle('active', id === 'stockholm');
+  };
+  if (salvadorCard) salvadorCard.onclick = () => { audio.play('ui'); selectThread('salvador'); };
+  if (stockholmCard) stockholmCard.onclick = () => { audio.play('ui'); selectThread('stockholm'); };
+
+  click('threadStartBtn', () => {
+    const fn = onThreadSelected;
+    onThreadSelected = null;
+    fn?.(selectedThread);
+  });
+  click('threadBackBtn', () => {
+    globeRunning = false;
+    show('intro');
+  });
 
   // A shared reality link (?r=CODE) turns Play into a one-tap jump into that
   // exact world — the friend-sharing loop.

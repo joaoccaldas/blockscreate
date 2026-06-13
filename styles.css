@@ -1214,3 +1214,212 @@ button:focus-visible, input:focus-visible, .era-card:focus-visible {
    ============================================================ */
 .settings-inner { max-width: 480px; }
 .landing-settings { max-width: 420px; margin: 1rem auto; }
+
+/* ============================================================
+   v5.64 — Thread selection, Portal preview & Branch compass
+   ============================================================ */
+.thread-select-card {
+  max-width: min(780px, calc(100vw - 32px)) !important;
+}
+.thread-title-wrap {
+  margin-bottom: 1.5rem;
+}
+.thread-subtitle {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+.thread-select-body {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.globe-container {
+  background: radial-gradient(circle, rgba(16,36,75,0.4) 0%, transparent 70%);
+  border-radius: 50%;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#globeCanvas {
+  display: block;
+}
+.thread-options {
+  flex: 1;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.thread-opt {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.22s ease-in-out;
+}
+.thread-opt:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+.thread-opt.active {
+  background: rgba(118, 247, 221, 0.08);
+  border-color: #76f7dd;
+  box-shadow: 0 0 15px rgba(118, 247, 221, 0.15);
+}
+.thread-opt-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.thread-opt-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #fff;
+}
+.thread-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.thread-dot.salvador {
+  background: #ffab40;
+  box-shadow: 0 0 8px #ffab40;
+}
+.thread-dot.stockholm {
+  background: #40c4ff;
+  box-shadow: 0 0 8px #40c4ff;
+}
+.thread-desc {
+  font-size: 0.82rem;
+  color: #cdd6f5;
+  line-height: 1.4;
+  margin: 0 0 8px;
+}
+.thread-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+.thread-footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.thread-footer .btn {
+  width: min(240px, 100%) !important;
+}
+
+/* Portal Destination Preview */
+.portal-preview-card {
+  max-width: min(680px, calc(100vw - 32px)) !important;
+}
+.destinations-wrap {
+  display: flex;
+  gap: 16px;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+}
+.dest-card {
+  flex: 1;
+  min-width: 250px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: left;
+  position: relative;
+  transition: all 0.2s ease-in-out;
+}
+.dest-card.dominant {
+  background: rgba(118, 247, 221, 0.06);
+  border-color: #76f7dd;
+  box-shadow: 0 0 15px rgba(118, 247, 221, 0.1);
+}
+.dest-card.undominant {
+  opacity: 0.55;
+}
+.dest-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.dest-icon {
+  font-size: 1.4rem;
+}
+.dest-header h3 {
+  margin: 0;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+.dest-card h4 {
+  margin: 0 0 6px 0;
+  font-size: 1.2rem;
+  color: #fff;
+}
+.dest-desc {
+  font-size: 0.8rem;
+  color: #cdd6f5;
+  line-height: 1.4;
+  margin: 0 0 12px 0;
+}
+.dest-status {
+  display: inline-block;
+  font-size: 0.64rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.dest-card.dominant .dest-status {
+  background: #76f7dd;
+  color: #050914;
+}
+.dest-card.undominant .dest-status {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--muted);
+}
+.influence-details {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+.influence-details h4 {
+  margin: 0 0 8px 0;
+  font-size: 0.88rem;
+  color: #76f7dd;
+}
+.influence-list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 0.82rem;
+  color: #cdd6f5;
+  line-height: 1.5;
+}
+.branch-compass {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+

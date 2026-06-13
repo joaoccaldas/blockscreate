@@ -47,6 +47,7 @@ const materials = [
   ['steel', 'Steel Beam', '#8a96a2'],
   ['machine_part', 'Machine Part', '#c8a24a'],
   ['crystal', 'Deep Crystal', '#b388ff'],
+  ['rna_string', 'RNA String', '#ff7bbb'],
 ];
 for (const [id, label, color] of materials) {
   add({ id, label, kind: 'material', colors: { base: color, top: color, side: color } });

@@ -18,7 +18,7 @@ export const ERA_MANIFESTS = {
     hazards: ['dilution', 'scarcity', 'unstable chemistry'],
     animals: ['none yet'],
     decorations: ['bubbles', 'mineral vents', 'micro currents'],
-    mandatory: ['Absorb nutrients', 'Collect vent minerals', 'Craft a lipid membrane', 'Build a membrane boundary', 'Stabilize a proto-cell'],
+    mandatory: ['Absorb nutrients', 'Collect vent minerals', 'Craft a lipid membrane', 'Synthesize RNA string', 'Craft a proto-cell', 'Stabilize the cell'],
     mastery: ['Store extra nutrients', 'Map a warm vent', 'Build a stronger membrane'],
     historicalClues: ['chemical_gradient', 'warm_vent', 'first_membrane'],
     branches: [

@@ -16,6 +16,7 @@ import { chronicleOf } from '../systems/Chronicle.js';
 import { buildMinimap } from '../systems/Minimap.js';
 import { MODE } from '../core/constants.js';
 import { getEraUI } from '../core/eraTheme.js';
+import { ERA_ROUTES } from '../core/eraGraph.js';
 
 export class HUD {
   constructor(root, { handlers = {}, settings, isTouch = false, mode = MODE.SURVIVAL, eraId = 'cell' } = {}) {
@@ -195,6 +196,45 @@ export class HUD {
           <p id="eraIntroSub" class="muted"></p>
           <div id="eraIntroBody" class="era-intro-body"></div>
           <button id="eraIntroGo" class="btn primary">Begin →</button>
+        </div>
+      </div>
+
+      <div id="portalPreview" class="overlay hidden">
+        <div class="overlay-card portal-preview-card">
+          <h2>Temporal Rift Stabilized</h2>
+          <p class="muted subtitle" style="margin-top: 0.25rem; font-size: 0.9rem;">Two timelines diverge from this point. Your actions have shaped the path ahead.</p>
+          
+          <div class="destinations-wrap">
+            <div id="destPrime" class="dest-card">
+              <div class="dest-header">
+                <span class="dest-icon" id="destPrimeIcon">🪐</span>
+                <h3 id="destPrimeLabel">Prime Spine</h3>
+              </div>
+              <h4 id="destPrimeTitle">Age of Dinosaurs</h4>
+              <p class="dest-desc" id="destPrimeDesc">The default path of history. Unchanged by alternate reality anomalies.</p>
+              <div id="destPrimeStatus" class="dest-status">Undominant</div>
+            </div>
+            
+            <div id="destBranch" class="dest-card">
+              <div class="dest-header">
+                <span class="dest-icon" id="destBranchIcon">🌿</span>
+                <h3 id="destBranchLabel">Alternate Reality</h3>
+              </div>
+              <h4 id="destBranchTitle">Age of Flora</h4>
+              <p class="dest-desc" id="destBranchDesc">A diverged path of evolution. Requires deliberate intervention to unlock.</p>
+              <div id="destBranchStatus" class="dest-status">Dominant</div>
+            </div>
+          </div>
+          
+          <div class="influence-details">
+            <h4>Factors influencing your timeline:</h4>
+            <ul id="influenceList" class="influence-list"></ul>
+          </div>
+          
+          <div class="pause-actions">
+            <button id="portalConfirmBtn" class="btn primary">Advance into history →</button>
+            <button id="portalCancelBtn" class="btn">← Step back</button>
+          </div>
         </div>
       </div>
 
@@ -513,6 +553,8 @@ export class HUD {
       absorb_nutrients: '🫧 Swim into glowing green <b>nutrients</b> to absorb them (3 needed)',
       collect_minerals: '♨️ Swim into a warm <b>mineral vent</b> to collect from it',
       make_membrane: `🟣 Now ${craft} to craft a <b>Lipid Membrane</b>`,
+      synthesize_rna: `🧬 Now ${craft} to synthesize an <b>RNA String</b>`,
+      craft_protocell: `🧫 Now ${craft} to craft a <b>Proto-Cell</b>`,
       build_membrane: this.isTouch
         ? '🧬 Select the <b>Lipid Membrane</b>, tap <b>🧱</b> to Build, then tap to place 4'
         : '🧬 Select the <b>Lipid Membrane</b> in the hotbar, click <b>🧱 Build</b> (top-right), then click to place 4',
@@ -658,6 +700,7 @@ export class HUD {
     }
     if (!active.length) html = `<div class="obj-item done">✅ All objectives complete!</div>`;
     html += `<div class="obj-count">${done}/${total} ${originFocus ? 'evolution steps' : 'done'}</div>`;
+    html += `<div class="branch-compass">🧭 ${game.getBranchCompass()}</div>`;
     list.innerHTML = html;
   }
 
@@ -848,7 +891,14 @@ export class HUD {
     const m = buildMapModel(game);
     const chron = chronicleOf(game);
     this.el('mapWalked').textContent = `${m.agesWalked} age${m.agesWalked === 1 ? '' : 's'} walked${m.rumoredCount ? ` · ${m.rumoredCount} path${m.rumoredCount === 1 ? '' : 's'} unexplored` : ''}`;
-    const mapHead = `<div class="map-now${chron.alternate ? ' alt' : ''}">🕰️ <b>${chron.when}</b><br>${chron.icon} You are here: <b>${chron.where}</b> · ${chron.phase}<br><span class="map-reality">${chron.alternate ? '⟁ ' : '◆ '}${chron.realityLabel}</span></div>`;
+    const mapHead = `<div class="map-now${chron.alternate ? ' alt' : ''}">` +
+      `🕰️ <b>${chron.when}</b><br>` +
+      `${chron.icon} You are here: <b>${chron.where}</b> · ${chron.phase}<br>` +
+      `<span class="map-reality">${chron.alternate ? '⟁ ' : '◆ '}${chron.realityLabel}</span>` +
+      `</div>` +
+      `<div class="paleo-map-container" style="text-align: center; margin: 10px 0;">` +
+      `  <canvas id="paleoMapCanvas" width="300" height="150" style="background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;"></canvas>` +
+      `</div>`;
     const tiers = m.tiers.map((t) => {
       const chips = t.nodes.map((n) =>
         `<span class="map-node map-${n.state}"><span class="map-ic">${n.icon}</span>${n.label}</span>`).join('');
@@ -866,6 +916,153 @@ export class HUD {
       </div>`;
     }
     this.el('mapBody').innerHTML = `${mapHead}<div class="map-flow">${tiers}</div>${leak}`;
+    this._drawPaleoMap(this.el('paleoMapCanvas'), game);
+  }
+
+  _drawPaleoMap(canvas, game) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    
+    const eraId = game.eraId;
+    const threadId = game.thread || 'salvador';
+    
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.lineWidth = 1;
+    for (let x = 30; x < w; x += 30) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    }
+    for (let y = 30; y < h; y += 30) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+
+    const toXY = (lat, lon) => {
+      const cx = (lon + 180) * (w / 360);
+      const cy = (90 - lat) * (h / 180);
+      return { x: cx, y: cy };
+    };
+
+    ctx.fillStyle = eraId === 'cell' ? '#273b30' : '#3c5a43';
+    ctx.strokeStyle = eraId === 'cell' ? '#3e5c4a' : '#558260';
+    ctx.lineWidth = 1.5;
+
+    const drawPolygon = (pts) => {
+      if (pts.length < 3) return;
+      ctx.beginPath();
+      const first = toXY(pts[0].lat, pts[0].lon);
+      ctx.moveTo(first.x, first.y);
+      for (let i = 1; i < pts.length; i++) {
+        const p = toXY(pts[i].lat, pts[i].lon);
+        ctx.lineTo(p.x, p.y);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    };
+
+    if (eraId === 'cell') {
+      ctx.fillStyle = '#ff7b54';
+      ctx.strokeStyle = '#ffb085';
+      const islands = [
+        { lat: 10, lon: 20 }, { lat: 11, lon: 22 }, { lat: -5, lon: -40 },
+        { lat: 35, lon: 90 }, { lat: -25, lon: -120 }, { lat: 55, lon: -10 }
+      ];
+      for (const isl of islands) {
+        const pt = toXY(isl.lat, isl.lon);
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      }
+    } else if (eraId === 'stone' || eraId === 'flora') {
+      drawPolygon([
+        { lat: 60, lon: -120 }, { lat: 55, lon: -60 }, { lat: 40, lon: -30 },
+        { lat: 50, lon: 30 }, { lat: 65, lon: 90 }, { lat: 50, lon: 140 },
+        { lat: 25, lon: 100 }, { lat: 30, lon: 0 }, { lat: 20, lon: -80 }
+      ]);
+      drawPolygon([
+        { lat: -10, lon: -60 }, { lat: -5, lon: 10 }, { lat: -25, lon: 40 },
+        { lat: -15, lon: 80 }, { lat: -45, lon: 120 }, { lat: -65, lon: 70 },
+        { lat: -55, lon: -10 }, { lat: -50, lon: -80 }, { lat: -35, lon: -90 }
+      ]);
+    } else {
+      drawPolygon([
+        { lat: 70, lon: -160 }, { lat: 75, lon: -100 }, { lat: 55, lon: -60 },
+        { lat: 25, lon: -80 }, { lat: 15, lon: -90 }, { lat: 10, lon: -80 },
+        { lat: 20, lon: -100 }, { lat: 35, lon: -120 }, { lat: 60, lon: -140 }
+      ]);
+      drawPolygon([
+        { lat: 10, lon: -75 }, { lat: -5, lon: -35 }, { lat: -20, lon: -40 },
+        { lat: -50, lon: -70 }, { lat: -45, lon: -75 }, { lat: -15, lon: -80 }
+      ]);
+      drawPolygon([
+        { lat: 70, lon: 10 }, { lat: 75, lon: 90 }, { lat: 70, lon: 160 },
+        { lat: 35, lon: 120 }, { lat: 10, lon: 100 }, { lat: 15, lon: 80 },
+        { lat: 30, lon: 35 }, { lat: 10, lon: 45 }, { lat: -30, lon: 20 },
+        { lat: -15, lon: 10 }, { lat: 5, lon: -10 }, { lat: 35, lon: -10 },
+        { lat: 50, lon: 0 }
+      ]);
+      drawPolygon([
+        { lat: -15, lon: 115 }, { lat: -15, lon: 145 }, { lat: -35, lon: 145 },
+        { lat: -30, lon: 115 }
+      ]);
+      drawPolygon([
+        { lat: -80, lon: -150 }, { lat: -80, lon: -50 }, { lat: -80, lon: 50 },
+        { lat: -80, lon: 150 }, { lat: -85, lon: 0 }
+      ]);
+    }
+
+    let dotLat = 0;
+    let dotLon = 0;
+    let dotColor = '#ffab40';
+    
+    if (threadId === 'salvador') {
+      dotColor = '#ffab40';
+      if (eraId === 'cell') {
+        dotLat = -12.97; dotLon = -38.51;
+      } else if (eraId === 'stone' || eraId === 'flora') {
+        dotLat = -23.9; dotLon = -11.0;
+      } else {
+        dotLat = -12.97; dotLon = -38.51;
+      }
+    } else {
+      dotColor = '#40c4ff';
+      if (eraId === 'cell') {
+        dotLat = 59.33; dotLon = 18.07;
+      } else if (eraId === 'stone' || eraId === 'flora') {
+        dotLat = 38.3; dotLon = 19.3;
+      } else {
+        dotLat = 59.33; dotLon = 18.07;
+      }
+    }
+    
+    const pt = toXY(dotLat, dotLon);
+    
+    if (eraId === 'cell') {
+      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 3]);
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, 18, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = '7px system-ui, sans-serif';
+      ctx.fillText('beyond reconstruction', pt.x - 38, pt.y + 28);
+    }
+    
+    const pulse = 1 + 0.3 * Math.sin(Date.now() * 0.008);
+    ctx.shadowColor = dotColor;
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = dotColor;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 4.5 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 9 * pulse, 0, Math.PI * 2);
+    ctx.stroke();
   }
 
   /**
@@ -914,11 +1111,8 @@ export class HUD {
       accurate_line: 'Survivors', merchant_city: 'Merchant City',
       fortress_city: 'Fortress City', road_empire: 'Road Empire', city_state: 'City-State',
     };
-    const counts = game.clues?.branchCounts?.() || {};
-    const lead = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
-    this.el('journalBranch').textContent = lead
-      ? `Timeline leaning: ${branchName[lead[0]] || lead[0]}`
-      : 'Timeline: undecided';
+    const compass = game.getBranchCompass();
+    this.el('journalBranch').innerHTML = `🧭 <b>Branch Compass:</b> ${compass}`;
 
     const section = (title, total, found, rows) =>
       `<div class="jr-section"><div class="jr-head">${title} <span class="muted">${found}/${total}</span></div>${rows}</div>`;
@@ -1052,6 +1246,130 @@ export class HUD {
     const screen = this.el('eraIntro');
     screen.classList.remove('hidden');
     this.el('eraIntroGo').onclick = () => { screen.classList.add('hidden'); done?.(); };
+  }
+
+  showPortalPreview(game, onConfirm) {
+    const preview = this.el('portalPreview');
+    if (!preview) { onConfirm?.(); return; }
+    
+    // Halt the game clock/movement
+    game.paused = true;
+    
+    // Retrieve the routes for the current era
+    const routes = ERA_ROUTES[game.eraId] || [];
+    const primeRoute = routes.find(r => r.prime);
+    const branchRoute = routes.find(r => r.branch);
+    
+    const primeEra = primeRoute ? getEra(primeRoute.to) : null;
+    const branchEra = branchRoute ? getEra(branchRoute.to) : null;
+    
+    // Populate Prime Destination Card
+    if (primeEra) {
+      this.el('destPrimeIcon').textContent = primeEra.icon || '🪐';
+      this.el('destPrimeTitle').textContent = primeEra.name;
+      this.el('destPrimeDesc').textContent = primeEra.manifest?.subtitle || primeEra.blurb || 'The prime chronological spine.';
+    } else {
+      this.el('destPrimeIcon').textContent = '♾️';
+      this.el('destPrimeTitle').textContent = 'Descend Layer';
+      this.el('destPrimeDesc').textContent = 'Fold inward into a nested simulation layer.';
+    }
+    
+    // Populate Branch Destination Card
+    if (branchEra) {
+      this.el('destBranch').classList.remove('hidden');
+      this.el('destBranchIcon').textContent = branchEra.icon || '🌀';
+      this.el('destBranchTitle').textContent = branchEra.name;
+      this.el('destBranchDesc').textContent = branchEra.manifest?.subtitle || branchEra.blurb || 'An alternate historical divergence.';
+    } else {
+      this.el('destBranch').classList.add('hidden');
+    }
+    
+    const activeBranch = game._dominantBranch();
+    const isBranchDominant = branchRoute && activeBranch === branchRoute.branch;
+    
+    // Highlight dominant vs undominant cards
+    const destPrimeCard = this.el('destPrime');
+    const destBranchCard = this.el('destBranch');
+    const destPrimeStatus = this.el('destPrimeStatus');
+    const destBranchStatus = this.el('destBranchStatus');
+    
+    if (isBranchDominant) {
+      destPrimeCard.classList.remove('dominant');
+      destPrimeCard.classList.add('undominant');
+      destPrimeStatus.textContent = 'Undominant';
+      
+      destBranchCard.classList.add('dominant');
+      destBranchCard.classList.remove('undominant');
+      destBranchStatus.textContent = 'Dominant';
+    } else {
+      destPrimeCard.classList.add('dominant');
+      destPrimeCard.classList.remove('undominant');
+      destPrimeStatus.textContent = 'Dominant';
+      
+      destBranchCard.classList.remove('dominant');
+      destBranchCard.classList.add('undominant');
+      destBranchStatus.textContent = 'Undominant';
+    }
+    
+    // Compile influence list factors
+    const list = this.el('influenceList');
+    list.innerHTML = '';
+    
+    if (game.eraId === 'cell') {
+      const isSunlit = game.world?.variant === 'sunlit';
+      const nutrients = game.inventory?.count('nutrient_blob') || 0;
+      const minerals = game.inventory?.count('mineral_vent') || 0;
+      const rnaClue = game.clues?.has('chemical_gradient');
+      const ventClue = game.clues?.has('warm_vent');
+      
+      list.innerHTML += `<li>☀️ <b>Starting variant:</b> ${isSunlit ? 'Sunlit Shallows (+5 to Photic)' : 'Deep Vents (+5 to Ventborn)'}</li>`;
+      if (nutrients > 0) list.innerHTML += `<li>Drifting molecules: ${nutrients} absorbed (+${(nutrients * 0.5).toFixed(1)} to Photic)</li>`;
+      if (minerals > 0) list.innerHTML += `<li>Vent energy: ${minerals} collected (+${(minerals * 1.5).toFixed(1)} to Ventborn)</li>`;
+      if (rnaClue) list.innerHTML += `<li>🧬 <b>Chemical Gradient Clue:</b> discovered (+2 to Photic)</li>`;
+      if (ventClue) list.innerHTML += `<li>🌋 <b>Warm Vent Clue:</b> discovered (+2 to Ventborn)</li>`;
+    } else if (game.eraId === 'iron') {
+      const trade = game.civ?.trade || 0;
+      const road = (game.civ?.placed?.road || 0);
+      const defense = (game.civ?.defense || 0);
+      const gates = (game.civ?.placed?.gate || 0);
+      
+      if (trade > 0) list.innerHTML += `<li>🪙 <b>Trade transactions:</b> ${trade} (+${trade} to Merchant City)</li>`;
+      if (road > 0) list.innerHTML += `<li>🛣️ <b>Road infrastructure:</b> ${road} (+${(road * 0.5).toFixed(1)} to Road Empire)</li>`;
+      if (defense > 0 || gates > 0) list.innerHTML += `<li>🏰 <b>Defense & gates:</b> (+${(defense * 0.4 + gates).toFixed(1)} to Fortress City)</li>`;
+    } else {
+      const counts = game.clues?.branchCounts?.() || {};
+      if (Object.keys(counts).length === 0) {
+        list.innerHTML = '<li>◆ No specific alignment factors recorded. Timeline defaults to the Prime Spine.</li>';
+      } else {
+        for (const [b, n] of Object.entries(counts)) {
+          if (n > 0) {
+            const name = b.split('_')[0].charAt(0).toUpperCase() + b.split('_')[0].slice(1);
+            list.innerHTML += `<li>📂 <b>${name} clues discovered:</b> ${n} (+${n} weight)</li>`;
+          }
+        }
+      }
+    }
+    
+    // Wire button clicks
+    this.el('portalConfirmBtn').onclick = () => {
+      this.audio?.play?.('unlock');
+      preview.classList.add('hidden');
+      game.paused = false;
+      onConfirm?.();
+    };
+    
+    this.el('portalCancelBtn').onclick = () => {
+      this.audio?.play?.('ui');
+      preview.classList.add('hidden');
+      game.paused = false;
+      
+      // Push the player back slightly to avoid immediately re-triggering portal entry
+      if (game.eraPortal) {
+        game.player.x -= (game.player.x < game.eraPortal.x ? 1.55 : -1.55);
+      }
+    };
+    
+    preview.classList.remove('hidden');
   }
 
   showPrologueIntro(done, touch = false) {

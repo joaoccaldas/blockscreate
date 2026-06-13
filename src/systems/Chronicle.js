@@ -15,21 +15,7 @@
 import { getEra } from '../core/eras.js';
 import { primeNextId, spineEraIds } from '../core/eraGraph.js';
 import { variantInfo } from '../core/eraTheme.js';
-
-// Deep-time "when" per era. Prime ages get real epochs; branch ages get uncanny,
-// forked phrasing (they are stories that never happened).
-const EPOCHS = {
-  cell: 'Hadean Ocean · ~3.8 billion years ago',
-  stone: 'Mesozoic · ~150 million years ago',
-  bronze: 'Bronze Age · ~3000 BCE',
-  iron: 'Iron Age · ~1000 BCE',
-  industrial: 'Industrial Age · ~1800 CE',
-  // branch / alternate ages — time that forked off the real line
-  flora: 'a verdant dawn · an age that never was',
-  republic: 'a republic of coin · a history that forked',
-  arcanum: 'a clockwork age · a dream of brass',
-  bio: 'a living machine age · a path not taken',
-};
+import { geologyOf, getThread, paleoLocation, formatCoords } from '../core/deepTime.js';
 
 /** Is this run in an alternate timeline (off the prime spine)? */
 export function isAlternate(realityPath = [], eraId = 'cell') {
@@ -53,11 +39,28 @@ export function chronicleOf(game) {
   const v = variantInfo(game.eraId, game.world?.variant);
   const variantName = v ? v.name : null;
   const alternate = isAlternate(game.realityPath, game.eraId);
+
+  const threadId = game.thread || 'salvador';
+  const thread = getThread(threadId);
+  const geo = geologyOf(game.eraId);
+  const coords = paleoLocation(threadId, game.eraId);
+  const located = formatCoords(coords);
+  const climate = game.eraId === 'cell' ? 'global ocean' : thread.climate;
+
+  // Format: period · date · thread · coordinates · climate
+  const when = `${geo.period} · ${geo.date} · ${thread.name} · ${located} · ${climate}`;
+
   return {
     icon: era.icon || '🌀',
     era: era.name,
     where: variantName || era.name,
-    when: EPOCHS[game.eraId] || 'deep time',
+    when,
+    period: geo.period,
+    date: geo.date,
+    climate,
+    thread: thread.name,
+    coords: located,
+    located,
     phase: phaseLabel(game),
     alternate,
     realityLabel: alternate ? 'Alternate timeline' : 'Prime timeline',

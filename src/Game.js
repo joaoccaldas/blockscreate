@@ -96,6 +96,7 @@ export class Game {
     this.structureScanTimer = 0;
     this.animalPeaceTime = 0;
     this.eraStage = 0;
+    this.thread = 'salvador';
   }
 
   // ---- lifecycle ----
@@ -150,6 +151,7 @@ export class Game {
     this.eraId = save.eraId;
     this.eraMods = getEraModifiers(save.eraId);
     this.clock = save.clock ?? 0;
+    this.thread = save.thread || 'salvador';
     this.world = World.deserialize(save.world);
     this.player = new Player(0, 0);
     this.player.load(save.player);
@@ -849,6 +851,59 @@ export class Game {
     return top >= 3 ? best : null;
   }
 
+  getBranchCompass() {
+    const weights = {};
+    const add = (name, val) => { if (val > 0) weights[name] = (weights[name] || 0) + val; };
+
+    if (this.eraId === 'cell') {
+      const photic = (this.world?.variant === 'sunlit' ? 5 : 0) + 
+                     (this.inventory?.count('nutrient_blob') || 0) * 0.5 + 
+                     (this.clues?.has('chemical_gradient') ? 2 : 0);
+      const ventborn = (this.world?.variant !== 'sunlit' ? 5 : 0) + 
+                       (this.inventory?.count('mineral_vent') || 0) * 1.5 + 
+                       (this.clues?.has('warm_vent') ? 2 : 0);
+      add('Photic', photic);
+      add('Ventborn', ventborn);
+    } else if (this.eraId === 'iron') {
+      add('Merchant', this.civ?.trade || 0);
+      add('Road', (this.civ?.placed?.road || 0) * 0.5);
+      add('Fortress', (this.civ?.defense || 0) * 0.4 + (this.civ?.placed?.gate || 0));
+    } else {
+      const counts = this.clues?.branchCounts?.() || {};
+      for (const [b, n] of Object.entries(counts)) {
+        if (n > 0) {
+          const name = b.split('_')[0].charAt(0).toUpperCase() + b.split('_')[0].slice(1);
+          add(name, n);
+        }
+      }
+    }
+
+    const sum = Object.values(weights).reduce((a, b) => a + b, 0);
+    const unknownWeight = Math.max(1, 10 - sum);
+    weights['Unknown'] = unknownWeight;
+
+    const total = sum + unknownWeight;
+    const pcts = {};
+    let runningSum = 0;
+    const keys = Object.keys(weights);
+    
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i];
+      if (i === keys.length - 1) {
+        pcts[k] = 100 - runningSum;
+      } else {
+        const pct = Math.round((weights[k] / total) * 100);
+        pcts[k] = pct;
+        runningSum += pct;
+      }
+    }
+
+    return Object.entries(pcts)
+      .filter(([k, v]) => v > 0)
+      .map(([k, v]) => `${k} ${v}%`)
+      .join(' · ');
+  }
+
   /** The era the player will advance into, routed through the era graph. */
   _nextEraChoice() {
     return chooseNextEra(this.eraId, { branch: this._dominantBranch() }) || nextEra(this.eraId);
@@ -1167,8 +1222,18 @@ export class Game {
     if (!this.canAdvance()) { this.eraPortal = null; return; }
     const portal = this._ensureEraPortal();
     if (Math.hypot(portal.x - this.player.x, portal.y - this.player.y) > 1.55) return;
-    this.eraPortal = null;
-    this.canDescend() ? this._descend() : this._advanceEra();
+    
+    if (this.hud && this.mode === MODE.SURVIVAL) {
+      this.hud.showPortalPreview(this, () => {
+        this.eraPortal = null;
+        if (this.canDescend()) this._descend();
+        else this._advanceEra();
+      });
+    } else {
+      this.eraPortal = null;
+      if (this.canDescend()) this._descend();
+      else this._advanceEra();
+    }
   }
 
   _nearestBlock(idList, radius = 24) {

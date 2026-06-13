@@ -96,6 +96,7 @@ gCell.civ.onBuild('lipid_membrane');
 gCell.civ.onBuild('lipid_membrane');
 gCell.civ.onBuild('lipid_membrane');
 gCell.civ.onBuild('lipid_membrane');
+gCell.crafted.add('rna_string');
 gCell.crafted.add('proto_cell');
 gCell.civ.cp = 80;
 // Drive stability up so the cell visibly evolves through its stages.
@@ -389,13 +390,16 @@ g.events.durations.predator_migration = 8;
 g.events.active.add('predator_migration');
 g.anomalies.seen.add('checksum_echo');
 g.guidance.seen.add('artifact_hunt');
+g.thread = 'stockholm';
 const jsonWithRpg = SaveManager.toJSON(g);
+if (jsonWithRpg.thread !== 'stockholm') throw new Error('save missing thread');
 if (jsonWithRpg.civ.defeated.raptor !== 1) throw new Error('save missing defeated enemy stats');
 if (!jsonWithRpg.events.durations.predator_migration) throw new Error('save missing event durations');
 if (!jsonWithRpg.anomalies.seen.includes('checksum_echo')) throw new Error('save missing anomaly state');
 if (!jsonWithRpg.guidance.seen.includes('artifact_hunt')) throw new Error('save missing guidance state');
 const g2 = newGame();
 g2.loadSave(jsonWithRpg);
+if (g2.thread !== 'stockholm') throw new Error('thread state lost across save');
 if (g2.world.grid.length !== g.world.grid.length) throw new Error('grid length mismatch after load');
 if (g2.world.getChunkSummary().generated !== g.world.getChunkSummary().generated) throw new Error('chunk metadata lost across save');
 if (g2.civ.defeated.raptor !== 1) throw new Error('defeated enemy stats lost across save');
@@ -406,7 +410,7 @@ if (!g2.anomalies.has('checksum_echo')) throw new Error('anomaly state lost acro
 if (!g2.guidance.seen.has('artifact_hunt')) throw new Error('guidance state lost across save');
 if (typeof g2.timeline?.divergence !== 'number') throw new Error('timeline state lost across save');
 if (!g2.structures || !g2.discoveries || !g2.clues || !g2.powerups || !g2.events || !g2.anomalies || !g2.guidance) throw new Error('fun systems missing after load');
-ok(`save/load round-trip; era ${g2.eraId}, objectives + fun systems restored`);
+ok(`save/load round-trip; thread '${g2.thread}', era ${g2.eraId}, objectives + fun systems restored`);
 
 // Era advancement builds a fresh world and installs the next era objective set.
 g2.civ.cp = 250;

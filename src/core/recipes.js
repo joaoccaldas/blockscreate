@@ -9,7 +9,8 @@
 export const RECIPES = [
   // --- First Cell ---
   { id: 'lipid_membrane', era: 'cell', out: { id: 'lipid_membrane', n: 4 }, in: { nutrient_blob: 2 } },
-  { id: 'proto_cell',     era: 'cell', out: { id: 'proto_cell', n: 1 }, in: { nutrient_blob: 3, mineral_vent: 1, lipid_membrane: 2 } },
+  { id: 'rna_string',     era: 'cell', out: { id: 'rna_string', n: 1 }, in: { nutrient_blob: 2, mineral_vent: 1 } },
+  { id: 'proto_cell',     era: 'cell', out: { id: 'proto_cell', n: 1 }, in: { rna_string: 1, lipid_membrane: 2 } },
 
   // --- Stone Age ---
   { id: 'planks',        era: 'stone', out: { id: 'planks', n: 4 }, in: { log: 1 } },

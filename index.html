@@ -72,7 +72,7 @@
         <li><span>🏛️</span> Grow a settlement &amp; unlock new ages</li>
       </ul>
 
-      <p class="version">v5.63 · worlds have a language</p>
+      <p class="version">v5.64 · ancestral threads</p>
     </div>
   </section>
 
@@ -88,6 +88,54 @@
       <div id="introDots" class="intro-dots"></div>
       <button id="introNext" class="btn primary">Continue →</button>
       <button id="introBack" class="btn intro-back">← Return</button>
+    </div>
+  </section>
+
+  <!-- Thread Selection Screen -->
+  <section id="threadSelect" class="screen intro-screen">
+    <div class="intro-stars" aria-hidden="true"></div>
+    <div class="intro-card thread-select-card">
+      <div class="thread-title-wrap">
+        <h2>Ancestral Thread</h2>
+        <p class="thread-subtitle">Before life can emerge, choose the ancestral lineage that will seed the biosphere.</p>
+      </div>
+      
+      <div class="thread-select-body">
+        <div class="globe-container">
+          <canvas id="globeCanvas" width="240" height="240"></canvas>
+        </div>
+        
+        <div class="thread-options">
+          <div id="threadSalvador" class="thread-opt active" data-thread="salvador">
+            <div class="thread-opt-header">
+              <span class="thread-dot salvador"></span>
+              <h3>Salvador</h3>
+            </div>
+            <p class="thread-desc">Tropical cradle. Warm, nutrient-rich shallow waters bathed in solar radiation. Fosters rapid energy assimilation and adaptation.</p>
+            <div class="thread-stats">
+              <span>Climate: Tropical</span>
+              <span>Coords: 13.0° S, 38.5° W</span>
+            </div>
+          </div>
+          
+          <div id="threadStockholm" class="thread-opt" data-thread="stockholm">
+            <div class="thread-opt-header">
+              <span class="thread-dot stockholm"></span>
+              <h3>Stockholm</h3>
+            </div>
+            <p class="thread-desc">Boreal cradle. Cool, deep waters shielded from surface radiation near warm vents. Fosters resilient structural complexity.</p>
+            <div class="thread-stats">
+              <span>Climate: Boreal</span>
+              <span>Coords: 59.3° N, 18.1° E</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="thread-footer">
+        <button id="threadStartBtn" class="btn primary">Begin Journey →</button>
+        <button id="threadBackBtn" class="btn intro-back">← Back</button>
+      </div>
     </div>
   </section>
 

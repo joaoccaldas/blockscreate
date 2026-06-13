@@ -39,6 +39,7 @@ export const SaveManager = {
       eraStage: game.eraStage || 0,
       realityPath: game.realityPath || [],
       prelife: game.prelife || { active: false, nutrients: 0, minerals: 0 },
+      thread: game.thread || 'salvador',
     };
   },
 
@@ -99,6 +100,7 @@ export const SaveManager = {
     save.eraStage = save.eraStage || 0;
     save.realityPath = save.realityPath || [];
     save.prelife = save.prelife || { active: false, nutrients: 0, minerals: 0 };
+    save.thread = save.thread || 'salvador';
     save.version = C.SAVE_VERSION;
     return save;
   },

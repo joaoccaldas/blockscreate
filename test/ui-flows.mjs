@@ -72,7 +72,7 @@ const g6=mk();g6.newWorld('cell',MODE.SURVIVAL);g6.hud.showEraIntro=(era,done)=>
 g6.prelife.active=false;g6.player.form='cell';
 let step=g6.hud._cellNextStep(g6);
 if(!/absorb/i.test(step||''))throw new Error('first cell step should be to absorb: '+step);
-g6.inventory.add('nutrient_blob',3);g6.inventory.add('mineral_vent',1);g6.crafted.add('lipid_membrane');
+g6.inventory.add('nutrient_blob',3);g6.inventory.add('mineral_vent',1);g6.crafted.add('lipid_membrane');g6.crafted.add('rna_string');g6.crafted.add('proto_cell');
 g6.objectives.evaluate(g6);
 step=g6.hud._cellNextStep(g6);
 if(!/50% stability/.test(step||''))throw new Error('cell guidance should keep the player feeding in-world: '+step);
@@ -92,7 +92,9 @@ ok('Before Life prologue teaches movement and creates the First Cell');
 const gPortal=mk();gPortal.settings.set('seenPrelife',true);gPortal.newWorld('cell',MODE.SURVIVAL);
 gPortal.world.variant='hydrothermal';
 gPortal.inventory.add('nutrient_blob',3);gPortal.inventory.add('mineral_vent',1);
+gPortal.crafted.add('lipid_membrane');gPortal.crafted.add('rna_string');gPortal.crafted.add('proto_cell');
 gPortal.cellStatus={stability:55};gPortal.civ.cp=30;gPortal.objectives.evaluate(gPortal);
+gPortal.hud.showPortalPreview=(game,done)=>done();
 gPortal._updateEraPortal();
 if(!gPortal.eraPortal||gPortal.eraPortal.kind!=='portal')throw new Error('ready cell should open a physical portal');
 gPortal.player.x=gPortal.eraPortal.x;gPortal.player.y=gPortal.eraPortal.y;gPortal._updateEraPortal();

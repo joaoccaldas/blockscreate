@@ -133,6 +133,12 @@ export class Game {
     this.mobs = [];
     this.eraStage = 0;
     this.realityPath = []; // the route of branches taken through the era graph
+    // The first ever survival run begins one beat before life. This is a tiny,
+    // movement-only tutorial whose ingredients become the First Cell.
+    this.prelife = eraId === 'cell' && mode === MODE.SURVIVAL && !this.settings?.get?.('seenPrelife')
+      ? { active: true, nutrients: 0, minerals: 0 }
+      : { active: false, nutrients: 0, minerals: 0 };
+    if (this.prelife.active) this.player.form = 'spark';
     this._grantStarter();
     this._setup();
   }
@@ -170,6 +176,8 @@ export class Game {
     this.grazerBondTime = save.grazerBondTime || 0;
     this.eraStage = save.eraStage || 0;
     this.realityPath = save.realityPath || [];
+    this.prelife = save.prelife || { active: false, nutrients: 0, minerals: 0 };
+    if (this.prelife.active) this.player.form = 'spark';
     this._setup();
   }
 
@@ -236,8 +244,8 @@ export class Game {
 
     // Auto-pause when the tab is hidden or loses focus, so the player never
     // returns to a dead character or a huge time-skip; also flushes a save.
-    this._onHide = () => {
-      if (document.hidden && !this.paused && this.running) {
+    this._onHide = (event) => {
+      if ((document.hidden || event?.type === 'blur') && !this.paused && this.running) {
         this._pause();
         try { SaveManager.save(this); } catch (e) { /* best effort */ }
       }
@@ -292,6 +300,12 @@ export class Game {
 
   /** On a fresh era, reveal the era first, then run any first-time coach-marks. */
   _introThenOnboard() {
+    if (this.prelife?.active && this.mode === MODE.SURVIVAL) {
+      this.showIntro = false;
+      this.paused = true;
+      this.hud.showPrologueIntro(() => { this.paused = false; }, isTouch);
+      return;
+    }
     if (this.showIntro && this.mode === MODE.SURVIVAL) {
       this.showIntro = false;
       this.paused = true;
@@ -387,7 +401,8 @@ export class Game {
 
   async _import(file) {
     try {
-      const save = await SaveManager.importFile(file);
+      const save = SaveManager.migrate(await SaveManager.importFile(file));
+      if (!save) throw new Error('Invalid or unsupported save');
       // Importing replaces the current world, so confirm before discarding it.
       this.hud.confirm('Import this world?', 'Your current world will be replaced (the autosave is kept until you save again).', () => {
         this.stop();
@@ -402,7 +417,7 @@ export class Game {
 
   _onPause() {
     if (this.dead) return; // death screen owns the input until the player acts
-    if (this.invOpen || this.craftOpen) { this._closeMenus(); return; }
+    if (this._anyMenuOpen()) { this._closeMenus(); this.paused = false; return; }
     this.paused ? this._resume() : this._pause();
   }
 
@@ -410,44 +425,33 @@ export class Game {
   _resume() { this.paused = false; this.hud.showPause(false); }
 
   _toggleInventory() {
-    this.invOpen = !this.invOpen;
-    this.craftOpen = false;
-    this.marketOpen = false; this.mapOpen = false;
+    const opening = !this.invOpen;
+    this._closeMenus();
+    this.invOpen = opening;
     if (this.invOpen) this.hud.renderInventory(this);
     this.hud.showInventory(this.invOpen);
-    this.hud.showCrafting(false);
-    this.hud.showMarket(false);
-    this.hud.showMap(false);
     this.hud.showPause(false);
-    this.paused = false;
+    this.paused = this.invOpen;
     this.audio?.play('ui');
   }
 
   _toggleCrafting() {
-    this.craftOpen = !this.craftOpen;
-    this.invOpen = false;
-    this.marketOpen = false; this.mapOpen = false;
+    const opening = !this.craftOpen;
+    this._closeMenus();
+    this.craftOpen = opening;
     if (this.craftOpen) this.hud.renderCrafting(this);
     this.hud.showCrafting(this.craftOpen);
-    this.hud.showInventory(false);
-    this.hud.showMarket(false);
-    this.hud.showMap(false);
     this.hud.showPause(false);
-    this.paused = false;
+    this.paused = this.craftOpen;
     this.audio?.play('ui');
   }
 
   _toggleJournal() {
-    this.journalOpen = !this.journalOpen;
-    this.invOpen = false;
-    this.craftOpen = false;
-    this.marketOpen = false; this.mapOpen = false;
+    const opening = !this.journalOpen;
+    this._closeMenus();
+    this.journalOpen = opening;
     if (this.journalOpen) this.hud.renderJournal(this);
     this.hud.showJournal(this.journalOpen);
-    this.hud.showInventory(false);
-    this.hud.showCrafting(false);
-    this.hud.showMarket(false);
-    this.hud.showMap(false);
     this.hud.showPause(false);
     this.paused = this.journalOpen; // pause behind the journal, like other menus
     this.audio?.play('ui');
@@ -460,6 +464,10 @@ export class Game {
     this.hud.showJournal(false);
     this.hud.showMarket(false);
     this.hud.showMap(false);
+  }
+
+  _anyMenuOpen() {
+    return !!(this.invOpen || this.craftOpen || this.journalOpen || this.marketOpen || this.mapOpen);
   }
 
   _craft(recipe) {
@@ -476,32 +484,22 @@ export class Game {
   }
 
   _toggleMarket() {
-    this.marketOpen = !this.marketOpen;
-    this.invOpen = false;
-    this.craftOpen = false;
-    this.journalOpen = false;
-    this.mapOpen = false;
+    const opening = !this.marketOpen;
+    this._closeMenus();
+    this.marketOpen = opening;
     if (this.marketOpen) this.hud.renderMarket(this);
     this.hud.showMarket(this.marketOpen);
-    this.hud.showInventory(false);
-    this.hud.showCrafting(false);
-    this.hud.showJournal(false);
-    this.hud.showMap(false);
     this.hud.showPause(false);
     this.paused = this.marketOpen; // pause behind the shop, like other menus
     this.audio?.play('ui');
   }
 
   _toggleMap() {
-    this.mapOpen = !this.mapOpen;
-    this.invOpen = this.craftOpen = this.journalOpen = this.marketOpen = false;
+    const opening = !this.mapOpen;
+    this._closeMenus();
+    this.mapOpen = opening;
     if (this.mapOpen) this.hud.renderMap(this);
     this.hud.showMap(this.mapOpen);
-    this.hud.showInventory(false);
-    this.hud.showCrafting(false);
-    this.hud.showJournal(false);
-    this.hud.showMarket(false);
-    this.hud.showMap(false);
     this.hud.showPause(false);
     this.paused = this.mapOpen;
     this.audio?.play('ui');
@@ -776,7 +774,7 @@ export class Game {
     this.camera.follow(this.player, dt);
 
     // Objectives.
-    if (this.mode === MODE.SURVIVAL) {
+    if (this.mode === MODE.SURVIVAL && !this.prelife?.active) {
       const done = this.objectives.evaluate(this);
       for (const o of done) {
         if (o.reward) this.civ.addCP(o.reward);
@@ -1054,7 +1052,7 @@ export class Game {
     ]);
     // Feeding range grows as the cell evolves — a tangible sense of power: a
     // mature cell sweeps up nearby food it couldn't reach as a bare protocell.
-    const reach = 2.1 + (this.player.cellStage || 0) * 0.28;
+    const reach = 2.1 + (this.prelife?.active ? 0 : (this.player.cellStage || 0) * 0.28);
     const R = Math.ceil(reach);
     const px = Math.round(this.player.x);
     const py = Math.round(this.player.y - this.player.h / 2);
@@ -1075,6 +1073,7 @@ export class Game {
           (this.player.x - x - 0.5) * 2, (this.player.y - this.player.h / 2 - y - 0.5) * 2,
           { color: def.color, life: 0.4, size: 0.16, gravity: 0 });
         this.audio?.play('mine');
+        this._notePrelifeAbsorb(def.item);
         // Throttle the toast so rapid feeding doesn't spam the banner.
         const now = Date.now();
         if (!this._lastAbsorbToast || now - this._lastAbsorbToast > 2200) {
@@ -1085,6 +1084,35 @@ export class Game {
         return;
       }
     }
+  }
+
+  _notePrelifeAbsorb(itemId) {
+    if (!this.prelife?.active) return;
+    if (itemId === 'nutrient_blob') this.prelife.nutrients++;
+    if (itemId === 'mineral_vent') this.prelife.minerals++;
+    if (this.prelife.nutrients < 2 || this.prelife.minerals < 1) return;
+
+    this.prelife.active = false;
+    this.settings?.set?.('seenPrelife', true);
+    this.player.form = 'cell';
+    this.player.cellGrowth = 0.75;
+    this.player.cellStage = 0;
+    this.inventory = new Inventory();
+    this.civ.cp = 0;
+    this.cellStability = 28;
+    this.audio?.play('unlock');
+    this.haptics?.buzz('portal');
+    this.particles.fountain(this.player.x, this.player.y - 0.5,
+      ['#76f7dd', '#b8ff85', '#ffd6ff', '#fff'], 48);
+    SaveManager.save(this);
+
+    this.paused = true;
+    this.hud.bigToast('🫧 <b>Against impossible odds, life begins.</b>', 3200);
+    const variant = variantInfo(this.eraId, this.world?.variant);
+    this.hud.showEraIntro(getEra(this.eraId), () => {
+      this.paused = false;
+      this._maybeOnboard();
+    }, null, variant);
   }
 
   /**
@@ -2159,6 +2187,7 @@ export class Game {
   }
 
   _spawnMobs(dt) {
+    if (this.prelife?.active) return;
     this.mobTimer -= dt;
     if (this.mobTimer > 0 || this.mobs.length >= 9) return;
     this.mobTimer = 4 + Math.random() * 3;

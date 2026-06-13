@@ -79,7 +79,7 @@ export class HUD {
       </div>
 
       <div id="objPanel" class="obj-panel">
-        <div class="obj-title">🎯 Objectives</div>
+        <div id="objectiveTitle" class="obj-title">🎯 Objectives</div>
         <div id="objList"></div>
       </div>
 
@@ -390,10 +390,22 @@ export class HUD {
     this.el('hungerBar').style.width = `${p.hunger}%`;
 
     const survival = game.mode === MODE.SURVIVAL;
+    const originFocus = survival && game.eraId === 'cell';
+    const prelife = !!game.prelife?.active;
+    const originBuilding = originFocus && (
+      game.crafted?.has?.('lipid_membrane') ||
+      game.inventory?.count?.('lipid_membrane') > 0 ||
+      game.objectives?.isDone?.('make_membrane')
+    );
+    const hasItems = game.inventory?.slots?.some?.(Boolean);
+    this.root.classList.toggle('origin-focus', originFocus);
+    this.root.classList.toggle('prelife-focus', prelife);
+    this.root.classList.toggle('origin-building', !!originBuilding);
+    this.root.classList.toggle('has-items', !!hasItems);
     this.el('topbar').classList.toggle('creative', !survival);
     this.el('objPanel').classList.toggle('hidden', !survival);
-    this.el('healthIcon').textContent = game.eraId === 'cell' ? '🧬' : '❤️';
-    this.el('hungerIcon').textContent = game.eraId === 'cell' ? '⚗️' : '🍖';
+    this.el('healthIcon').textContent = prelife ? '✦' : game.eraId === 'cell' ? '🧬' : '❤️';
+    this.el('hungerIcon').textContent = prelife ? '⚛' : game.eraId === 'cell' ? '⚗️' : '🍖';
 
     const era = getEra(game.eraId);
     this.el('eraBadge').textContent = `${era.icon} ${era.name}${survival ? '' : ' · Creative'}`;
@@ -506,6 +518,12 @@ export class HUD {
     const hint = this.el('cellHint');
     hint.classList.toggle('hidden', !isCell);
     if (!isCell) return;
+    if (game.prelife?.active) {
+      const move = this.isTouch ? 'Use ◀ ▶ ▲ ▼' : 'Use WASD or arrow keys';
+      hint.innerHTML = `<div class="cell-hint-evo"><span class="cell-hint-stage">✦ Before Life</span></div>` +
+        `${move} to drift into glowing ingredients. No tools. No danger. Just chemistry.`;
+      return;
+    }
     const stage = status.stage || 0;
     this.el('cellStageVal').textContent = (status.stageName || '—').replace(/^a /, '');
     // Five-pip evolution track so progress toward a full cell is glanceable.
@@ -601,18 +619,31 @@ export class HUD {
 
   renderObjectives(game) {
     const list = this.el('objList');
+    if (game.prelife?.active) {
+      const n = Math.min(2, game.prelife.nutrients || 0);
+      const m = Math.min(1, game.prelife.minerals || 0);
+      this.el('objectiveTitle').textContent = '✦ Create The First Life';
+      list.innerHTML =
+        `<div class="obj-item"><span class="obj-ic">🫧</span><span>Gather drifting molecules <b>${n}/2</b></span></div>` +
+        `<div class="obj-item"><span class="obj-ic">♨️</span><span>Find vent energy <b>${m}/1</b></span></div>` +
+        `<div class="obj-count">${n + m}/3 ingredients aligned</div>`;
+      return;
+    }
     // In collapsed (mobile) mode show just the next goal to keep it tiny.
     const collapsed = this.root.classList.contains('info-collapsed');
-    const active = game.objectives.active(collapsed ? 1 : 3);
-    const done = game.objectives.completed.size;
-    const total = game.objectives.all.length;
+    const originFocus = game.eraId === 'cell';
+    const active = game.objectives.active(originFocus || collapsed ? 1 : 3);
+    const relevant = originFocus ? game.objectives.mandatory() : game.objectives.all;
+    const done = relevant.filter((o) => game.objectives.isDone(o.id)).length;
+    const total = relevant.length;
+    this.el('objectiveTitle').textContent = originFocus ? '🧬 Next Evolution' : '🎯 Objectives';
     let html = '';
     for (const o of active) {
       const cls = o.kind === 'mastery' ? ' mastery' : o.kind === 'portal' ? ' portal' : '';
       html += `<div class="obj-item${cls}"><span class="obj-ic">${o.icon}</span><span>${o.label}</span></div>`;
     }
     if (!active.length) html = `<div class="obj-item done">✅ All objectives complete!</div>`;
-    html += `<div class="obj-count">${done}/${total} done</div>`;
+    html += `<div class="obj-count">${done}/${total} ${originFocus ? 'evolution steps' : 'done'}</div>`;
     list.innerHTML = html;
   }
 
@@ -981,6 +1012,7 @@ export class HUD {
    * what this age is about. `done` resumes play.
    */
   showEraIntro(era, done, route = null, variant = null) {
+    this.el('eraIntroGo').textContent = 'Begin →';
     const m = era.manifest || {};
     this.el('eraIntroIcon').textContent = era.icon || '🌀';
     this.el('eraIntroTitle').textContent = m.title || era.name;
@@ -1008,23 +1040,34 @@ export class HUD {
     this.el('eraIntroGo').onclick = () => { screen.classList.add('hidden'); done?.(); };
   }
 
+  showPrologueIntro(done, touch = false) {
+    this.el('eraIntroIcon').textContent = '✦';
+    this.el('eraIntroTitle').textContent = 'Before Life';
+    this.el('eraIntroSub').textContent = 'Earth, more than four billion years ago. Oceans churn. Vents burn. Nothing is alive.';
+    this.el('eraIntroBody').innerHTML =
+      `<div class="ei-line"><span>🌍 Your journey</span><b>create life, guide evolution, build civilizations, and branch reality</b></div>` +
+      `<div class="ei-line"><span>✦ For now</span><b>${touch ? 'use the movement buttons' : 'use WASD or arrow keys'} to bring three ingredients together</b></div>`;
+    const screen = this.el('eraIntro');
+    screen.classList.remove('hidden');
+    this.el('eraIntroGo').textContent = 'Begin the impossible →';
+    this.el('eraIntroGo').onclick = () => {
+      screen.classList.add('hidden');
+      this.el('eraIntroGo').textContent = 'Begin →';
+      done?.();
+    };
+  }
+
   showOnboarding(done, touch = false) {
     // The First Cell era plays differently (swim + absorb, no tools yet), so it
     // gets its own intro; later eras get the mine/build/craft tutorial.
     const steps = this.eraId === 'cell'
       ? [
-        { icon: '🫧', title: 'You are the first life', body: 'You begin as a tiny cell in a warm primordial sea. Survive, grow, and evolve into the ages that follow.' },
-        { icon: '🏊', title: 'Swim around', body: touch ? 'Use the ◀ ▶ ▲ ▼ buttons to swim in any direction.' : 'Swim with WASD or the arrow keys — up and down too. You float, you don\'t fall.' },
-        { icon: '✨', title: 'Absorb to grow', body: 'Swim into glowing green nutrients and warm mineral vents to absorb them. The banner shows where the nearest one is.' },
-        { icon: '🧬', title: 'Become a true cell', body: touch ? 'Open ☰ → Crafting to form a Lipid Membrane and stabilize a Proto-Cell.' : 'Press C to craft a Lipid Membrane, then a Proto-Cell, to stabilize.' },
-        { icon: '🦖', title: 'Evolve forward', body: 'Finish the objectives (top-right) to fill Civ Points, then evolve into the Age of Dinosaurs — and beyond.' },
+        { icon: '🫧', title: 'Life begins with movement', body: touch ? 'Use ◀ ▶ ▲ ▼ and swim into the nearest glowing nutrient. Absorb it. Become more.' : 'Use WASD or the arrow keys and swim into the nearest glowing nutrient. Absorb it. Become more.' },
+        { icon: '✷', title: 'Your choices create realities', body: 'Grow from one cell into civilizations, then bend history into worlds that should never have existed.' },
       ]
       : [
-        { icon: '🌎', title: 'A new age', body: 'You\'ve evolved into a new era with new tools, blocks, and dangers. Gather, build, and grow your civilization.' },
-        { icon: '⛏️', title: 'Mine the world', body: touch ? 'Tap a nearby block to mine it. Hold to keep mining. Some blocks need a matching tool.' : 'Hold left-click on a nearby block to mine it. Some blocks need a matching/stronger tool.' },
-        { icon: '🧱', title: 'Build & place', body: touch ? 'Tap the ⛏/🧱 button to switch to Build, then tap next to a block to place.' : 'Click the “⛏ Mine ⇄ Build” button (top-right) to switch to Build, then click next to a block to place. (You can also right-click the world, or press Q.)' },
-        { icon: '🎒', title: 'Inventory & crafting', body: touch ? 'Use the ☰ menu for Inventory and Crafting.' : 'Press E for Inventory and C for Crafting. Numbers 1–9 pick a hotbar slot.' },
-        { icon: '🎯', title: 'Complete objectives', body: 'Finish the objectives (top-right) to earn ✨ Civ Points and open the portal to the next era.' },
+        { icon: '🌎', title: 'The world has changed', body: 'Mine, build, survive, and shape this age. What you prioritize can change which reality comes next.' },
+        { icon: '⛏️', title: 'Make your first mark', body: touch ? 'Tap nearby blocks to mine. Switch ⛏/🧱 mode to build. Follow the next objective and improvise.' : 'Hold left-click to mine. Press Q or use the ⛏ Mine ⇄ Build button to build. Follow the next objective and improvise.' },
       ];
     let i = 0;
     const screen = this.el('onboarding');

@@ -62,10 +62,11 @@ export class StructureTracker {
   }
 
   evaluate(game, origin = null) {
+    const builtCells = game.civ?.builtCells instanceof Set ? game.civ.builtCells : null;
     const ctx = scan(game.world, origin || {
       x: Math.floor(game.player.x),
       y: Math.floor(game.player.y),
-    });
+    }, 7, builtCells);
     const newly = [];
     for (const s of STRUCTURES) {
       if (this.discovered.has(s.id)) continue;
@@ -83,7 +84,7 @@ export class StructureTracker {
   serialize() { return [...this.discovered]; }
 }
 
-export function scan(world, origin, radius = 7) {
+export function scan(world, origin, radius = 7, builtCells = null) {
   const counts = {};
   let wood = 0;
   let masonry = 0;
@@ -98,7 +99,7 @@ export function scan(world, origin, radius = 7) {
   for (let y = origin.y - radius; y <= origin.y + radius; y++) {
     for (let x = origin.x - radius; x <= origin.x + radius; x++) {
       const id = world.get(x, y);
-      if (id === AIR) continue;
+      if (id === AIR || !included(builtCells, x, y)) continue;
       const name = getBlock(id).name;
       counts[name] = (counts[name] || 0) + 1;
       if (WOOD.has(name)) wood++;
@@ -109,7 +110,7 @@ export function scan(world, origin, radius = 7) {
   for (let y = origin.y - radius; y <= origin.y + radius; y++) {
     let run = 0;
     for (let x = origin.x - radius; x <= origin.x + radius; x++) {
-      run = world.get(x, y) !== AIR ? run + 1 : 0;
+      run = world.get(x, y) !== AIR && included(builtCells, x, y) ? run + 1 : 0;
       platform = Math.max(platform, run);
     }
   }
@@ -117,35 +118,41 @@ export function scan(world, origin, radius = 7) {
   for (let x = origin.x - radius; x <= origin.x + radius; x++) {
     let run = 0;
     for (let y = origin.y - radius; y <= origin.y + radius; y++) {
-      run = world.get(x, y) !== AIR ? run + 1 : 0;
+      run = world.get(x, y) !== AIR && included(builtCells, x, y) ? run + 1 : 0;
       vertical = Math.max(vertical, run);
     }
   }
 
-  const roof = lineCount(world, origin.x - 2, origin.y - 4, 5, 0);
-  const floor = lineCount(world, origin.x - 2, origin.y, 5, 0);
-  const leftWall = lineCount(world, origin.x - 2, origin.y - 3, 0, 3);
-  const rightWall = lineCount(world, origin.x + 2, origin.y - 3, 0, 3);
+  const roof = lineCount(world, origin.x - 2, origin.y - 4, 5, 0, builtCells);
+  const floor = lineCount(world, origin.x - 2, origin.y, 5, 0, builtCells);
+  const leftWall = lineCount(world, origin.x - 2, origin.y - 3, 0, 3, builtCells);
+  const rightWall = lineCount(world, origin.x + 2, origin.y - 3, 0, 3, builtCells);
 
   for (let y = origin.y - 3; y <= origin.y + 3; y++) {
     for (let x = origin.x - 3; x <= origin.x + 3; x++) {
       const edge = x === origin.x - 3 || x === origin.x + 3 || y === origin.y - 3 || y === origin.y + 3;
       if (!edge) continue;
       const id = world.get(x, y);
-      if (id !== AIR && id !== ids.torch && id !== ids.campfire) ring++;
+      if (id !== AIR && id !== ids.torch && id !== ids.campfire && included(builtCells, x, y)) ring++;
     }
   }
 
   return { counts, wood, masonry, vertical, platform, roof, floor, leftWall, rightWall, ring };
 }
 
-function lineCount(world, x, y, dx, dy) {
+function lineCount(world, x, y, dx, dy, builtCells = null) {
   const steps = Math.max(Math.abs(dx), Math.abs(dy)) + 1;
   let n = 0;
   const sx = Math.sign(dx);
   const sy = Math.sign(dy);
   for (let i = 0; i < steps; i++) {
-    if (world.get(x + sx * i, y + sy * i) !== AIR) n++;
+    const tx = x + sx * i;
+    const ty = y + sy * i;
+    if (world.get(tx, ty) !== AIR && included(builtCells, tx, ty)) n++;
   }
   return n;
+}
+
+function included(builtCells, x, y) {
+  return !builtCells || builtCells.has(`${x},${y}`);
 }

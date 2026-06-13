@@ -117,6 +117,7 @@ html, body {
 
 /* Daily challenge card on the landing — the come-back-tomorrow hook. */
 .daily-card { max-width: 320px; margin: 0.9rem 0 0; background: rgba(10, 16, 34, 0.55); border: 1px solid rgba(124, 228, 255, 0.3); border-radius: 12px; padding: 0.7rem 0.8rem; }
+.daily-card.hidden { display: none; }
 .daily-head { font-size: 0.8rem; font-weight: bold; color: #cfe6ff; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
 .daily-done { color: #6fc04e; font-size: 0.72rem; }
 .daily-streak { margin-left: auto; color: #ffb14a; font-size: 0.78rem; }
@@ -472,6 +473,36 @@ html, body {
 .info-collapsed #discoveryPanel,
 .info-collapsed #powerupBar,
 .info-collapsed #eventBar { display: none; }
+
+/* The origin era begins as a focused game, not a dashboard. Civilization,
+   collections and reality tools reveal after the player evolves. */
+.origin-focus #civPanel,
+.origin-focus #discoveryPanel,
+.origin-focus #infoBtn,
+.origin-focus #marketBtn,
+.origin-focus #mapBtn,
+.origin-focus #journalBtn,
+.origin-focus .minimap,
+.origin-focus .touch-quick [data-act="market"],
+.origin-focus .touch-quick [data-act="map"] { display: none; }
+.origin-focus:not(.origin-building) #buildIndicator { display: none; }
+.origin-focus:not(.has-items) #hotbar { display: none; }
+.origin-focus #objPanel {
+  background: rgba(7, 20, 34, 0.78);
+  border-color: rgba(118, 247, 221, 0.42);
+}
+.origin-focus .obj-title { color: #b8fff2; }
+.prelife-focus #desktopActions,
+.prelife-focus #buildIndicator,
+.prelife-focus #hotbar,
+.prelife-focus #pauseBtn,
+.prelife-focus .touch-quick,
+.prelife-focus #eraBadge { display: none; }
+.prelife-focus #objPanel {
+  border-color: rgba(118,247,221,0.55);
+  box-shadow: 0 0 28px rgba(118,247,221,0.16);
+}
+.prelife-focus #topbar { opacity: 0.35; }
 /* In collapsed mode the right column holds the quick 🎒🔨 buttons, so dock the
    compact objectives panel on the LEFT under the topbar to avoid overlap. */
 .info-collapsed #objPanel {

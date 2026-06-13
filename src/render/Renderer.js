@@ -407,7 +407,9 @@ export class Renderer {
     const px = sx - w / 2;
     const py = sy - h;
 
-    if (player.form === 'cell') {
+    if (player.form === 'spark') {
+      this.drawPrimordialSpark(sx, sy - h * 0.45, Math.max(w, h) * 0.42, player);
+    } else if (player.form === 'cell') {
       this.drawCell(sx, sy - h * 0.45, Math.max(w, h) * 0.62 * (player.cellGrowth || 1),
         player.cellStage || 0, player);
       return;
@@ -458,6 +460,30 @@ export class Renderer {
     ctx.fillStyle = '#1b1b1b';
     const eo = player.facing > 0 ? w * 0.55 : w * 0.22;
     ctx.fillRect(px + eo, py + h * 0.16, w * 0.16, h * 0.08);
+  }
+
+  drawPrimordialSpark(cx, cy, R, player = null) {
+    const ctx = this.ctx;
+    const pulse = 1 + Math.sin(this.t * 7) * 0.18;
+    R *= pulse;
+    ctx.save();
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 3);
+    glow.addColorStop(0, 'rgba(255,255,220,0.95)');
+    glow.addColorStop(0.25, 'rgba(118,247,221,0.72)');
+    glow.addColorStop(1, 'rgba(118,247,221,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = Math.max(1, R * 0.12);
+    for (let i = 0; i < 3; i++) {
+      const a = this.t * (1.5 + i * 0.25) + i * 2.1;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(a) * R, cy + Math.sin(a) * R, R * 0.18, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   /**

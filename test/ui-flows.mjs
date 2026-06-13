@@ -69,6 +69,7 @@ ok('Desktop Inventory/Craft/Journal actions are wired to HUD handlers');
 // First-cell guidance names the exact next action — including HOW to build, the
 // step where new (and Mac) players were getting stuck.
 const g6=mk();g6.newWorld('cell',MODE.SURVIVAL);g6.hud.showEraIntro=(era,done)=>done();g6.start();
+g6.prelife.active=false;g6.player.form='cell';
 let step=g6.hud._cellNextStep(g6);
 if(!/absorb/i.test(step||''))throw new Error('first cell step should be to absorb: '+step);
 g6.inventory.add('nutrient_blob',3);g6.inventory.add('mineral_vent',1);g6.crafted.add('lipid_membrane');
@@ -76,5 +77,29 @@ g6.objectives.evaluate(g6);
 step=g6.hud._cellNextStep(g6);
 if(!/Build/.test(step||''))throw new Error('cell guidance should tell the player to Build the membrane: '+step);
 ok('First Cell guidance names the next action and the Build control');
+
+// The first-ever cell run starts before life and becomes a cell only after the
+// player brings together two molecules and one source of vent energy.
+const gPre=mk();gPre.settings.set('seenPrelife',false);gPre.newWorld('cell',MODE.SURVIVAL);
+if(!gPre.prelife.active||gPre.player.form!=='spark')throw new Error('fresh origin should begin before life');
+gPre.hud.showEraIntro=(era,done)=>done();gPre.hud.bigToast=noop;
+gPre._notePrelifeAbsorb('nutrient_blob');gPre._notePrelifeAbsorb('nutrient_blob');gPre._notePrelifeAbsorb('mineral_vent');
+if(gPre.prelife.active||gPre.player.form!=='cell')throw new Error('ingredients should create the First Cell');
+if(!gPre.settings.get('seenPrelife'))throw new Error('completed prologue should persist');
+ok('Before Life prologue teaches movement and creates the First Cell');
+
+// Every modal is a true pause, the map is actually visible, and Escape closes
+// the active modal instead of leaving the game invisibly paused.
+const g7=mk();g7.newWorld('cell',MODE.SURVIVAL);g7.hud.showEraIntro=(era,done)=>done();g7.start();
+let mapShown=false;g7.hud.showMap=(show)=>{mapShown=show;};
+g7._toggleMap();
+if(!g7.mapOpen||!g7.paused||!mapShown)throw new Error('map should open visibly and pause the game');
+g7._onPause();
+if(g7.mapOpen||g7.paused)throw new Error('Escape should close the map and resume');
+g7._pause();g7._toggleInventory();
+if(!g7.invOpen||!g7.paused)throw new Error('inventory opened from pause must keep the simulation paused');
+g7._toggleInventory();
+if(g7.invOpen||g7.paused)throw new Error('closing inventory should resume');
+ok('map and menus have one visible, consistent pause flow');
 
 console.log(`\nAll ${pass} Tier-1 UI checks passed.`);

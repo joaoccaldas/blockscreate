@@ -45,6 +45,9 @@ export class Civilization {
     this.housing = 0;
     this.light = 0;
     this.placed = {};
+    // Exact player-built cells let structure recognition distinguish deliberate
+    // architecture from naturally generated terrain.
+    this.builtCells = new Set();
     this.defeated = {};
     this.defense = 0;
     this.storage = 0;
@@ -85,7 +88,7 @@ export class Civilization {
   }
 
   onBuild(itemId, x = 0, y = Infinity) {
-    void x;
+    if (Number.isFinite(x) && Number.isFinite(y)) this.builtCells.add(`${Math.floor(x)},${Math.floor(y)}`);
     this.placed[itemId] = (this.placed[itemId] || 0) + 1;
     this.highestBuild = Math.min(this.highestBuild, y);
     if (SETTLEMENT_BLOCKS.has(itemId)) {
@@ -167,6 +170,7 @@ export class Civilization {
       eraId: this.eraId, cp: this.cp, tokens: this.tokens, tokensSpent: this.tokensSpent || 0, cpMult: this.cpMult || 1, population: this.population,
       totalMined: this.totalMined, totalCrafted: this.totalCrafted, totalBuilt: this.totalBuilt,
       housing: this.housing, light: this.light, placed: this.placed, defeated: this.defeated,
+      builtCells: [...this.builtCells],
       defense: this.defense, storage: this.storage, trade: this.trade, pollution: this.pollution,
       highestBuild: this.highestBuild, deepestMine: this.deepestMine,
     };
@@ -180,6 +184,7 @@ export class Civilization {
     this.housing ??= 0;
     this.light ??= 0;
     this.placed ??= {};
+    this.builtCells = new Set(this.builtCells || []);
     this.defeated ??= {};
     this.defense ??= 0;
     this.storage ??= 0;

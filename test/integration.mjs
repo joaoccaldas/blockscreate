@@ -78,6 +78,9 @@ g.newWorld('stone', MODE.SURVIVAL);
 ok(`game built; world ${g.world.width}x${g.world.height}, spawn ${JSON.stringify(g.world.spawn)}`);
 
 const gCell = newGame();
+// This fixture exercises the established First Cell loop. The brand-new-player
+// Before Life prologue has its own focused UI-flow coverage.
+settings.set('seenPrelife', true);
 gCell.newWorld('cell', MODE.SURVIVAL);
 if (gCell.eraId !== 'cell') throw new Error('cell era did not start');
 if (gCell.player.h >= 1.8) throw new Error('cell player form was not applied');

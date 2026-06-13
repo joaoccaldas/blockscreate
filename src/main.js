@@ -101,6 +101,10 @@ function refreshLanding() {
 function renderDailyCard() {
   const host = document.getElementById('dailyCard');
   if (!host) return;
+  // Dailies are a return loop, not opening-minute homework. Reveal them after
+  // the player has made a world or reached another age.
+  host.classList.toggle('hidden', !SaveManager.hasSave() && progress.unlockedList().length === 1);
+  if (host.classList.contains('hidden')) return;
   const ch = dailyChallenge();
   const era = getEra(ch.era);
   const v = variantInfo(ch.era, ch.variant);
@@ -201,7 +205,16 @@ function wire() {
     if (sub) sub.textContent = `A friend shared a reality: ${era.icon} ${v ? v.name : era.name}. Press Play to enter their exact world.`;
     click('playBtn', () => startGame({ reality: shared }));
   } else {
-    click('playBtn', () => { buildPortals(); show('portal'); });
+    // A brand-new player has one meaningful choice: begin. Skip the era picker
+    // until they have actually unlocked choices worth making.
+    click('playBtn', () => {
+      if (progress.unlockedList().length === 1 && !SaveManager.hasSave()) {
+        startGame({ eraId: 'cell', mode: MODE.SURVIVAL });
+      } else {
+        buildPortals();
+        show('portal');
+      }
+    });
   }
   click('continueBtn', () => {
     const save = SaveManager.load();

@@ -44,6 +44,17 @@ assert.ok(structures.some((s) => s.id === 'hut'), 'hut should be recognized');
 assert.ok(tracker.has('hut'), 'hut discovery persisted');
 ok('structure tracker recognizes a player-built hut');
 
+// Naturally generated terrain must never count as deliberate architecture when
+// the real game provides an exact set of player-built cells.
+const naturalTracker = new StructureTracker();
+const naturalFound = naturalTracker.evaluate({
+  world,
+  player: { x: 10, y: 10 },
+  civ: { builtCells: new Set() },
+}, { x: 10, y: 10 });
+assert.strictEqual(naturalFound.length, 0, 'natural terrain should not earn structure rewards');
+ok('structure tracker ignores natural terrain');
+
 const defendedWorld = emptyWorld();
 const campfire = blockId('campfire');
 const torch = blockId('torch');

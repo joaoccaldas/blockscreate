@@ -38,6 +38,7 @@ export const SaveManager = {
       grazerBondTime: game.grazerBondTime || 0,
       eraStage: game.eraStage || 0,
       realityPath: game.realityPath || [],
+      prelife: game.prelife || { active: false, nutrients: 0, minerals: 0 },
     };
   },
 
@@ -79,6 +80,8 @@ export const SaveManager = {
     save.eraId = save.eraId || 'cell';
     save.clock = typeof save.clock === 'number' ? save.clock : 0;
     save.crafted = save.crafted || [];
+    save.civ = save.civ || {};
+    save.civ.builtCells = save.civ.builtCells || [];
     save.objectives = save.objectives || [];
     save.mobs = save.mobs || [];
     save.structures = save.structures || [];
@@ -95,6 +98,7 @@ export const SaveManager = {
     save.grazerBondTime = save.grazerBondTime || 0;
     save.eraStage = save.eraStage || 0;
     save.realityPath = save.realityPath || [];
+    save.prelife = save.prelife || { active: false, nutrients: 0, minerals: 0 };
     save.version = C.SAVE_VERSION;
     return save;
   },

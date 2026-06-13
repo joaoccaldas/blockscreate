@@ -409,6 +409,7 @@ export class Renderer {
 
     if (player.form === 'spark') {
       this.drawPrimordialSpark(sx, sy - h * 0.45, Math.max(w, h) * 0.42, player);
+      return;
     } else if (player.form === 'cell') {
       this.drawCell(sx, sy - h * 0.45, Math.max(w, h) * 0.62 * (player.cellGrowth || 1),
         player.cellStage || 0, player);
@@ -930,10 +931,14 @@ export class Renderer {
   drawGoalBeacon(camera, goal, player, W, H, T, reduceMotion) {
     const ctx = this.ctx;
     const dist = player ? Math.hypot(goal.x - player.x, goal.y - player.y) : 0;
-    if (dist < 2.2) return; // already there — don't clutter
     const c = camera.worldToScreen(goal.x, goal.y);
     const margin = 46;
     const onScreen = c.sx > margin && c.sx < W - margin && c.sy > margin && c.sy < H - margin;
+    if (goal.kind === 'portal' && onScreen) {
+      this.drawEraPortal(camera, goal, T, reduceMotion);
+      return;
+    }
+    if (dist < 2.2 && goal.kind !== 'portal') return; // already there — don't clutter
     const pulse = reduceMotion ? 1 : 1 + Math.sin(this.t * 4) * 0.12;
     ctx.save();
     if (onScreen) {
@@ -974,6 +979,37 @@ export class Renderer {
       ctx.font = 'bold 11px system-ui, sans-serif';
       ctx.fillText(`${Math.round(dist)}m`, 0, 22);
     }
+    ctx.restore();
+    ctx.textAlign = 'left';
+  }
+
+  drawEraPortal(camera, goal, T, reduceMotion) {
+    const ctx = this.ctx;
+    const { sx, sy } = camera.worldToScreen(goal.x, goal.y);
+    const pulse = reduceMotion ? 1 : 1 + Math.sin(this.t * 3) * 0.1;
+    const r = T * 1.25 * pulse;
+    ctx.save();
+    ctx.translate(sx, sy);
+    const glow = ctx.createRadialGradient(0, 0, r * 0.15, 0, 0, r * 1.8);
+    glow.addColorStop(0, 'rgba(255,255,255,0.95)');
+    glow.addColorStop(0.28, 'rgba(130,90,255,0.85)');
+    glow.addColorStop(1, 'rgba(80,220,255,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#d9c7ff';
+    ctx.lineWidth = Math.max(3, T * 0.12);
+    for (let i = 0; i < 3; i++) {
+      ctx.rotate(this.t * (i % 2 ? -0.35 : 0.45));
+      ctx.beginPath();
+      ctx.ellipse(0, 0, r * (0.55 + i * 0.18), r * (1.05 - i * 0.1), i * 0.7, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.max(13, T * 0.42)}px system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(goal.label || 'ENTER NEXT AGE', 0, -r * 1.55);
     ctx.restore();
     ctx.textAlign = 'left';
   }

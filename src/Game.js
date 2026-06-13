@@ -133,6 +133,7 @@ export class Game {
     this.mobs = [];
     this.eraStage = 0;
     this.realityPath = []; // the route of branches taken through the era graph
+    this.eraPortal = null;
     // The first ever survival run begins one beat before life. This is a tiny,
     // movement-only tutorial whose ingredients become the First Cell.
     this.prelife = eraId === 'cell' && mode === MODE.SURVIVAL && !this.settings?.get?.('seenPrelife')
@@ -176,6 +177,7 @@ export class Game {
     this.grazerBondTime = save.grazerBondTime || 0;
     this.eraStage = save.eraStage || 0;
     this.realityPath = save.realityPath || [];
+    this.eraPortal = null;
     this.prelife = save.prelife || { active: false, nutrients: 0, minerals: 0 };
     if (this.prelife.active) this.player.form = 'spark';
     this._setup();
@@ -791,6 +793,7 @@ export class Game {
     this._updateAchievements(dt);
     this._updateDaily(dt);
     this._updateGoalBeacon(dt);
+    this._updateEraPortal();
     this._updateGuidanceHints(dt);
 
     // Era advancement.
@@ -1043,6 +1046,9 @@ export class Game {
 
   _absorbCellResources(dt) {
     if (this.mode !== MODE.SURVIVAL || this.eraId !== 'cell') return;
+    // The prologue teaches movement: ingredients only combine while the player
+    // is actively steering the chemical spark.
+    if (this.prelife?.active && Math.hypot(this.player.vx || 0, this.player.vy || 0) < 0.25) return;
     this.cellAbsorbCooldown = Math.max(0, (this.cellAbsorbCooldown || 0) - dt);
     if (this.cellAbsorbCooldown > 0) return;
 
@@ -1061,6 +1067,14 @@ export class Game {
         const def = targets.get(this.world.get(x, y));
         if (!def || Math.hypot(x + 0.5 - this.player.x, y + 0.5 - this.player.y) > reach) continue;
         this.world.set(x, y, AIR);
+        if (this.prelife?.active) {
+          this._notePrelifeAbsorb(def.item);
+          this.particles.fountain(x + 0.5, y + 0.5, [def.color, '#76f7dd', '#fff'], 18);
+          this.audio?.play('mine');
+          if (this.prelife.active) this.hud?.toast(def.item === 'nutrient_blob' ? '✦ Molecule aligned' : '♨️ Vent energy captured', 1100);
+          this.cellAbsorbCooldown = 0.45;
+          return;
+        }
         this.inventory.add(def.item, 1);
         this.civ.addCP(def.cp * this.powerups.multiplier('cpMultiplier'));
         this._floatText(x + 0.5, y, `+${def.cp} CP`, { color: def.color, size: 0.5, life: 0.8 });
@@ -1073,7 +1087,6 @@ export class Game {
           (this.player.x - x - 0.5) * 2, (this.player.y - this.player.h / 2 - y - 0.5) * 2,
           { color: def.color, life: 0.4, size: 0.16, gravity: 0 });
         this.audio?.play('mine');
-        this._notePrelifeAbsorb(def.item);
         // Throttle the toast so rapid feeding doesn't spam the banner.
         const now = Date.now();
         if (!this._lastAbsorbToast || now - this._lastAbsorbToast > 2200) {
@@ -1123,6 +1136,7 @@ export class Game {
    */
   _goalTarget() {
     if (this.mode !== MODE.SURVIVAL || !this.world) return null;
+    if (this.canAdvance()) return this._ensureEraPortal();
     if (this.eraId === 'cell') {
       const n = this._nearestCellResource(24);
       return n ? { x: n.x + 0.5, y: n.y + 0.5, icon: '🫧' } : null;
@@ -1130,6 +1144,31 @@ export class Game {
     const want = GOAL_RESOURCES[this.eraId] || GOAL_RESOURCES._default;
     const found = this._nearestBlock(want.map((id) => blockId(id)).filter((n) => n != null), 28);
     return found ? { x: found.x + 0.5, y: found.y + 0.5, icon: '⛏️' } : null;
+  }
+
+  _ensureEraPortal() {
+    if (this.eraPortal) return this.eraPortal;
+    const dir = this.player.x < this.world.width / 2 ? 1 : -1;
+    const x = Math.max(4, Math.min(this.world.width - 4, this.player.x + dir * 8));
+    const column = Math.max(0, Math.min(this.world.width - 1, Math.round(x)));
+    const y = this.eraId === 'cell'
+      ? Math.max(5, Math.min(this.world.height - 5, this.player.y - 1))
+      : this.world.heightMap[column] - 1;
+    const nxt = this._nextEraChoice();
+    this.eraPortal = {
+      x, y, icon: '🌀', kind: 'portal',
+      label: nxt ? `ENTER ${nxt.name.toUpperCase()}` : 'DESCEND',
+    };
+    this.hud?.bigToast?.('🌀 <b>A rift has opened nearby.</b><br><small>Follow it and enter the next age.</small>', 4200);
+    return this.eraPortal;
+  }
+
+  _updateEraPortal() {
+    if (!this.canAdvance()) { this.eraPortal = null; return; }
+    const portal = this._ensureEraPortal();
+    if (Math.hypot(portal.x - this.player.x, portal.y - this.player.y) > 1.55) return;
+    this.eraPortal = null;
+    this.canDescend() ? this._descend() : this._advanceEra();
   }
 
   _nearestBlock(idList, radius = 24) {
@@ -1172,6 +1211,15 @@ export class Game {
   _updateCellStatus(dt) {
     if (this.eraId !== 'cell') {
       this.cellStatus = null;
+      return;
+    }
+    if (this.prelife?.active) {
+      const nearest = this._nearestCellResource(14);
+      this.cellStatus = {
+        stability: 0, stage: 0, stageName: 'chemistry before life',
+        gradient: nearest ? nearest.label : 'primordial ocean',
+        distance: nearest?.distance ?? null, ready: false,
+      };
       return;
     }
     const nearest = this._nearestCellResource(14);

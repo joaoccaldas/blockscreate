@@ -21,7 +21,7 @@ export const ERAS = [
     blurb: 'Begin as chemistry at a warm vent: absorb nutrients, form a membrane, and become alive.',
     icon: '🫧',
     unlockCost: 0,
-    advanceCost: 80,
+    advanceCost: 30,
     sky: { day: ['#69d6d0', '#b8fff2'], night: ['#071a28', '#123c4a'] },
     ground: '#2aa79b',
     starter: [],

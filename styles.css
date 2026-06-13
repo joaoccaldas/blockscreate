@@ -480,11 +480,13 @@ html, body {
 .origin-focus #discoveryPanel,
 .origin-focus #infoBtn,
 .origin-focus #marketBtn,
-.origin-focus #mapBtn,
 .origin-focus #journalBtn,
 .origin-focus .minimap,
+.origin-focus #invBtn,
+.origin-focus #craftBtn,
 .origin-focus .touch-quick [data-act="market"],
-.origin-focus .touch-quick [data-act="map"] { display: none; }
+.origin-focus .touch-quick [data-act="inv"],
+.origin-focus .touch-quick [data-act="craft"] { display: none; }
 .origin-focus:not(.origin-building) #buildIndicator { display: none; }
 .origin-focus:not(.has-items) #hotbar { display: none; }
 .origin-focus #objPanel {
@@ -502,7 +504,7 @@ html, body {
   border-color: rgba(118,247,221,0.55);
   box-shadow: 0 0 28px rgba(118,247,221,0.16);
 }
-.prelife-focus #topbar { opacity: 0.35; }
+.prelife-focus #topbar { display: none; }
 /* In collapsed mode the right column holds the quick 🎒🔨 buttons, so dock the
    compact objectives panel on the LEFT under the topbar to avoid overlap. */
 .info-collapsed #objPanel {

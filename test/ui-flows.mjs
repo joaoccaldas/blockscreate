@@ -66,8 +66,8 @@ for(const h of ['onToggleInventory','onToggleCrafting','onToggleJournal']){
 }
 ok('Desktop Inventory/Craft/Journal actions are wired to HUD handlers');
 
-// First-cell guidance names the exact next action — including HOW to build, the
-// step where new (and Mac) players were getting stuck.
+// First-cell guidance keeps the critical path inside the world instead of
+// forcing a new player through crafting/build menus.
 const g6=mk();g6.newWorld('cell',MODE.SURVIVAL);g6.hud.showEraIntro=(era,done)=>done();g6.start();
 g6.prelife.active=false;g6.player.form='cell';
 let step=g6.hud._cellNextStep(g6);
@@ -75,8 +75,8 @@ if(!/absorb/i.test(step||''))throw new Error('first cell step should be to absor
 g6.inventory.add('nutrient_blob',3);g6.inventory.add('mineral_vent',1);g6.crafted.add('lipid_membrane');
 g6.objectives.evaluate(g6);
 step=g6.hud._cellNextStep(g6);
-if(!/Build/.test(step||''))throw new Error('cell guidance should tell the player to Build the membrane: '+step);
-ok('First Cell guidance names the next action and the Build control');
+if(!/50% stability/.test(step||''))throw new Error('cell guidance should keep the player feeding in-world: '+step);
+ok('First Cell critical path stays in-world instead of requiring menus');
 
 // The first-ever cell run starts before life and becomes a cell only after the
 // player brings together two molecules and one source of vent energy.
@@ -87,6 +87,17 @@ gPre._notePrelifeAbsorb('nutrient_blob');gPre._notePrelifeAbsorb('nutrient_blob'
 if(gPre.prelife.active||gPre.player.form!=='cell')throw new Error('ingredients should create the First Cell');
 if(!gPre.settings.get('seenPrelife'))throw new Error('completed prologue should persist');
 ok('Before Life prologue teaches movement and creates the First Cell');
+
+// Completing First Cell opens a physical rift; touching it advances the era.
+const gPortal=mk();gPortal.settings.set('seenPrelife',true);gPortal.newWorld('cell',MODE.SURVIVAL);
+gPortal.world.variant='hydrothermal';
+gPortal.inventory.add('nutrient_blob',3);gPortal.inventory.add('mineral_vent',1);
+gPortal.cellStatus={stability:55};gPortal.civ.cp=30;gPortal.objectives.evaluate(gPortal);
+gPortal._updateEraPortal();
+if(!gPortal.eraPortal||gPortal.eraPortal.kind!=='portal')throw new Error('ready cell should open a physical portal');
+gPortal.player.x=gPortal.eraPortal.x;gPortal.player.y=gPortal.eraPortal.y;gPortal._updateEraPortal();
+if(gPortal.eraId!=='stone')throw new Error('touching the rift should enter the next age');
+ok('First Cell opens a physical rift that advances on contact');
 
 // Every modal is a true pause, the map is actually visible, and Escape closes
 // the active modal instead of leaving the game invisibly paused.

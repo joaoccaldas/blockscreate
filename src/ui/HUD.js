@@ -97,7 +97,7 @@ export class HUD {
         <button id="invBtn" class="action-btn" title="Inventory (E)">🎒 <span>Bag</span></button>
         <button id="craftBtn" class="action-btn" title="Crafting (C)">🔨 <span>Craft</span></button>
         <button id="marketBtn" class="action-btn" title="Era market — spend tokens on boosts & relics (B)">🛒 <span>Market</span></button>
-        <button id="mapBtn" class="action-btn" title="Map of Space & Time (M)">🗺️ <span>Map</span></button>
+        <button id="mapBtn" class="action-btn" title="Timeline of realities (M)">🗺️ <span>Timeline</span></button>
         <button id="journalBtn" class="action-btn" title="Journal of clues & discoveries">📖 <span>Journal</span></button>
       </div>`}
       <div id="powerupBar" class="powerup-bar hidden"></div>
@@ -456,7 +456,7 @@ export class HUD {
       ? (status.ready ? `🌀 Portal to ${nxt.name} is open!` : `${gate || `Next: ${nxt.name}`}`)
       : (status.canDescend ? '∞ Descend a layer — begin again, deeper' : 'Finish this age to descend a layer');
     const btn = this.el('advanceBtn');
-    btn.classList.toggle('hidden', !(survival && ((nxt && status.ready) || status.canDescend)));
+    btn.classList.toggle('hidden', !(survival && game.eraId !== 'cell' && ((nxt && status.ready) || status.canDescend)));
     btn.textContent = status.canDescend ? `∞ Descend a Layer${status.layer ? ` (Layer ${status.layer + 1})` : ''}` : 'Enter Portal';
 
     // Label doubles as the affordance: a tap-target that names the current mode
@@ -502,7 +502,7 @@ export class HUD {
       build_membrane: this.isTouch
         ? '🧬 Select the <b>Lipid Membrane</b>, tap <b>🧱</b> to Build, then tap to place 4'
         : '🧬 Select the <b>Lipid Membrane</b> in the hotbar, click <b>🧱 Build</b> (top-right), then click to place 4',
-      stabilize_cell: `🧫 ${craft.charAt(0).toUpperCase() + craft.slice(1)} to craft a <b>Proto-Cell</b> and stabilize`,
+      stabilize_cell: '🧬 Keep feeding. Reach <b>50% stability</b> and evolution will answer.',
     };
     for (const o of obj.list) {
       if (o.kind === 'mandatory' && !obj.isDone(o.id)) return steps[o.id] || null;
@@ -542,7 +542,7 @@ export class HUD {
     const move = this.isTouch ? 'Use ◀ ▶ ▲ ▼ to swim' : 'Swim with WASD / arrows';
     const step = this._cellNextStep(game);
     const guide = status.ready
-      ? '✨ Cell complete! Press <b>Enter Portal</b> to evolve into the 🦖 Age of Dinosaurs →'
+      ? '🌀 A rift has opened in the ocean. Follow the portal marker and <b>swim into it</b> →'
       : step
         || (status.gradient && status.gradient !== 'quiet chemistry'
           ? `🫧 ${move} into the glowing <b>${status.gradient}</b>${distance} to absorb it`

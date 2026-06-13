@@ -87,7 +87,7 @@ function show(id) {
   }
 }
 
-function startGame({ eraId, mode, save, reality, daily }) {
+function startGame({ eraId, mode, save, reality, daily, thread }) {
   if (game) game.stop();
   audio.resume(); // unlock audio from the click that launched the game
   game = new Game({

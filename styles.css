@@ -43,8 +43,9 @@ html, body {
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(circle at 50% 115%, rgba(41, 175, 167, 0.3), transparent 45%),
-    radial-gradient(circle at 15% 15%, rgba(120, 70, 200, 0.18), transparent 32%),
+    radial-gradient(circle at 50% 115%, rgba(41, 175, 167, 0.5), transparent 45%),
+    radial-gradient(circle at 15% 15%, rgba(120, 70, 200, 0.4), transparent 32%),
+    url('./assets/generated/landing/prologue-ocean.png') center/cover no-repeat,
     #050914;
 }
 .intro-stars {

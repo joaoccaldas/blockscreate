@@ -8,7 +8,7 @@
  * The list is intentionally explicit (no build step) so what ships is what we
  * cache. Missing entries still work — they just fetch from network.
  */
-const CACHE = 'blockscreate-v5.64.1';
+const CACHE = 'blockscreate-v5.64.2';
 
 const ASSETS = [
   './',
@@ -75,6 +75,7 @@ const ASSETS = [
   './assets/generated/textures/blocks_extra.png',
   './assets/generated/effects/effects.png',
   './assets/generated/landing/origin-to-dinos.png',
+  './assets/generated/landing/prologue-ocean.png',
   './assets/generated/sprites/player.png',
   './assets/generated/sprites/player_idle.png',
   './assets/generated/sprites/cell.png',

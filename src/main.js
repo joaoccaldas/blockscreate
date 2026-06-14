@@ -104,8 +104,9 @@ function startGame({ eraId, mode, save, reality, daily, thread }) {
   else if (reality) {
     // Land the player in a fixed world (a friend's link, or the daily).
     game.newWorld(reality.era, reality.mode, { seed: reality.seed, variant: reality.variant });
-  } else game.newWorld(eraId, mode);
-  if (thread) game.thread = thread;
+  } else {
+    game.newWorld(eraId, mode, { thread });
+  }
   if (daily) game.daily = daily; // attach the goal so completion is tracked
   show('game');
   game.start();
@@ -122,11 +123,7 @@ function refreshLanding() {
 }
 
 function showJourneyIntro(launch = null) {
-  journeyLaunch = launch || (() => {
-    settings.set('seenPrelife', false);
-    settings.set('seenTutorial', '');
-    startGame({ eraId: 'cell', mode: MODE.SURVIVAL });
-  });
+  journeyLaunch = launch;
   introStep = 0;
   renderJourneyIntro();
   show('intro');

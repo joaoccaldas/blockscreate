@@ -84,6 +84,11 @@ export class HUD {
         <div id="objectiveTitle" class="obj-title">🎯 Objectives</div>
         <div id="objList"></div>
       </div>
+      
+      <div id="discoveryPanel" class="obj-panel hidden" style="top: auto; bottom: 80px; left: 16px;">
+        <div class="obj-title">✨ Discoveries</div>
+        <div id="discoveryList"></div>
+      </div>
 
 
 
@@ -158,6 +163,16 @@ export class HUD {
         </div>
       </div>
 
+      <div id="marketPanel" class="overlay hidden">
+        <div class="overlay-card market-card">
+          <div class="market-header">
+            <h2 id="marketTitle">🛒 Market</h2>
+            <div id="marketWallet" class="market-wallet"></div>
+          </div>
+          <div id="marketBody" class="market-body"></div>
+          <button id="marketClose" class="btn">Close</button>
+        </div>
+      </div>
       <div id="codexPanel" class="overlay hidden">
         <div class="overlay-card codex-card">
           <div class="codex-header">
@@ -897,7 +912,14 @@ export class HUD {
     ctx.fillRect(m.px, m.py, 1, 1);
   }
 
-  showCodex(show) { this.el('codexPanel').classList.toggle('hidden', !show); }
+  showCodex(show, tab = 'codex-journal') {
+    this.el('codexPanel').classList.toggle('hidden', !show);
+    if (show) {
+      this.root.querySelectorAll('.codex-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      this.root.querySelectorAll('.codex-page').forEach(p => p.classList.toggle('hidden', p.id !== tab));
+      this.el(tab).classList.remove('hidden');
+    }
+  }
   showMarket(show) { this.el('marketPanel').classList.toggle('hidden', !show); }
 
   /**

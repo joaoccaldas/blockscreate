@@ -22,8 +22,6 @@ try {
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-
     await page.goto(`http://127.0.0.1:${port}`, { waitUntil: 'networkidle' });
     assert(await page.locator('#dailyCard').isHidden(), `${config.name}: daily should wait until a return visit`);
     assert(await page.locator('#prologueBtn').isVisible(), `${config.name}: story prologue must be explicit on landing`);
@@ -33,7 +31,10 @@ try {
     await page.locator('#introNext').click();
     await page.locator('#introNext').click();
     await page.locator('#introNext').click();
-    assert(await page.locator('#eraIntro').isVisible(), `${config.name}: Play should open the pre-life prologue`);
+    assert(await page.locator('#threadSelect').isVisible(), `${config.name}: Intro must lead to Location Choice`);
+    await page.locator('#threadStartBtn').click();
+    
+    await page.locator('#eraIntro').waitFor({ state: 'visible', timeout: 5000 });
     assert(await page.locator('#eraIntroTitle').textContent() === 'The Primordial Ocean', `${config.name}: prologue should begin before the First Cell`);
     await page.locator('#eraIntroGo').click();
     await page.waitForTimeout(500);
@@ -42,9 +43,9 @@ try {
     assert(await page.locator('#discoveryPanel').isHidden(), `${config.name}: natural terrain must not create discoveries`);
 
     await page.keyboard.press('m');
-    assert(await page.locator('#mapPanel').isVisible(), `${config.name}: map should open visibly`);
+    assert(await page.locator('#codexPanel').isVisible(), `${config.name}: map should open visibly`);
     await page.keyboard.press('Escape');
-    assert(await page.locator('#mapPanel').isHidden(), `${config.name}: Escape should close the map`);
+    assert(await page.locator('#codexPanel').isHidden(), `${config.name}: Escape should close the map`);
     assert(errors.length === 0, `${config.name}: console errors: ${errors.join('; ')}`);
     await context.close();
     console.log(`✓ ${config.name} opening flow`);

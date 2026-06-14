@@ -346,7 +346,8 @@ export class Game {
       onToggleInventory: () => this._toggleInventory(),
       onToggleCrafting: () => this._toggleCrafting(),
       onToggleMarket: () => this._toggleMarket(),
-      onToggleCodex: () => this._toggleCodex(),
+      onToggleMap: () => this._toggleCodex('codex-map'),
+      onToggleCodex: () => this._toggleCodex('codex-journal'),
       onInteract: () => this._doInteract(),
       onToggleBuild: () => { this.buildMode = !this.buildMode; },
       onCompanionCommand: () => this._cycleCompanionCommand(),
@@ -362,7 +363,8 @@ export class Game {
       onToggleInventory: () => this._toggleInventory(),
       onToggleCrafting: () => this._toggleCrafting(),
       onToggleMarket: () => this._toggleMarket(),
-      onToggleCodex: () => this._toggleCodex(),
+      onToggleMap: () => this._toggleCodex('codex-map'),
+      onToggleCodex: () => this._toggleCodex('codex-journal'),
       onBuyOffer: (id) => this._buyOffer(id),
       onCraft: (r) => this._craft(r),
       onPickSlot: (i) => {
@@ -455,15 +457,16 @@ export class Game {
     this.audio?.play('ui');
   }
 
-  _toggleCodex() {
-    const opening = !this.codexOpen;
+  _toggleCodex(tab = 'codex-journal') {
+    const opening = !this.codexOpen || this.codexTab !== tab;
     this._closeMenus();
     this.codexOpen = opening;
+    this.codexTab = tab;
     if (this.codexOpen) {
       this.hud.renderJournal(this);
       this.hud.renderMap(this);
     }
-    this.hud.showCodex(this.codexOpen);
+    this.hud.showCodex(this.codexOpen, tab);
     this.hud.showPause(false);
     this.paused = this.codexOpen; // pause behind the codex, like other menus
     this.audio?.play('ui');

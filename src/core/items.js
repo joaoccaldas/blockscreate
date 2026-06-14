@@ -49,12 +49,16 @@ const materials = [
   ['crystal', 'Deep Crystal', '#b388ff'],
   ['rna_string', 'RNA String', '#ff7bbb'],
   ['matrix_fragment', 'Matrix Fragment', '#00ff00'],
+  ['matrix_shard', 'Matrix Shard', '#9d00ff'],
 ];
 for (const [id, label, color] of materials) {
   add({ id, label, kind: 'material', colors: { base: color, top: color, side: color } });
 }
 
-// 3) Tools. Tier scales mining speed and gates progression by era.
+// 3) Special tools
+add({ id: 'blueprint_tool', label: 'Architect Matrix', kind: 'tool', stack: 1, colors: { base: '#00ffff', top: '#00ffff', side: '#00ffff' } });
+
+// 4) Tools. Tier scales mining speed and gates progression by era.
 const tools = [
   // id, label, tool kind, tier, color
   ['wood_pickaxe', 'Wooden Pickaxe', 'pickaxe', 1, '#b78a4e'],

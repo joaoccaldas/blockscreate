@@ -23,19 +23,19 @@ try {
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`http://127.0.0.1:${port}`, { waitUntil: 'networkidle' });
-    assert(await page.locator('#dailyCard').isHidden(), `${config.name}: daily should wait until a return visit`);
-    assert(await page.locator('#prologueBtn').isVisible(), `${config.name}: story prologue must be explicit on landing`);
+    assert(await page.locator('#dailyCard').isHidden(), `${config.name}: daily should wait until a return visit`, errors);
+    assert(await page.locator('#prologueBtn').isVisible(), `${config.name}: story prologue must be explicit on landing`, errors);
     await page.locator('#playBtn').click();
-    assert(await page.locator('#intro').isVisible(), `${config.name}: New Journey should open the story introduction`);
-    assert(await page.locator('#introTitle').textContent() === 'There were no heroes.', `${config.name}: intro should explain the premise`);
+    assert(await page.locator('#intro').isVisible(), `${config.name}: New Journey should open the story introduction`, errors);
+    assert(await page.locator('#introTitle').textContent() === 'There were no heroes.', `${config.name}: intro should explain the premise`, errors);
     await page.locator('#introNext').click();
     await page.locator('#introNext').click();
     await page.locator('#introNext').click();
-    assert(await page.locator('#threadSelect').isVisible(), `${config.name}: Intro must lead to Location Choice`);
+    assert(await page.locator('#threadSelect').isVisible(), `${config.name}: Intro must lead to Location Choice`, errors);
     await page.locator('#threadStartBtn').click();
     
     await page.locator('#eraIntro').waitFor({ state: 'visible', timeout: 5000 });
-    assert(await page.locator('#eraIntroTitle').textContent() === 'The Primordial Ocean', `${config.name}: prologue should begin before the First Cell`);
+    assert(await page.locator('#eraIntroTitle').textContent() === 'The Primordial Ocean', `${config.name}: prologue should begin before the First Cell`, errors);
     await page.locator('#eraIntroGo').click();
     await page.waitForTimeout(500);
     assert(await page.locator('#civPanel').isHidden(), `${config.name}: origin HUD should stay focused`);
@@ -68,6 +68,9 @@ async function waitForServer() {
   throw new Error('Local test server did not start');
 }
 
-function assert(value, message) {
-  if (!value) throw new Error(message);
+function assert(value, message, errors = []) {
+  if (!value) {
+    if (errors.length) console.error('Page errors:', errors);
+    throw new Error(message);
+  }
 }

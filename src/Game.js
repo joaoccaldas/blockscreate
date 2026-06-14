@@ -206,6 +206,7 @@ export class Game {
         'deep_stone', 'magma', 'crystal_ore',
         'coal_ore', 'copper_ore', 'tin_ore', 'iron_ore', 'gold_ore']
         .forEach((id) => this.inventory.add(id, 99));
+      this.inventory.add('blueprint_tool', 1);
     } else if (this.eraId !== 'cell') {
       // Survival: a couple of torches to start; everything else is earned.
       this.inventory.add('torch', 4);
@@ -246,6 +247,7 @@ export class Game {
     this.industryNet = null;
     this.power = new PowerGrid(); // energy network analyzer (read-only)
     this.powerNet = null;
+    this.blueprints = SaveManager.loadBlueprints(); // universal blueprint repository
     this.resize();
     this.camera.snap(this.player);
     this._onResize = () => this.resize();
@@ -1537,13 +1539,34 @@ export class Game {
     const dist = Math.hypot(tx - this.player.x, ty - (this.player.y - this.player.h / 2));
     const reach = C.REACH + this.powerups.value('reach', 0);
     const inReach = dist <= reach;
+    const sel = this.inventory.selectedItem();
+
+    // Blueprint selection tool logic.
+    if (sel?.id === 'blueprint_tool') {
+      this.hover = { x: tileX, y: tileY, valid: true, mode: 'select', progress: 0 };
+      this.ghost = null;
+      if (!m.down) {
+        if (this.selectionStart && this.selectionEnd) {
+          this._promptBlueprintSave(this.selectionStart, this.selectionEnd);
+          this.selectionStart = null;
+          this.selectionEnd = null;
+        }
+        return;
+      }
+      if (!this.selectionStart) {
+        this.selectionStart = { x: tileX, y: tileY };
+      }
+      this.selectionEnd = { x: tileX, y: tileY };
+      return;
+    }
+
+    // Normal interactions
     const placeIntent = m.button === 2 || this.buildMode;
 
     this.hover = { x: tileX, y: tileY, valid: inReach, mode: placeIntent ? 'place' : 'mine', progress: 0 };
 
     // Ghost placement preview.
     this.ghost = null;
-    const sel = this.inventory.selectedItem();
     if (placeIntent && inReach && sel && isPlaceable(sel.id) &&
         this.world.get(tileX, tileY) === AIR && !this._overlapsPlayer(tileX, tileY)) {
       this.ghost = { x: tileX, y: tileY, valid: true, color: getItem(sel.id)?.colors?.base };
@@ -1646,6 +1669,61 @@ export class Game {
     if (this.mode === MODE.SURVIVAL) this._comboHit(x + 0.5, y);
     // Removing a block can drop falling blocks stacked above it.
     this._settleFalling(x, y - 1);
+  }
+
+  _promptBlueprintSave(start, end) {
+    const minX = Math.min(start.x, end.x);
+    const maxX = Math.max(start.x, end.x);
+    const minY = Math.min(start.y, end.y);
+    const maxY = Math.max(start.y, end.y);
+
+    const w = maxX - minX + 1;
+    const h = maxY - minY + 1;
+    if (w * h > 400) {
+      this.hud.toast('Selection too large (max 400 blocks)', 2000);
+      return;
+    }
+
+    const blocks = [];
+    let empty = true;
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        const id = this.world.get(x, y);
+        blocks.push(id);
+        if (id !== 0) empty = false;
+      }
+    }
+
+    if (empty) {
+      this.hud.toast('No structure selected', 2000);
+      return;
+    }
+
+    const bp = { id: 'bp_' + Date.now(), w, h, blocks, name: 'New Blueprint' };
+    this.hud.prompt('Name this blueprint:', 'Custom Blueprint', (name) => {
+      if (name) {
+        bp.name = name;
+        this.blueprints = this.blueprints || [];
+        this.blueprints.push(bp);
+        SaveManager.saveBlueprints(this.blueprints);
+        this.hud.toast(`Saved blueprint: ${name}`);
+        this.audio?.play('ui');
+      }
+    });
+  }
+
+  fillGhostBlock(x, y) {
+    // If the player holds an item that matches the ghost block's requirement, or just uses any block, replace it.
+    // For now, let's just make it a visual effect where it turns into a random useful block if they have raw material.
+    if (this.inventory.has('stone', 1)) {
+      this.inventory.remove('stone', 1);
+      this.world.set(x, y, 1); // stone
+      this.hud.toast('Ghost projection solidified!');
+      this.particles.burst(x + 0.5, y + 0.5, '#00ffff', 15);
+      this.audio?.play('place');
+    } else {
+      this.hud.toast('Need Stone to solidify this projection.');
+    }
   }
 
   /** Crack open a buried cache: a burst of loot + CP — the explorer's payoff. */
@@ -2927,6 +3005,8 @@ export class Game {
       meteors: this.meteors,
       hover: this.hover,
       ghost: this.ghost,
+      selectionStart: this.selectionStart,
+      selectionEnd: this.selectionEnd,
       dt,
     });
   }

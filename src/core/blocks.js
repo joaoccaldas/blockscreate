@@ -163,6 +163,21 @@ const defs = [
       game.showMatrixTerminal?.(x, y);
     }
   },
+  {
+    id: 62, name: 'anomaly', label: 'Reality Anomaly', solid: true, hardness: 99, tool: 'pickaxe',
+    colors: { base: '#2b005e', top: '#450099', side: '#1d003d' }, era: 'stone', fleck: '#00ffcc', light: 1.0,
+    interact: (game, x, y) => {
+      game.hud?.toast('👁️ The Truth beckons. Encase it.', 2000);
+      game.audio?.play?.('ui'); // we need a spooky sound here later
+    }
+  },
+  {
+    id: 63, name: 'ghost_block', label: 'Holographic Projection', solid: false, hardness: 0, tool: 'hand',
+    colors: { base: 'rgba(0, 255, 255, 0.4)', top: 'rgba(0, 255, 255, 0.6)', side: 'rgba(0, 200, 255, 0.3)' }, era: 'stone', light: 0.3,
+    interact: (game, x, y) => {
+      game.fillGhostBlock?.(x, y);
+    }
+  }
 ];
 
 // fix accidental typo above without breaking the table layout

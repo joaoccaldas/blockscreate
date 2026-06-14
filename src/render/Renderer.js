@@ -105,6 +105,9 @@ export class Renderer {
 
     if (ghost && ghost.valid) this.drawGhost(camera, ghost, T);
     if (hover && hover.valid) this.drawHover(camera, hover, T);
+    if (scene.selectionStart && scene.selectionEnd) {
+      this.drawSelection(camera, scene.selectionStart, scene.selectionEnd, T);
+    }
 
     this.applyDayNight(dayFactor, W, H);
 
@@ -1036,6 +1039,26 @@ export class Renderer {
       ctx.fillStyle = 'rgba(255,255,255,0.85)';
       ctx.fillRect(sx, sy + T - 4, T * hover.progress, 4);
     }
+  }
+
+  drawSelection(camera, start, end, T) {
+    const minX = Math.min(start.x, end.x);
+    const maxX = Math.max(start.x, end.x);
+    const minY = Math.min(start.y, end.y);
+    const maxY = Math.max(start.y, end.y);
+
+    const { sx: x1, sy: y1 } = camera.worldToScreen(minX, minY);
+    const w = (maxX - minX + 1) * T;
+    const h = (maxY - minY + 1) * T;
+    
+    const ctx = this.ctx;
+    ctx.strokeStyle = 'rgba(0, 255, 255, 0.9)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.strokeRect(x1, y1, w, h);
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+    ctx.fillRect(x1, y1, w, h);
   }
 
   applyDayNight(dayFactor, W, H) {

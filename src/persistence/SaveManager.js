@@ -59,9 +59,27 @@ export const SaveManager = {
       
       return true;
     } catch (e) {
-      console.warn('Save failed', e);
+      console.error('Failed to save', e);
       return false;
     }
+  },
+
+  saveBlueprints(blueprints) {
+    try {
+      localStorage.setItem('blockscreate.blueprints', JSON.stringify(blueprints));
+    } catch (e) {
+      console.error('Failed to save blueprints', e);
+    }
+  },
+
+  loadBlueprints() {
+    try {
+      const data = localStorage.getItem('blockscreate.blueprints');
+      if (data) return JSON.parse(data);
+    } catch (e) {
+      console.error('Failed to load blueprints', e);
+    }
+    return [];
   },
 
   load(runId = null) {

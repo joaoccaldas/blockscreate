@@ -117,6 +117,52 @@ const defs = [
   // Trade Republic: Commerce branch distinct blocks
   { id: 56, name: 'vault_block', label: 'Vault Block', solid: true,  hardness: 3.0, tool: 'pickaxe', colors: { base: '#e2bd68', top: '#f2cd78', side: '#c29d48' }, era: 'republic', drops: 'vault_block' },
   { id: 57, name: 'mint_block',  label: 'Mint Block',  solid: true,  hardness: 2.8, tool: 'pickaxe', colors: { base: '#423d38', top: '#544d47', side: '#302b28' }, era: 'republic', drops: 'mint_block' },
+  // Interactive Lore & Puzzles
+  {
+    id: 58, name: 'cave_painting', label: 'Cave Painting', solid: false, hardness: 0.1, tool: 'hand',
+    colors: { base: '#705040', top: '#8a6652', side: '#573d31' }, era: 'stone', drops: [],
+    interact: (game, x, y) => {
+      game.hud?.bigToast('<span style="color:#d4b15a;font-size:1.2em;">"We are not the first. The sky fell once before."</span><br><br><small><i>An ancient clue added to Codex</i></small>', 4000);
+      game.discoveries?.unlock?.('first_shelter'); // Just to give it some weight
+    }
+  },
+  {
+    id: 59, name: 'strange_obelisk', label: 'Strange Obelisk', solid: true, hardness: 99, tool: 'pickaxe',
+    colors: { base: '#1a1829', top: '#2e2b42', side: '#12101c' }, era: 'stone', fleck: '#ff0055', light: 0.5,
+    interact: (game, x, y) => {
+      game.hud?.toast('🌀 Space bends...', 2000);
+      // Teleport randomly within 15 blocks
+      const nx = Math.floor(game.player.x + (Math.random() * 30 - 15));
+      let ny = game.world.getSurface(nx) - 1;
+      if (ny > 0) {
+        game.player.x = nx + 0.5;
+        game.player.y = ny;
+        game.player.vy = 0;
+        game.camera?.snap(game.player);
+      }
+    }
+  },
+  {
+    id: 60, name: 'lockbox', label: 'Lockbox', solid: true, hardness: 1.5, tool: 'hand',
+    colors: { base: '#423d38', top: '#544d47', side: '#302b28' }, era: 'industrial', drops: [],
+    interact: (game, x, y) => {
+      // Turn into air and drop loot
+      game.world.set(x, y, AIR);
+      game.hud?.toast('🔓 Lockbox opened!', 1500);
+      game.audio?.play?.('ui');
+      // Drop generic treasure
+      game.inventory?.add?.('trade_bead', Math.floor(Math.random() * 3) + 1);
+      game.inventory?.add?.('steel', Math.floor(Math.random() * 2) + 1);
+    }
+  },
+  {
+    id: 61, name: 'matrix_node', label: 'Matrix Node', solid: true, hardness: 99, tool: 'pickaxe',
+    colors: { base: '#000000', top: '#002200', side: '#001100' }, era: 'republic', fleck: '#00ff00', light: 0.8,
+    interact: (game, x, y) => {
+      // Toggle Matrix Terminal mini-game overlay
+      game.showMatrixTerminal?.(x, y);
+    }
+  },
 ];
 
 // fix accidental typo above without breaking the table layout

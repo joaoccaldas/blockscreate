@@ -62,7 +62,8 @@ export class Input {
       if (k === 'c') this.handlers.onToggleCrafting?.();
       if (k === 'b') this.handlers.onToggleMarket?.();
       if (k === 'm') this.handlers.onToggleMap?.();
-      if (k === 'f') this.state.fly = !this.state.fly;
+      if (k === 'f') this.handlers.onInteract?.(); // new interact key
+      if (k === 'h') this.state.fly = !this.state.fly; // moved fly to h
       if (k === 'q') this.handlers.onToggleBuild?.();
       if (k === 'r') this.handlers.onCompanionCommand?.();
       if (k === 'x') this.handlers.onToggleMount?.();

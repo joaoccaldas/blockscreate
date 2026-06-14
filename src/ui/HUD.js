@@ -354,6 +354,7 @@ export class HUD {
         <button class="tbtn up" data-act="up" aria-label="Swim up">▲</button>
         <button class="tbtn down" data-act="down" aria-label="Swim down">▼</button>`
       : `
+        <button class="tbtn interact" data-act="interact" aria-label="Interact" id="touchInteractBtn" style="opacity: 0.3;">👋</button>
         <button class="tbtn build" data-act="build" aria-label="Mine or build">⛏</button>
         ${this.mode === MODE.CREATIVE ? '<button class="tbtn fly" data-act="fly" aria-label="Toggle flight">🪂</button>' : ''}
         <button class="tbtn jump" data-act="jump" aria-label="Jump">⤴</button>`;
@@ -408,6 +409,8 @@ export class HUD {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleMount?.(); });
       } else if (act === 'cargo') {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onCompanionCargo?.(); });
+      } else if (act === 'interact') {
+        btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onInteract?.(); });
       }
     });
   }
@@ -533,6 +536,15 @@ export class HUD {
     this.renderPowerups(game);
     this.renderEvents(game);
     this.renderRaidWarning(game);
+    if (this.isTouch) {
+      const interactBtn = this.root.querySelector('#touchInteractBtn');
+      if (interactBtn) {
+        const target = game._getInteractTarget?.();
+        interactBtn.style.opacity = target ? '1' : '0.3';
+        interactBtn.classList.toggle('pop', !!target);
+      }
+    }
+
     this.renderHotbar(game);
   }
 
@@ -1184,7 +1196,9 @@ export class HUD {
       (badges.length ? section('🏅 Relics', badges.length, badges.length, badgeRows) : '') +
       section('🏛️ Structures', structs.length, structs.filter((s) => game.structures.has(s.id)).length, structRows) +
       section('✨ Discoveries', discos.length, discos.filter((d) => game.discoveries.has(d.id)).length, discoRows) +
-      (anomalies.length ? section('⩗ Anomalies', anomalies.length, anomalies.filter((a) => game.anomalies.has(a.id)).length, anomalyRows) : '');
+      (anomalies.length ? section('⩗ Anomalies', anomalies.length, anomalies.filter((a) => game.anomalies.has(a.id)).length, anomalyRows) : '') +
+      ((game.inventory?.count?.('matrix_fragment') || 0) > 0 ? section('💠 Matrix Data', '???', game.inventory.count('matrix_fragment'), 
+        `<div class="jr-row"><span class="jr-ic">💠</span><div><b>Encrypted Fragments: ${game.inventory.count('matrix_fragment')}</b><small>The simulation is leaking. You are compiling raw data from the outside.</small></div></div>`) : '');
   }
 
   /** Reusable confirm dialog for destructive actions. onYes runs on Confirm. */

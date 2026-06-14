@@ -1492,4 +1492,61 @@ button:focus-visible, input:focus-visible, .era-card:focus-visible {
 .save-actions { display: flex; gap: 0.5rem; }
 .save-actions .btn { padding: 0.5rem 1rem; font-size: 0.9rem; margin: 0; }
 
+/* Matrix Terminal */
+.matrix-terminal {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 320px;
+  background: #051005;
+  border: 2px solid #00ff00;
+  color: #00ff00;
+  font-family: monospace;
+  box-shadow: 0 0 20px #00ff0033;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+}
+.mt-header {
+  background: #00ff00;
+  color: #000;
+  padding: 4px 8px;
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+}
+.mt-close {
+  background: none; border: none; color: #000; font-weight: bold; cursor: pointer;
+}
+.mt-body {
+  padding: 12px;
+}
+.mt-log {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  opacity: 0.8;
+}
+.mt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin: 16px 0;
+}
+.mt-cell {
+  aspect-ratio: 1;
+  background: #002200;
+  border: 1px solid #00ff00;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mt-cell.active {
+  background: #00ff00;
+  box-shadow: 0 0 8px #00ff00;
+}
+.mt-status {
+  text-align: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
 

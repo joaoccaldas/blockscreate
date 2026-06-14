@@ -3,7 +3,7 @@
  * Service Worker for offline play.
  * Bumps automatically on every release.
  */
-const CACHE_NAME = 'blockscreate-v5.67.0';
+const CACHE_NAME = 'blockscreate-v5.67.1';
 
 const ASSETS = [
   './',
@@ -62,12 +62,16 @@ const ASSETS = [
   './src/ui/HUD.js',
   './src/ui/ShareCard.js',
   './src/ui/LandingScene.js',
+  './src/ui/MatrixTerminal.js',
   './src/persistence/SaveManager.js',
   './src/persistence/Progress.js',
   './src/persistence/Settings.js',
   // Art
   './assets/generated/textures/blocks.png',
   './assets/generated/textures/blocks_extra.png',
+  './assets/generated/textures/flora_blocks.png',
+  './assets/generated/textures/industrial_blocks.png',
+  './assets/generated/ui/matrix_terminal_bg.png',
   './assets/generated/effects/effects.png',
   './assets/generated/landing/origin-to-dinos.png',
   './assets/generated/landing/prologue-ocean.png',

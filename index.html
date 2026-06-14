@@ -54,7 +54,7 @@
 
       <div class="menu-buttons">
         <button id="playBtn" class="btn primary">✦ New Journey</button>
-        <button id="continueBtn" class="btn">⏳ Continue</button>
+        <button id="continueBtn" class="btn">⏳ Load Game</button>
         <button id="prologueBtn" class="btn story-btn">▶ Watch Story Prologue</button>
         <button id="erasBtn" class="btn hidden">🌀 Choose an Age</button>
         <button id="howtoBtn" class="btn">❓ How to Play</button>
@@ -135,6 +135,25 @@
       <div class="thread-footer">
         <button id="threadStartBtn" class="btn primary">Begin Journey →</button>
         <button id="threadBackBtn" class="btn intro-back">← Back</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Save Selection Screen -->
+  <section id="saveSelect" class="screen intro-screen">
+    <div class="intro-stars" aria-hidden="true"></div>
+    <div class="intro-card save-select-card" style="width: min(800px, 94vw);">
+      <div class="thread-title-wrap">
+        <h2>Load Game</h2>
+        <p class="thread-subtitle">Resume a previous journey across the timeline.</p>
+      </div>
+      <div class="save-list-container" style="max-height: 50vh; overflow-y: auto; text-align: left; margin: 1.5rem 0;">
+        <ul id="saveList" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.8rem;">
+          <!-- Save slots injected here -->
+        </ul>
+      </div>
+      <div class="thread-footer">
+        <button id="saveBackBtn" class="btn intro-back">← Back</button>
       </div>
     </div>
   </section>

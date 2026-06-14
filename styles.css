@@ -1424,3 +1424,72 @@ button:focus-visible, input:focus-visible, .era-card:focus-visible {
   letter-spacing: 0.3px;
 }
 
+/* ---- Codex Hub ---- */
+.codex-card {
+  width: min(720px, 94vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  text-align: left;
+}
+.codex-header {
+  padding: 1.2rem 1.2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+.codex-header h2 { margin: 0 0 0.8rem; text-align: left; }
+.close-codex { top: 12px; right: 12px; width: 32px; height: 32px; }
+.codex-tabs {
+  display: flex;
+  gap: 1rem;
+}
+.codex-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  padding: 0.6rem 0.4rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  font-family: inherit;
+}
+.codex-tab:hover { color: #fff; }
+.codex-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.codex-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.2rem;
+}
+.codex-page-head {
+  margin-bottom: 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+/* ---- Save Slots ---- */
+.save-slot {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s, border-color 0.2s;
+}
+.save-slot:hover {
+  background: rgba(0, 0, 0, 0.6);
+  border-color: var(--accent);
+}
+.save-info h3 { margin: 0 0 0.4rem; color: #fff; }
+.save-info p { margin: 0; color: var(--muted); font-size: 0.85rem; }
+.save-actions { display: flex; gap: 0.5rem; }
+.save-actions .btn { padding: 0.5rem 1rem; font-size: 0.9rem; margin: 0; }
+
+

@@ -26,11 +26,11 @@ ok('journal sources expose full catalogs');
 
 // renderJournal runs without throwing and toggle pauses/resumes.
 let journalRendered=false;g.hud.renderJournal=()=>{journalRendered=true;};
-g._toggleJournal();
-if(!g.journalOpen||!journalRendered||!g.paused)throw new Error('journal did not open/pause/render');
-g._toggleJournal();
-if(g.journalOpen||g.paused)throw new Error('journal did not close/resume');
-ok('journal toggles open (pause+render) and closed (resume)');
+g._toggleCodex();
+if(!g.codexOpen||!journalRendered||!g.paused)throw new Error('codex did not open/pause/render');
+g._toggleCodex();
+if(g.codexOpen||g.paused)throw new Error('codex did not close/resume');
+ok('codex toggles open (pause+render) and closed (resume)');
 
 // branchCounts reflects discovered clues.
 g.clues.discover('fossil_bed');

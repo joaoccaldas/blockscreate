@@ -85,10 +85,7 @@ export class HUD {
         <div id="objList"></div>
       </div>
 
-      <div id="discoveryPanel" class="discovery-panel hidden">
-        <div class="obj-title">✨ Discoveries</div>
-        <div id="discoveryList"></div>
-      </div>
+
 
       <button id="pauseBtn" class="icon-btn" title="Menu (Esc)">☰</button>
       <button id="infoBtn" class="icon-btn info-btn" title="Toggle stats panels">📊</button>
@@ -99,8 +96,7 @@ export class HUD {
         <button id="invBtn" class="action-btn" title="Inventory (E)">🎒 <span>Bag</span></button>
         <button id="craftBtn" class="action-btn" title="Crafting (C)">🔨 <span>Craft</span></button>
         <button id="marketBtn" class="action-btn" title="Era market — spend tokens on boosts & relics (B)">🛒 <span>Market</span></button>
-        <button id="mapBtn" class="action-btn" title="Timeline of realities (M)">🗺️ <span>Timeline</span></button>
-        <button id="journalBtn" class="action-btn" title="Journal of clues & discoveries">📖 <span>Journal</span></button>
+        <button id="codexBtn" class="action-btn" title="Codex: Journal, Map & Discoveries (J)">📚 <span>Codex</span></button>
       </div>`}
       <div id="powerupBar" class="powerup-bar hidden"></div>
       <div id="eventBar" class="event-bar hidden"></div>
@@ -162,31 +158,35 @@ export class HUD {
         </div>
       </div>
 
-      <div id="journalPanel" class="panel hidden">
-        <div class="panel-head">
-          <h2>📖 Journal</h2>
-          <span id="journalBranch" class="muted small"></span>
+      <div id="codexPanel" class="overlay hidden">
+        <div class="overlay-card codex-card">
+          <div class="codex-header">
+            <h2>📚 Codex</h2>
+            <div class="codex-tabs">
+              <button class="codex-tab active" data-tab="codex-journal">📖 Journal</button>
+              <button class="codex-tab" data-tab="codex-map">🗺️ Map</button>
+              <button class="codex-tab" data-tab="codex-discoveries">✨ Discoveries</button>
+            </div>
+            <button class="icon-btn close-codex" id="codexClose" title="Close (J or Esc)">✕</button>
+          </div>
+          <div class="codex-content">
+            <div id="codex-journal" class="codex-page active">
+              <div class="codex-page-head">
+                <span id="journalBranch" class="muted small"></span>
+              </div>
+              <div id="journalBody"></div>
+            </div>
+            <div id="codex-map" class="codex-page hidden">
+              <div class="codex-page-head">
+                <span id="mapWalked" class="muted small"></span>
+              </div>
+              <div id="mapBody"></div>
+            </div>
+            <div id="codex-discoveries" class="codex-page hidden">
+              <div id="discoveryList"></div>
+            </div>
+          </div>
         </div>
-        <div id="journalBody"></div>
-        <button class="close-btn" id="journalClose">Close</button>
-      </div>
-
-      <div id="marketPanel" class="panel hidden">
-        <div class="panel-head">
-          <h2 id="marketTitle">🛒 Market</h2>
-          <span id="marketWallet" class="muted small"></span>
-        </div>
-        <div id="marketBody"></div>
-        <button class="close-btn" id="marketClose">Close</button>
-      </div>
-
-      <div id="mapPanel" class="panel hidden">
-        <div class="panel-head">
-          <h2>🗺️ Map of Space &amp; Time</h2>
-          <span id="mapWalked" class="muted small"></span>
-        </div>
-        <div id="mapBody"></div>
-        <button class="close-btn" id="mapClose">Close</button>
       </div>
 
       <div id="eraIntro" class="overlay hidden">
@@ -295,18 +295,26 @@ export class HUD {
       this.el('invBtn').onclick = () => this.h.onToggleInventory?.();
       this.el('craftBtn').onclick = () => this.h.onToggleCrafting?.();
       this.el('marketBtn').onclick = () => this.h.onToggleMarket?.();
-      this.el('mapBtn').onclick = () => this.h.onToggleMap?.();
-      this.el('journalBtn').onclick = () => this.h.onToggleJournal?.();
+      this.el('codexBtn').onclick = () => this.h.onToggleCodex?.();
     }
     this.el('marketClose').onclick = () => this.h.onToggleMarket?.();
-    this.el('mapClose').onclick = () => this.h.onToggleMap?.();
+    this.el('codexClose').onclick = () => this.h.onToggleCodex?.();
+    
+    // Codex Tabs
+    this.root.querySelectorAll('.codex-tab').forEach(tab => {
+      tab.onclick = (e) => {
+        this.root.querySelectorAll('.codex-tab').forEach(t => t.classList.remove('active'));
+        this.root.querySelectorAll('.codex-page').forEach(p => p.classList.add('hidden'));
+        e.target.classList.add('active');
+        this.el(e.target.dataset.tab).classList.remove('hidden');
+      };
+    });
     this.el('resumeBtn').onclick = () => this.h.onResume?.();
     this.el('pInv').onclick = () => this.h.onToggleInventory?.();
     this.el('pCraft').onclick = () => this.h.onToggleCrafting?.();
     this.el('pMarket').onclick = () => this.h.onToggleMarket?.();
-    this.el('pMap').onclick = () => this.h.onToggleMap?.();
-    this.el('pJournal').onclick = () => this.h.onToggleJournal?.();
-    this.el('journalClose').onclick = () => this.h.onToggleJournal?.();
+    this.el('pMap').onclick = () => this.h.onToggleCodex?.();
+    this.el('pJournal').onclick = () => this.h.onToggleCodex?.();
 
     this.el('setSound').onchange = (e) => this.h.onSetSound?.(e.target.checked);
     this.el('setMusic').onchange = (e) => this.h.onSetMusic?.(e.target.checked);
@@ -354,7 +362,7 @@ export class HUD {
         <button class="tbtn small" data-act="inv" aria-label="Inventory">🎒</button>
         <button class="tbtn small" data-act="craft" aria-label="Crafting">🔨</button>
         <button class="tbtn small" data-act="market" aria-label="Era market">🛒</button>
-        <button class="tbtn small" data-act="map" aria-label="Map of Space and Time">🗺️</button>
+        <button class="tbtn small" data-act="codex" aria-label="Codex">📚</button>
         ${this.eraId === 'stone' ? '<button class="tbtn small" data-act="companion" aria-label="Companion command">🌿</button>' : ''}
         ${this.eraId === 'stone' ? '<button class="tbtn small" data-act="mount" aria-label="Mount companion">🐾</button>' : ''}
         ${this.eraId === 'stone' ? '<button class="tbtn small" data-act="cargo" aria-label="Companion cargo">📦</button>' : ''}
@@ -392,8 +400,8 @@ export class HUD {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleCrafting?.(); });
       } else if (act === 'market') {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleMarket?.(); });
-      } else if (act === 'map') {
-        btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleMap?.(); });
+      } else if (act === 'codex') {
+        btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onToggleCodex?.(); });
       } else if (act === 'companion') {
         btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.h.onCompanionCommand?.(); });
       } else if (act === 'mount') {
@@ -877,9 +885,8 @@ export class HUD {
     ctx.fillRect(m.px, m.py, 1, 1);
   }
 
-  showJournal(show) { this.el('journalPanel').classList.toggle('hidden', !show); }
+  showCodex(show) { this.el('codexPanel').classList.toggle('hidden', !show); }
   showMarket(show) { this.el('marketPanel').classList.toggle('hidden', !show); }
-  showMap(show) { this.el('mapPanel').classList.toggle('hidden', !show); }
 
   /**
    * The Map of Space & Time: the time axis runs top→down by age; each tier shows

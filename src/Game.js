@@ -339,9 +339,8 @@ export class Game {
       },
       onToggleInventory: () => this._toggleInventory(),
       onToggleCrafting: () => this._toggleCrafting(),
-      onToggleJournal: () => this._toggleJournal(),
       onToggleMarket: () => this._toggleMarket(),
-      onToggleMap: () => this._toggleMap(),
+      onToggleCodex: () => this._toggleCodex(),
       onToggleBuild: () => { this.buildMode = !this.buildMode; },
       onCompanionCommand: () => this._cycleCompanionCommand(),
       onToggleMount: () => this._toggleMountCompanion(),
@@ -355,9 +354,8 @@ export class Game {
       onHotbar: (i) => { this.inventory.selected = i; },
       onToggleInventory: () => this._toggleInventory(),
       onToggleCrafting: () => this._toggleCrafting(),
-      onToggleJournal: () => this._toggleJournal(),
       onToggleMarket: () => this._toggleMarket(),
-      onToggleMap: () => this._toggleMap(),
+      onToggleCodex: () => this._toggleCodex(),
       onBuyOffer: (id) => this._buyOffer(id),
       onCraft: (r) => this._craft(r),
       onPickSlot: (i) => {
@@ -450,28 +448,30 @@ export class Game {
     this.audio?.play('ui');
   }
 
-  _toggleJournal() {
-    const opening = !this.journalOpen;
+  _toggleCodex() {
+    const opening = !this.codexOpen;
     this._closeMenus();
-    this.journalOpen = opening;
-    if (this.journalOpen) this.hud.renderJournal(this);
-    this.hud.showJournal(this.journalOpen);
+    this.codexOpen = opening;
+    if (this.codexOpen) {
+      this.hud.renderJournal(this);
+      this.hud.renderMap(this);
+    }
+    this.hud.showCodex(this.codexOpen);
     this.hud.showPause(false);
-    this.paused = this.journalOpen; // pause behind the journal, like other menus
+    this.paused = this.codexOpen; // pause behind the codex, like other menus
     this.audio?.play('ui');
   }
 
   _closeMenus() {
-    this.invOpen = this.craftOpen = this.journalOpen = this.marketOpen = this.mapOpen = false;
+    this.invOpen = this.craftOpen = this.codexOpen = this.marketOpen = false;
     this.hud.showInventory(false);
     this.hud.showCrafting(false);
-    this.hud.showJournal(false);
+    this.hud.showCodex(false);
     this.hud.showMarket(false);
-    this.hud.showMap(false);
   }
 
   _anyMenuOpen() {
-    return !!(this.invOpen || this.craftOpen || this.journalOpen || this.marketOpen || this.mapOpen);
+    return !!(this.invOpen || this.craftOpen || this.codexOpen || this.marketOpen);
   }
 
   _craft(recipe) {
@@ -498,16 +498,7 @@ export class Game {
     this.audio?.play('ui');
   }
 
-  _toggleMap() {
-    const opening = !this.mapOpen;
-    this._closeMenus();
-    this.mapOpen = opening;
-    if (this.mapOpen) this.hud.renderMap(this);
-    this.hud.showMap(this.mapOpen);
-    this.hud.showPause(false);
-    this.paused = this.mapOpen;
-    this.audio?.play('ui');
-  }
+
 
   /** Buy an era-market offer: spend tokens, then apply its effect. */
   _buyOffer(offerId) {

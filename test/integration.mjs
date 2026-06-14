@@ -273,10 +273,10 @@ ok('New Game+: descend a layer restarts deeper with a permanent legacy');
 // Map of Space & Time renders through the game without error and tracks state.
 const gMap = newGame();
 gMap.newWorld('cell', MODE.SURVIVAL);
-gMap._toggleMap();
-if (!gMap.mapOpen) throw new Error('map did not open');
-gMap._toggleMap();
-if (gMap.mapOpen) throw new Error('map did not close');
+gMap._toggleCodex();
+if (!gMap.codexOpen) throw new Error('codex did not open');
+gMap._toggleCodex();
+if (gMap.codexOpen) throw new Error('codex did not close');
 const mapModel = (await import('../src/systems/SpaceTimeMap.js')).buildMapModel(gMap);
 if (mapModel.current !== 'cell') throw new Error('map model lost the current era');
 if (!mapModel.tiers.some((t) => t.nodes.some((n) => n.state === 'current'))) throw new Error('map has no current node');

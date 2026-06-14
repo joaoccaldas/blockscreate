@@ -61,7 +61,7 @@ ok('HUD Mine/Build toggle is wired (clickable build for trackpad users)');
 
 // Desktop Inventory/Craft/Journal are reachable as clickable HUD actions, not
 // keyboard-only — the same discoverability fix as the build button.
-for(const h of ['onToggleInventory','onToggleCrafting','onToggleJournal']){
+for(const h of ['onToggleInventory','onToggleCrafting','onToggleCodex']){
   if(typeof g5.hud.h[h]!=='function')throw new Error('HUD missing handler '+h+' for desktop action buttons');
 }
 ok('Desktop Inventory/Craft/Journal actions are wired to HUD handlers');
@@ -104,11 +104,11 @@ ok('First Cell opens a physical rift that advances on contact');
 // Every modal is a true pause, the map is actually visible, and Escape closes
 // the active modal instead of leaving the game invisibly paused.
 const g7=mk();g7.newWorld('cell',MODE.SURVIVAL);g7.hud.showEraIntro=(era,done)=>done();g7.start();
-let mapShown=false;g7.hud.showMap=(show)=>{mapShown=show;};
-g7._toggleMap();
-if(!g7.mapOpen||!g7.paused||!mapShown)throw new Error('map should open visibly and pause the game');
+let codexShown=false;g7.hud.showCodex=(show)=>{codexShown=show;};
+g7._toggleCodex();
+if(!g7.codexOpen||!g7.paused||!codexShown)throw new Error('codex should open visibly and pause the game');
 g7._onPause();
-if(g7.mapOpen||g7.paused)throw new Error('Escape should close the map and resume');
+if(g7.codexOpen||g7.paused)throw new Error('Escape should close the codex and resume');
 g7._pause();g7._toggleInventory();
 if(!g7.invOpen||!g7.paused)throw new Error('inventory opened from pause must keep the simulation paused');
 g7._toggleInventory();

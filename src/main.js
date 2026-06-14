@@ -301,6 +301,55 @@ function startGlobeAnimation(canvas, getSelectedThread) {
   requestAnimationFrame(frame);
 }
 
+function showSaveSelect(saves) {
+  const list = document.getElementById('saveList');
+  if (!list) return;
+  list.innerHTML = '';
+  
+  if (saves.length === 0) {
+    list.innerHTML = '<p class="muted">No ancestral threads found.</p>';
+  } else {
+    for (const s of saves) {
+      const li = document.createElement('li');
+      li.className = 'save-slot';
+      
+      const era = getEra(s.eraId);
+      const eraName = era ? era.name : s.eraId;
+      const eraIcon = era ? era.icon : '🌍';
+      const dateStr = new Date(s.savedAt).toLocaleString();
+      const modeStr = s.mode === 'creative' ? '🎨 Creative' : '⚔️ Survival';
+      const threadStr = s.thread.charAt(0).toUpperCase() + s.thread.slice(1);
+      
+      li.innerHTML = `
+        <div class="save-info">
+          <h3>${eraIcon} ${eraName} <span style="opacity:0.5;font-size:0.8em;font-weight:normal;">(${threadStr})</span></h3>
+          <p>${modeStr} • Last played: ${dateStr}</p>
+        </div>
+        <div class="save-actions">
+          <button class="btn primary load-btn">Load</button>
+          <button class="btn danger del-btn" style="background:rgba(255,0,0,0.2);color:#ff5555;border-color:#ff5555;">Delete</button>
+        </div>
+      `;
+      
+      li.querySelector('.load-btn').addEventListener('click', () => {
+        const data = SaveManager.load(s.runId);
+        if (data) startGame({ save: data });
+      });
+      
+      li.querySelector('.del-btn').addEventListener('click', () => {
+        if (confirm('Delete this thread permanently?')) {
+          SaveManager.deleteSave(s.runId);
+          showSaveSelect(SaveManager.listSaves());
+        }
+      });
+      
+      list.appendChild(li);
+    }
+  }
+  
+  show('saveSelect');
+}
+
 function renderDailyCard() {
   const host = document.getElementById('dailyCard');
   if (!host) return;
@@ -398,6 +447,7 @@ function wire() {
   screens.landing = document.getElementById('landing');
   screens.intro = document.getElementById('intro');
   screens.threadSelect = document.getElementById('threadSelect');
+  screens.saveSelect = document.getElementById('saveSelect');
   screens.portal = document.getElementById('portal');
   screens.howto = document.getElementById('howto');
   screens.settings = document.getElementById('settings');
@@ -444,9 +494,16 @@ function wire() {
   click('prologueBtn', () => showJourneyIntro());
   click('erasBtn', () => { buildPortals(); show('portal'); });
   click('continueBtn', () => {
-    const save = SaveManager.load();
-    if (save) startGame({ save });
+    const saves = SaveManager.listSaves();
+    if (saves.length === 0) return;
+    if (saves.length === 1) {
+      const save = SaveManager.load(saves[0].runId);
+      if (save) startGame({ save });
+    } else {
+      showSaveSelect(saves);
+    }
   });
+  click('saveBackBtn', () => show('landing'));
   click('howtoBtn', () => show('howto'));
   click('howtoBack', () => show('landing'));
   click('portalBack', () => show('landing'));

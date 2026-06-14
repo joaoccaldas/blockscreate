@@ -40,12 +40,23 @@ export const SaveManager = {
       realityPath: game.realityPath || [],
       prelife: game.prelife || { active: false, nutrients: 0, minerals: 0 },
       thread: game.thread || 'salvador',
+      runId: game.runId,
     };
   },
 
   save(game) {
     try {
-      localStorage.setItem(C.SAVE_KEY, JSON.stringify(this.toJSON(game)));
+      if (!game.runId) {
+        game.runId = (game.thread || 'salvador') + '-' + Date.now();
+      }
+      const data = JSON.stringify(this.toJSON(game));
+      
+      // Write to the specific slot
+      localStorage.setItem('blockscreate.save.' + game.runId, data);
+      
+      // Also write to the default/legacy pointer for "Continue"
+      localStorage.setItem(C.SAVE_KEY, data);
+      
       return true;
     } catch (e) {
       console.warn('Save failed', e);
@@ -53,15 +64,57 @@ export const SaveManager = {
     }
   },
 
-  load() {
+  load(runId = null) {
     try {
-      const raw = localStorage.getItem(C.SAVE_KEY);
+      let raw = null;
+      if (runId) {
+        raw = localStorage.getItem('blockscreate.save.' + runId);
+      } else {
+        // Fallback to legacy/latest key
+        raw = localStorage.getItem(C.SAVE_KEY);
+      }
       if (!raw) return null;
       return this.migrate(JSON.parse(raw));
     } catch (e) {
       console.warn('Save load failed; ignoring corrupt save.', e);
       return null;
     }
+  },
+
+  listSaves() {
+    const saves = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('blockscreate.save.') && key !== C.SAVE_KEY) {
+        try {
+          const raw = localStorage.getItem(key);
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.world) {
+            saves.push({
+              runId: parsed.runId || key.replace('blockscreate.save.', ''),
+              thread: parsed.thread || 'salvador',
+              savedAt: parsed.savedAt || 0,
+              eraId: parsed.eraId || 'cell',
+              mode: parsed.mode || 'survival',
+            });
+          }
+        } catch (e) {}
+      }
+    }
+    // Return sorted by newest first
+    return saves.sort((a, b) => b.savedAt - a.savedAt);
+  },
+
+  deleteSave(runId) {
+    try {
+      localStorage.removeItem('blockscreate.save.' + runId);
+      // If we deleted the active default save, clear it too so Continue is disabled
+      const def = localStorage.getItem(C.SAVE_KEY);
+      if (def) {
+        const p = JSON.parse(def);
+        if (p.runId === runId) localStorage.removeItem(C.SAVE_KEY);
+      }
+    } catch (e) {}
   },
 
   /**
@@ -101,6 +154,7 @@ export const SaveManager = {
     save.realityPath = save.realityPath || [];
     save.prelife = save.prelife || { active: false, nutrients: 0, minerals: 0 };
     save.thread = save.thread || 'salvador';
+    save.runId = save.runId || null;
     save.version = C.SAVE_VERSION;
     return save;
   },

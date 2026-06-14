@@ -47,9 +47,10 @@ export const ERA_BIOMES = {
 };
 
 export class World {
-  constructor({ seed, eraId, width = C.WORLD_W, height = C.WORLD_H, originX = 0, chunks = null }) {
+  constructor({ seed, eraId, width = C.WORLD_W, height = C.WORLD_H, originX = 0, chunks = null, thread = 'salvador' }) {
     this.seed = seed >>> 0;
     this.eraId = eraId;
+    this.thread = thread;
     this.originX = originX;
     this.width = width;
     this.height = height;
@@ -185,8 +186,15 @@ export class World {
   biomeAtGlobal(gx) {
     const list = ERA_BIOMES[this.eraId] || ERA_BIOMES.stone;
     const chunk = this.chunkKeyAtGlobal(gx);
-    const n = hash2(chunk, this.seed % 9973, this.seed + 8181);
-    return list[Math.min(list.length - 1, Math.floor(n * list.length))];
+    
+    // The Ancestral Thread fundamentally alters the climate/biome map.
+    let threadBias = 0;
+    if (this.thread === 'salvador') threadBias = 0.2;
+    if (this.thread === 'stockholm') threadBias = -0.2;
+    
+    const rawN = hash2(chunk, this.seed % 9973, this.seed + 8181);
+    const n = Math.max(0, Math.min(0.999, rawN + threadBias));
+    return list[Math.floor(n * list.length)];
   }
 
   generateColumn(x, ID = blockIds()) {
@@ -408,6 +416,7 @@ export class World {
     return {
       seed: this.seed,
       eraId: this.eraId,
+      thread: this.thread,
       variant: this.variant || null,
       originX: this.originX,
       width: this.width,
@@ -458,6 +467,7 @@ export class World {
     const w = new World({
       seed: data.seed,
       eraId: data.eraId,
+      thread: data.thread,
       width: data.width,
       height: data.height,
       originX: data.originX || 0,

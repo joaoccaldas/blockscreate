@@ -33,6 +33,7 @@ import { Combo } from './systems/Combo.js';
 import { Haptics } from './systems/Haptics.js';
 import { Input, isTouch } from './input/Input.js';
 import { HUD } from './ui/HUD.js';
+import { MatrixTerminal } from './ui/MatrixTerminal.js';
 import { SaveManager } from './persistence/SaveManager.js';
 import { getBlock, dropsOf, isSolid, AIR, blockId, minTierOf, fallsOf } from './core/blocks.js';
 import { getItem, isPlaceable } from './core/items.js';
@@ -101,14 +102,15 @@ export class Game {
 
   // ---- lifecycle ----
 
-  newWorld(eraId, mode, { branch = null, seed = null, variant = null } = {}) {
+  newWorld(eraId, mode, { branch = null, seed = null, variant = null, thread = null } = {}) {
     this.dead = false;
     this.showIntro = true; // fresh era entry → show the era-reveal on start
     this.mode = mode;
     this.eraId = eraId;
+    if (thread) this.thread = thread;
     this.eraMods = getEraModifiers(eraId);
     this.clock = C.DAY_LENGTH * 0.3;
-    this.world = new World({ seed: seed != null ? (seed >>> 0) : ((Math.random() * 1e9) | 0), eraId });
+    this.world = new World({ seed: seed != null ? (seed >>> 0) : ((Math.random() * 1e9) | 0), eraId, thread: this.thread });
     // Pick this run's reality variant — branch-flavored when routed in via a
     // branch, else seed-derived so every fresh start has its own look. An
     // explicit variant (from a shared reality code) wins, for an exact match.
@@ -230,6 +232,10 @@ export class Game {
       mode: this.mode,
       eraId: this.eraId,
     });
+    this.matrixTerminal = new MatrixTerminal(this.hudRoot, {
+      onClose: () => { this.paused = false; },
+      onWin: (x, y) => this._onMatrixWin(x, y),
+    });
     this.invOpen = false;
     this.craftOpen = false;
     this.pendingRaid = null; // telegraphed siege awaiting its muster window
@@ -341,6 +347,7 @@ export class Game {
       onToggleCrafting: () => this._toggleCrafting(),
       onToggleMarket: () => this._toggleMarket(),
       onToggleCodex: () => this._toggleCodex(),
+      onInteract: () => this._doInteract(),
       onToggleBuild: () => { this.buildMode = !this.buildMode; },
       onCompanionCommand: () => this._cycleCompanionCommand(),
       onToggleMount: () => this._toggleMountCompanion(),
@@ -1472,6 +1479,53 @@ export class Game {
       }
     }
     this.hud?.toast('☄️ Impact!', 1500);
+  }
+  showMatrixTerminal(x, y) {
+    if (this.isDead || this.paused) return;
+    this.paused = true;
+    this.matrixTerminal.show(x, y);
+  }
+
+  _onMatrixWin(x, y) {
+    this.world.set(x, y, AIR);
+    this.inventory?.add?.('matrix_fragment', 1);
+    this.hud?.toast('💠 Encrypted fragment recovered!', 2000);
+    this.audio?.play?.('pickup');
+    
+    // Unlock matrix lore discovery
+    this.discoveries?.unlock?.('matrix_fragment_1');
+  }
+
+  _getInteractTarget() {
+    const cx = Math.floor(this.player.x);
+    const cy = Math.floor(this.player.y);
+    const radius = 2;
+    
+    let closest = null;
+    let minDist = Infinity;
+
+    for (let y = cy - radius; y <= cy + radius; y++) {
+      for (let x = cx - radius; x <= cx + radius; x++) {
+        const id = this.world.get(x, y);
+        const block = getItem(id);
+        if (block && typeof block.interact === 'function') {
+          const dist = Math.hypot(x + 0.5 - this.player.x, y + 0.5 - this.player.y);
+          if (dist <= 2.5 && dist < minDist) {
+            minDist = dist;
+            closest = { x, y, block };
+          }
+        }
+      }
+    }
+    return closest;
+  }
+
+  _doInteract() {
+    if (this.isDead || this.paused) return;
+    const target = this._getInteractTarget();
+    if (target) {
+      target.block.interact(this, target.x, target.y);
+    }
   }
 
   _handleInteraction(dt) {

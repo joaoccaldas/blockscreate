@@ -973,6 +973,21 @@ export class Game {
     return true;
   }
 
+  triggerRealitySplit() {
+    this.unlocked.unlock('flora');
+    SaveManager.save(this);
+    this._teardownView();
+    // The simulation forces a branch into the Flora Age
+    this.newWorld('flora', MODE.SURVIVAL, { branch: 'mutation' }); 
+    const priorPath = this.realityPath || [];
+    this.realityPath = [...priorPath, { from: this.eraId, to: 'flora', branch: 'mutation' }];
+    this.audio?.setEra?.('flora');
+    this.audio?.play('unlock');
+    this.haptics?.buzz('portal');
+    SaveManager.save(this);
+    this._introThenOnboard();
+  }
+
   _checkEraStage() {
     const progress = this.objectives?.stageProgress?.();
     if (!progress || progress.stage <= (this.eraStage || 0)) return;

@@ -181,6 +181,7 @@ export class HUD {
               <button class="codex-tab active" data-tab="codex-journal">📖 Journal</button>
               <button class="codex-tab" data-tab="codex-map">🗺️ Map</button>
               <button class="codex-tab" data-tab="codex-discoveries">✨ Discoveries</button>
+              <button class="codex-tab" data-tab="codex-truth">👁️ The Truth</button>
             </div>
             <button class="icon-btn close-codex" id="codexClose" title="Close (J or Esc)">✕</button>
           </div>
@@ -199,6 +200,14 @@ export class HUD {
             </div>
             <div id="codex-discoveries" class="codex-page hidden">
               <div id="discoveryList"></div>
+            </div>
+            <div id="codex-truth" class="codex-page hidden">
+              <div class="codex-page-head">
+                <span id="truthShards" class="muted small"></span>
+              </div>
+              <div id="truthBody" style="text-align: center; margin-top: 1rem;">
+                <p>The fragments are scattered. Seek the anomalies.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -1221,6 +1230,29 @@ export class HUD {
       (anomalies.length ? section('⩗ Anomalies', anomalies.length, anomalies.filter((a) => game.anomalies.has(a.id)).length, anomalyRows) : '') +
       ((game.inventory?.count?.('matrix_fragment') || 0) > 0 ? section('💠 Matrix Data', '???', game.inventory.count('matrix_fragment'), 
         `<div class="jr-row"><span class="jr-ic">💠</span><div><b>Encrypted Fragments: ${game.inventory.count('matrix_fragment')}</b><small>The simulation is leaking. You are compiling raw data from the outside.</small></div></div>`) : '');
+
+    // Populate The Truth tab
+    const shards = game.inventory?.count?.('matrix_shard') || 0;
+    this.el('truthShards').textContent = `${shards} / 3 Truth Shards Reassembled`;
+    
+    let truthContent = `<p>The fragments are scattered. Seek the anomalies.</p>`;
+    if (shards > 0) {
+      truthContent = `<p style="color: #0ff;">The code is bleeding through. You hold ${shards} shard(s) of the underlying architecture.</p>`;
+      if (shards >= 3) {
+        truthContent += `<div style="margin-top: 2rem;"><button id="truthPortalBtn" class="btn primary shadow-pulse" style="background: #9d00ff;">Rend the Simulation</button></div>`;
+      }
+    }
+    this.el('truthBody').innerHTML = truthContent;
+    
+    const truthBtn = this.el('truthPortalBtn');
+    if (truthBtn) {
+      truthBtn.onclick = () => {
+        game.hud?.toast('THE FABRIC TEARS...', 3000);
+        game.audio?.play('level_up'); // We can use level_up or a custom sound
+        game.hud?.showCodex(false);
+        game.triggerRealitySplit();
+      };
+    }
   }
 
   /** Reusable confirm dialog for destructive actions. onYes runs on Confirm. */

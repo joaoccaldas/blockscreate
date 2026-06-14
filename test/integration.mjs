@@ -252,7 +252,7 @@ ok('Trade Republic: a trade-leaning Iron player diverges into the branch age');
 const { MARKET } = await import('../src/systems/EraMarket.js');
 if (!(MARKET.republic && MARKET.republic.length)) throw new Error('Trade Republic has no market');
 const repObjIds = gDiv.objectives.list.map((o) => o.id);
-for (const id of ['open_market', 'send_caravan', 'pave_roads']) if (!repObjIds.includes(id)) throw new Error(`republic objective ${id} missing`);
+for (const id of ['open_market', 'send_caravan', 'build_mint']) if (!repObjIds.includes(id)) throw new Error(`republic objective ${id} missing`);
 if (!gDiv.world.grid.length) throw new Error('Trade Republic world did not generate terrain');
 ok('Trade Republic is a fully playable era (world, market, objectives)');
 

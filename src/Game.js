@@ -757,6 +757,8 @@ export class Game {
     this._ambientWeather(dt);
     this._updateMeteors(dt);
     this._updateCrops(dt);
+    this._updateFlora(dt);
+    this._updateCommerce(dt);
     this.particles.update(dt);
     this.floaters.update(dt);
     this.combo.update(dt); // lets a streak time out when you stop acting
@@ -1737,6 +1739,87 @@ export class Game {
             this.particles.burst(x + 0.5, y + 0.5, '#d9b84a', 3, { gravity: 3, life: 0.4 });
           }
         }
+      }
+    }
+  }
+
+  _updateFlora(dt) {
+    if (!this.world || this.world.eraId !== 'flora') return;
+    this._floraTimer = (this._floraTimer || 0) + dt;
+    if (this._floraTimer < 5) return;
+    this._floraTimer = 0;
+
+    const vineId = blockId('giant_vine');
+    if (vineId === 0) return; // not defined
+
+    const cx = Math.floor(this.player.x);
+    const cy = Math.floor(this.player.y);
+    for (let i = 0; i < 4; i++) { // small number of attempts per tick
+      const rx = cx + Math.floor((Math.random() - 0.5) * 40);
+      const ry = cy + Math.floor((Math.random() - 0.5) * 30);
+      const target = this.world.get(rx, ry);
+      if (target === vineId) {
+        // Grow upwards
+        if (this.world.get(rx, ry - 1) === 0) {
+          if (Math.random() < 0.4) {
+            this.world.set(rx, ry - 1, vineId);
+            this.particles.burst(rx + 0.5, ry - 0.5, '#70e28b', 2, { gravity: 2, life: 0.3 });
+          }
+        }
+      } else if (target === blockId('spore_pod') && this.world.get(rx, ry + 1) === 0) {
+        // rare vine spawn under spore pod
+        if (Math.random() < 0.05) {
+          this.world.set(rx, ry + 1, vineId);
+        }
+      }
+    }
+  }
+
+  _updateCommerce(dt) {
+    if (!this.world || this.world.eraId !== 'republic') return;
+    this._commerceTimer = (this._commerceTimer || 0) + dt;
+    if (this._commerceTimer < 10) return; // run every 10 seconds
+    this._commerceTimer = 0;
+
+    // Apply vault interest
+    let vaults = this.civ.structures.get('vault') || 0;
+    if (vaults > 0 && this.civ.cp > 0) {
+      const interest = Math.floor(this.civ.cp * 0.01 * vaults); // 1% per vault
+      if (interest > 0) {
+        this.civ.cp += interest;
+        this.floaters.add('+', this.player.x, this.player.y - 1, '#f2cd78', `+${interest} CP Interest`);
+      }
+    }
+
+    // Process mints
+    let mints = this.civ.structures.get('mint') || 0;
+    if (mints > 0) {
+      let coinsMinted = 0;
+      // take from settler stock or player inventory
+      for (let i = 0; i < mints; i++) {
+        let source = null;
+        if (this.inventory.count('gold_ore') > 0) source = { inv: true, item: 'gold_ore' };
+        else if ((this.settlers?.stock?.gold_ore || 0) > 0) source = { inv: false, item: 'gold_ore' };
+        else if (this.inventory.count('copper_ore') > 0) source = { inv: true, item: 'copper_ore' };
+        else if ((this.settlers?.stock?.copper_ore || 0) > 0) source = { inv: false, item: 'copper_ore' };
+
+        if (source) {
+          if (source.inv) this.inventory.consume(source.item, 1);
+          else {
+            this.settlers.stock[source.item]--;
+            // prevent negative stock
+            if (this.settlers.stock[source.item] < 0) this.settlers.stock[source.item] = 0;
+          }
+          
+          this.inventory.add('trade_bead', 1);
+          coinsMinted++;
+        }
+      }
+
+      if (coinsMinted > 0) {
+        this.hud.toast(`Mints struck ${coinsMinted} coins`);
+        // assume an generic audio like 'craft' or 'place' works as we don't have 'coin' specifically
+        this.audio?.play('place'); 
       }
     }
   }

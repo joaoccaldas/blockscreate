@@ -21,8 +21,8 @@ export const OBJECTIVES = {
     { id: 'advance',          kind: 'portal',    icon: '🦖', label: 'Evolve into the Age of Dinosaurs',   reward: 0,  check: (g) => g.canAdvance() },
   ],
   flora: [
-    { id: 'forage_fiber', kind: 'mandatory', icon: '🌾', label: 'Forage 5 Plant Fiber',                 reward: 12, check: (g) => total(g, 'fiber') >= 5 },
-    { id: 'gather_wood',  kind: 'mandatory', icon: '🪵', label: 'Gather 3 Wood for tools',              reward: 10, check: (g) => total(g, 'log') >= 3 },
+    { id: 'climb_vine',   kind: 'mandatory', icon: '🌿', label: 'Climb a Giant Vine',                 reward: 15, check: (g) => g.player.y < Math.floor(g.world.highestBuild || g.player.y) && g.world.get(Math.floor(g.player.x), Math.floor(g.player.y)) === 54 }, // 54 = giant_vine
+    { id: 'harvest_spores', kind: 'mandatory', icon: '✨', label: 'Harvest 3 Spores',                   reward: 12, check: (g) => total(g, 'spores') >= 3 },
     { id: 'cultivate',    kind: 'mandatory', icon: '🌱', label: 'Cultivate a farm plot',                reward: 22, check: (g) => g.civ.hasBuilt('farm_plot') },
     { id: 'grow_grove',   kind: 'mandatory', icon: '🌳', label: 'Plant a grove (place 4 logs)',         reward: 20, check: (g) => g.civ.hasBuilt('log', 4) },
     { id: 'green_world',  kind: 'mastery',   icon: '🍃', label: 'Mastery: forage 12 plant fiber',       reward: 20, check: (g) => total(g, 'fiber') >= 12 },
@@ -82,9 +82,9 @@ export const OBJECTIVES = {
   republic: [
     { id: 'open_market',   kind: 'mandatory', icon: '🏺', label: 'Open a market',                        reward: 40, check: (g) => g.civ.hasBuilt('market') },
     { id: 'send_caravan',  kind: 'mandatory', icon: '🐪', label: 'Establish a caravan post',             reward: 50, check: (g) => g.civ.hasBuilt('caravan_post') },
-    { id: 'pave_roads',    kind: 'mandatory', icon: '🛣️', label: 'Pave 6 stretches of road',             reward: 45, check: (g) => g.civ.hasBuilt('road', 6) },
+    { id: 'build_mint',    kind: 'mandatory', icon: '🪙', label: 'Build a Mint',                         reward: 50, check: (g) => g.structures?.has('mint') },
     { id: 'treasury',      kind: 'mandatory', icon: '💰', label: 'Grow the treasury to 400 Civ Points',  reward: 60, check: (g) => (g.civ.cp || 0) >= 400 },
-    { id: 'caravan_master',kind: 'mastery',   icon: '🧭', label: 'Mastery: bank 3 trade beads',          reward: 55, check: (g) => g.inventory.count('trade_bead') >= 3 },
+    { id: 'build_vault',   kind: 'mastery',   icon: '🏦', label: 'Mastery: build a Vault',               reward: 60, check: (g) => g.structures?.has('vault') },
     { id: 'guild_charter', kind: 'mastery',   icon: '📜', label: 'Mastery: reach a trade network of 8',  reward: 60, check: (g) => (g.civ.trade || 0) >= 8 },
   ],
 };

@@ -5,7 +5,7 @@
  * hunger, energy) live here too; in Creative mode they are simply ignored.
  */
 import { C, MODE } from '../core/constants.js';
-import { isSolid } from '../core/blocks.js';
+import { isSolid, isClimbable } from '../core/blocks.js';
 
 export class Player {
   constructor(x, y) {
@@ -38,6 +38,9 @@ export class Player {
     const speedBoost = input.modifiers?.moveSpeed || 1;
     this.vx = ax * C.MOVE_SPEED * (swimmingCell ? 0.62 : speedBoost);
 
+    const blockAtPlayer = world.get(Math.floor(this.x), Math.floor(this.y - this.h / 2));
+    const climbing = isClimbable(blockAtPlayer);
+
     if (flying) {
       this.vy = 0;
       if (input.up) this.vy = -C.MOVE_SPEED;
@@ -50,6 +53,10 @@ export class Player {
       this.vy += Math.sin((world.clock || 0) * 0.9 + this.x) * dt * 2.2;
       this.vy *= Math.max(0, 1 - dt * 5.5);
       this.vy = Math.max(-C.MOVE_SPEED * 0.8, Math.min(C.MOVE_SPEED * 0.8, this.vy));
+    } else if (climbing) {
+      this.vy = 0;
+      if (input.up) this.vy = -C.MOVE_SPEED * 0.8;
+      if (input.down) this.vy = C.MOVE_SPEED * 0.8;
     } else {
       // Gravity
       this.vy += C.GRAVITY * dt;

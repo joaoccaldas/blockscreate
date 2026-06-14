@@ -54,6 +54,20 @@ export const STRUCTURES = [
     reward: 45,
     check: (ctx) => ctx.ring >= 10 && ctx.counts.torch >= 2,
   },
+  {
+    id: 'vault',
+    icon: '💰',
+    label: 'Vault',
+    reward: 60,
+    check: (ctx) => (ctx.counts.vault_block || 0) >= 4 && ctx.counts.torch >= 1,
+  },
+  {
+    id: 'mint',
+    icon: '🪙',
+    label: 'Mint',
+    reward: 50,
+    check: (ctx) => (ctx.counts.mint_block || 0) >= 4 && ctx.counts.torch >= 1,
+  },
 ];
 
 export class StructureTracker {

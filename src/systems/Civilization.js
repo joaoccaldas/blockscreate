@@ -27,6 +27,7 @@ const SETTLEMENT_BLOCKS = new Set([
   'lipid_membrane', 'planks', 'cobblestone', 'brick', 'thatch', 'campfire', 'torch', 'log',
   'farm_plot', 'granary', 'market', 'caravan_post', 'gate', 'road', 'auto_miner', 'windmill', 'build_site',
   'smelter', 'factory', 'conveyor', 'generator', 'power_line',
+  'vault_block', 'mint_block'
 ]);
 
 export class Civilization {

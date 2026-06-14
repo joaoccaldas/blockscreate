@@ -109,6 +109,14 @@ const defs = [
   // Buried ruins & treasure: carved chambers underground reward exploration.
   { id: 52, name: 'ruin_brick', label: 'Ruined Brick', solid: true, hardness: 2.4, tool: 'pickaxe', colors: { base: '#6b6354', top: '#867c69', side: '#544d42' }, era: 'stone', drops: 'cobblestone' },
   { id: 53, name: 'treasure',   label: 'Buried Cache',  solid: true, hardness: 1.2, tool: 'hand',    colors: { base: '#b8923a', top: '#f4d24a', side: '#8a6c28' }, era: 'stone', treasure: true, light: 0.3, fleck: '#fff0a8' },
+
+  // Age of Flora: Cultivation branch distinct blocks
+  { id: 54, name: 'giant_vine', label: 'Giant Vine',   solid: false, hardness: 0.4, tool: 'axe',     colors: { base: '#2b5e28', top: '#428f3e', side: '#20471e' }, era: 'flora', drops: 'fiber', climbable: true },
+  { id: 55, name: 'spore_pod',  label: 'Spore Pod',    solid: true,  hardness: 0.3, tool: 'hand',    colors: { base: '#224036', top: '#70e28b', side: '#1a3028' }, era: 'flora', drops: 'spores', light: 0.65 },
+
+  // Trade Republic: Commerce branch distinct blocks
+  { id: 56, name: 'vault_block', label: 'Vault Block', solid: true,  hardness: 3.0, tool: 'pickaxe', colors: { base: '#e2bd68', top: '#f2cd78', side: '#c29d48' }, era: 'republic', drops: 'vault_block' },
+  { id: 57, name: 'mint_block',  label: 'Mint Block',  solid: true,  hardness: 2.8, tool: 'pickaxe', colors: { base: '#423d38', top: '#544d47', side: '#302b28' }, era: 'republic', drops: 'mint_block' },
 ];
 
 // fix accidental typo above without breaking the table layout
@@ -167,4 +175,10 @@ export function minTierOf(id) {
 export function fallsOf(id) {
   const b = BLOCKS[id];
   return !!(b && b.falls);
+}
+
+/** Is this block climbable (like a vine/ladder)? */
+export function isClimbable(id) {
+  const b = BLOCKS[id];
+  return !!(b && b.climbable);
 }

@@ -16,9 +16,11 @@ import { getEraUI, variantInfo } from './core/eraTheme.js';
 import { Audio } from './systems/Audio.js';
 import { LandingScene } from './ui/LandingScene.js';
 import { Game } from './Game.js';
+import { MatrixTerminal } from './ui/MatrixTerminal.js';
 
 const screens = {};
 let game = null;
+let matrixTerminal = null;
 let landingScene = null;
 let chosenMode = MODE.SURVIVAL;
 let introStep = 0;
@@ -100,6 +102,8 @@ function startGame({ eraId, mode, save, reality, daily, thread }) {
     onExit: () => { game = null; refreshLanding(); show('landing'); },
     onDailyComplete: (key) => progress.completeDaily(key),
   });
+  matrixTerminal = new MatrixTerminal(game);
+  game.matrixTerminal = matrixTerminal;
   if (save) game.loadSave(save);
   else if (reality) {
     // Land the player in a fixed world (a friend's link, or the daily).

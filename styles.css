@@ -1492,61 +1492,118 @@ button:focus-visible, input:focus-visible, .era-card:focus-visible {
 .save-actions { display: flex; gap: 0.5rem; }
 .save-actions .btn { padding: 0.5rem 1rem; font-size: 0.9rem; margin: 0; }
 
-/* Matrix Terminal */
-.matrix-terminal {
+/* Matrix Terminal - Cosmic UI */
+.matrix-overlay {
   position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 320px;
-  background: #051005;
-  border: 2px solid #00ff00;
-  color: #00ff00;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+.matrix-overlay.hidden { display: none; }
+
+.matrix-window {
+  width: 500px;
+  max-width: 90vw;
+  background-image: url('assets/generated/ui/matrix_terminal_bg.png');
+  background-size: cover;
+  background-position: center;
+  border: 2px solid #0ff;
+  border-radius: 8px;
+  color: #0ff;
   font-family: monospace;
-  box-shadow: 0 0 20px #00ff0033;
-  z-index: 200;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 15px rgba(0, 255, 255, 0.2);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
-.mt-header {
-  background: #00ff00;
-  color: #000;
-  padding: 4px 8px;
+
+.matrix-header {
+  background: rgba(0, 50, 50, 0.8);
+  border-bottom: 2px solid #0ff;
+  padding: 8px 12px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-weight: bold;
 }
-.mt-close {
-  background: none; border: none; color: #000; font-weight: bold; cursor: pointer;
+
+.matrix-title {
+  text-shadow: 0 0 5px #0ff;
 }
-.mt-body {
-  padding: 12px;
-}
-.mt-log {
-  margin: 0 0 8px 0;
-  font-size: 12px;
-  opacity: 0.8;
-}
-.mt-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  margin: 16px 0;
-}
-.mt-cell {
-  aspect-ratio: 1;
-  background: #002200;
-  border: 1px solid #00ff00;
+
+.matrix-header .close-btn {
+  background: transparent;
+  color: #0ff;
+  border: none;
+  font-size: 1.2rem;
   cursor: pointer;
-  transition: all 0.15s;
+  text-shadow: 0 0 5px #0ff;
 }
-.mt-cell.active {
-  background: #00ff00;
-  box-shadow: 0 0 8px #00ff00;
+
+.matrix-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: rgba(0, 10, 20, 0.6);
 }
-.mt-status {
-  text-align: center;
+
+.matrix-log {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(0, 255, 255, 0.5);
+  padding: 10px;
+  min-height: 80px;
+  font-size: 0.9rem;
+  text-shadow: 0 0 3px #0ff;
+}
+
+.matrix-puzzle {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.matrix-node {
+  aspect-ratio: 1;
+  border: 1px solid #0ff;
+  background: rgba(0, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+}
+.matrix-node:hover {
+  background: rgba(0, 255, 255, 0.3);
+  box-shadow: 0 0 10px #0ff;
+}
+.matrix-node.active {
+  background: #0ff;
+  color: #000;
+  box-shadow: 0 0 15px #0ff;
+}
+
+.matrix-btn {
+  background: transparent;
+  border: 1px solid #0ff;
+  color: #0ff;
+  padding: 10px;
+  font-family: monospace;
+  font-size: 1.1rem;
   font-weight: bold;
-  font-size: 14px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+.matrix-btn:hover {
+  background: rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 10px #0ff;
 }
 
 

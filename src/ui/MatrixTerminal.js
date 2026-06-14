@@ -1,112 +1,101 @@
 export class MatrixTerminal {
-  constructor(container, handlers) {
-    this.container = container;
-    this.handlers = handlers;
+  constructor(game) {
+    this.game = game;
+    this.el = document.getElementById('matrixTerminal');
+    this.logEl = document.getElementById('matrixLog');
+    this.puzzleEl = document.getElementById('matrixPuzzle');
+    this.hackBtn = document.getElementById('matrixHackBtn');
     
-    this.el = document.createElement('div');
-    this.el.className = 'matrix-terminal hidden';
-    this.el.innerHTML = `
-      <div class="mt-header">
-        <span>MATRIX NODE UPLINK</span>
-        <button class="mt-close">X</button>
-      </div>
-      <div class="mt-body">
-        <p class="mt-log">Connecting to hidden reality layer...</p>
-        <p class="mt-log">Encrypted data fragment found.</p>
-        <p class="mt-log">Decrypt by aligning the signal matrix (all nodes must be active):</p>
-        <div class="mt-grid"></div>
-        <div class="mt-status">STATUS: LOCKED</div>
-      </div>
-    `;
-    
-    this.container.appendChild(this.el);
-    this.gridEl = this.el.querySelector('.mt-grid');
-    this.statusEl = this.el.querySelector('.mt-status');
-    
-    this.el.querySelector('.mt-close').onclick = () => this.hide();
-    
-    this.grid = [];
-    this.size = 3;
-    this.targetPos = null; // {x, y} of the block to destroy on win
+    document.getElementById('matrixClose').onclick = () => this.close();
+    this.hackBtn.onclick = () => this.tryHack();
   }
-  
-  show(targetX, targetY) {
-    this.targetPos = { x: targetX, y: targetY };
+
+  open(x, y) {
+    this.targetX = x;
+    this.targetY = y;
     this.el.classList.remove('hidden');
-    this.initGrid();
-    this.renderGrid();
+    this.game.audio?.play('ui');
+    this.generatePuzzle();
   }
-  
-  hide() {
+
+  close() {
     this.el.classList.add('hidden');
-    this.targetPos = null;
-    this.handlers.onClose?.();
+    this.game.audio?.play('ui');
   }
-  
-  initGrid() {
-    this.grid = [];
-    for (let i = 0; i < this.size * this.size; i++) {
-      this.grid.push(false);
-    }
-    // Randomize but ensure solvable by simulating random clicks
-    const clicks = 5 + Math.floor(Math.random() * 5);
-    for (let i = 0; i < clicks; i++) {
-      this.flip(Math.floor(Math.random() * this.size), Math.floor(Math.random() * this.size));
-    }
-    // ensure it's not solved initially
-    if (this.checkWin()) this.flip(0, 0); 
-    this.updateStatus();
-  }
-  
-  flip(c, r) {
-    if (c < 0 || c >= this.size || r < 0 || r >= this.size) return;
-    const idx = r * this.size + c;
-    this.grid[idx] = !this.grid[idx];
-  }
-  
-  toggle(c, r) {
-    this.flip(c, r);
-    this.flip(c - 1, r);
-    this.flip(c + 1, r);
-    this.flip(c, r - 1);
-    this.flip(c, r + 1);
+
+  generatePuzzle() {
+    this.puzzleEl.innerHTML = '';
+    this.logEl.innerHTML = '// NODE ESTABLISHED.<br>// BYPASS ENCRYPTION REQUIRED.';
     
-    this.renderGrid();
-    if (this.checkWin()) {
-      this.statusEl.textContent = 'STATUS: DECRYPTED';
-      this.statusEl.style.color = '#00ff00';
-      setTimeout(() => this.win(), 800);
-    } else {
-      this.updateStatus();
+    // Lights Out puzzle
+    this.nodes = [];
+    for (let i = 0; i < 16; i++) {
+      const btn = document.createElement('div');
+      btn.className = 'matrix-node';
+      btn.textContent = '⬡';
+      btn.onclick = () => this.toggleNode(i);
+      this.puzzleEl.appendChild(btn);
+      this.nodes.push(btn);
     }
+    
+    // Randomize initial state (simulate clicks to ensure it's solvable)
+    for(let i=0; i<5; i++) {
+      this.toggleNode(Math.floor(Math.random() * 16), false);
+    }
+    this.checkWin(false);
   }
-  
-  checkWin() {
-    return this.grid.every(v => v);
-  }
-  
-  updateStatus() {
-    const active = this.grid.filter(v => v).length;
-    this.statusEl.textContent = `STATUS: ${active} / ${this.size * this.size} ALIGNED`;
-    this.statusEl.style.color = '#ffaa00';
-  }
-  
-  renderGrid() {
-    this.gridEl.innerHTML = '';
-    for (let r = 0; r < this.size; r++) {
-      for (let c = 0; c < this.size; c++) {
-        const btn = document.createElement('button');
-        btn.className = 'mt-cell' + (this.grid[r * this.size + c] ? ' active' : '');
-        btn.onclick = () => this.toggle(c, r);
-        this.gridEl.appendChild(btn);
+
+  toggleNode(i, playSound = true) {
+    if (playSound) this.game.audio?.play('ui');
+    
+    const toggle = (idx) => {
+      if (idx >= 0 && idx < 16) {
+        this.nodes[idx].classList.toggle('active');
       }
+    };
+    
+    toggle(i);
+    // Cross pattern: watch boundaries!
+    if (i % 4 !== 0) toggle(i - 1); // left
+    if (i % 4 !== 3) toggle(i + 1); // right
+    toggle(i - 4); // top
+    toggle(i + 4); // bottom
+    
+    if (playSound) this.checkWin(true);
+  }
+
+  checkWin(log = true) {
+    const active = this.nodes.filter(n => n.classList.contains('active')).length;
+    if (log) {
+      this.logEl.innerHTML = `// SCANNING...<br>// ${active} NODES SYNCHRONIZED.`;
+    }
+    
+    if (active === 16 || active === 0) { // Win if all on or all off
+      this.logEl.innerHTML = `// SYSTEM OVERRIDDEN.<br>// ACCESS GRANTED.`;
+      this.hackBtn.textContent = '▶ EXTRACT TRUTH SHARD';
+      this.hackBtn.style.color = '#0f0';
+    } else {
+      this.hackBtn.textContent = '▶ INITIATE OVERRIDE';
+      this.hackBtn.style.color = '#0ff';
     }
   }
-  
-  win() {
-    if (this.handlers.onWin && this.targetPos) {
-      this.handlers.onWin(this.targetPos.x, this.targetPos.y);
+
+  tryHack() {
+    const active = this.nodes.filter(n => n.classList.contains('active')).length;
+    if (active === 16 || active === 0) {
+      // Reward the player with a matrix_shard!
+      this.game.inventory.add('matrix_shard', 1);
+      this.game.hud?.toast('Extracted Matrix Shard!');
+      this.game.particles.fountain(this.targetX + 0.5, this.targetY + 0.5, ['#0ff', '#fff', '#00f'], 30);
+      this.game.audio?.play('unlock');
+      
+      // Remove the anomaly block
+      this.game.world.set(this.targetX, this.targetY, 0); 
+      
+      this.close();
+    } else {
+      this.logEl.innerHTML = `// ACCESS DENIED.<br>// SYNCHRONIZE ALL NODES.`;
+      this.game.audio?.play('ui');
     }
-    this.hide();
   }
 }

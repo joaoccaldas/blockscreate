@@ -159,16 +159,14 @@ const defs = [
     id: 61, name: 'matrix_node', label: 'Matrix Node', solid: true, hardness: 99, tool: 'pickaxe',
     colors: { base: '#000000', top: '#002200', side: '#001100' }, era: 'republic', fleck: '#00ff00', light: 0.8,
     interact: (game, x, y) => {
-      // Toggle Matrix Terminal mini-game overlay
-      game.showMatrixTerminal?.(x, y);
+      game.matrixTerminal?.open(x, y);
     }
   },
   {
     id: 62, name: 'anomaly', label: 'Reality Anomaly', solid: true, hardness: 99, tool: 'pickaxe',
     colors: { base: '#2b005e', top: '#450099', side: '#1d003d' }, era: 'stone', fleck: '#00ffcc', light: 1.0,
     interact: (game, x, y) => {
-      game.hud?.toast('👁️ The Truth beckons. Encase it.', 2000);
-      game.audio?.play?.('ui'); // we need a spooky sound here later
+      game.matrixTerminal?.open(x, y);
     }
   },
   {

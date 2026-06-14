@@ -248,6 +248,25 @@
       <canvas id="gameCanvas"></canvas>
       <div id="hud"></div>
     </div>
+    <!-- Matrix Terminal Overlay (hidden by default) -->
+    <div id="matrixTerminal" class="matrix-overlay hidden">
+      <div class="matrix-window">
+        <div class="matrix-header">
+          <span class="matrix-title">⬡ MATRIX_TERMINAL_V1.0</span>
+          <button id="matrixClose" class="btn close-btn">×</button>
+        </div>
+        <div class="matrix-body">
+          <div class="matrix-log" id="matrixLog">
+            // NODE ESTABLISHED.<br>
+            // AWAITING OVERRIDE...
+          </div>
+          <div class="matrix-puzzle" id="matrixPuzzle">
+            <!-- Dynamic puzzle content goes here -->
+          </div>
+          <button id="matrixHackBtn" class="btn matrix-btn">▶ INITIATE OVERRIDE</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <script type="module" src="src/main.js"></script>

@@ -1723,6 +1723,14 @@ export class Game {
         SaveManager.saveBlueprints(this.blueprints);
         this.hud.toast(`Saved blueprint: ${name}`);
         this.audio?.play('ui');
+        
+        // Reward truth shards for epic builds (large structures)
+        const blockCount = blocks.filter(id => id !== 0).length;
+        if (blockCount > 25) {
+          this.inventory.add('matrix_shard', 1);
+          this.hud.bigToast('💠 Epic Structure Detected!<br><small>A Matrix Shard materializes in your inventory.</small>', 3000);
+          this.audio?.play('level_up');
+        }
       }
     });
   }

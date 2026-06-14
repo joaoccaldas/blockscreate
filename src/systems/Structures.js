@@ -96,6 +96,90 @@ export class StructureTracker {
   list() { return STRUCTURES.filter((s) => this.discovered.has(s.id)); }
   all() { return STRUCTURES; }
   serialize() { return [...this.discovered]; }
+
+  /**
+   * Evaluates all player-built cells, groups them into contiguous buildings,
+   * and calculates an Architectural Score based on volume, height, materials, and complexity.
+   */
+  scoreArchitecture(game) {
+    if (!game.civ || !game.civ.builtCells) return 0;
+    
+    // Group builtCells into connected components (buildings)
+    const cells = Array.from(game.civ.builtCells).map(s => {
+      const [x, y] = s.split(',').map(Number);
+      return {x, y, id: game.world.get(x, y)};
+    }).filter(c => c.id !== AIR); // Ignore air (destroyed blocks)
+
+    const visited = new Set();
+    const buildings = [];
+    
+    for (const c of cells) {
+      const key = `${c.x},${c.y}`;
+      if (visited.has(key)) continue;
+      
+      const building = [];
+      const queue = [c];
+      visited.add(key);
+      
+      while (queue.length > 0) {
+        const curr = queue.shift();
+        building.push(curr);
+        
+        // Check 4-way neighbors
+        const neighbors = [
+          {x: curr.x + 1, y: curr.y}, {x: curr.x - 1, y: curr.y},
+          {x: curr.x, y: curr.y + 1}, {x: curr.x, y: curr.y - 1}
+        ];
+        
+        for (const n of neighbors) {
+          const nk = `${n.x},${n.y}`;
+          if (!visited.has(nk) && game.civ.builtCells.has(nk) && game.world.get(n.x, n.y) !== AIR) {
+            visited.add(nk);
+            queue.push({x: n.x, y: n.y, id: game.world.get(n.x, n.y)});
+          }
+        }
+      }
+      buildings.push(building);
+    }
+    
+    // Now score each building
+    let totalScore = 0;
+    for (const b of buildings) {
+      if (b.length < 5) continue; // Ignore tiny scattered blocks
+      
+      let minX = Infinity, maxX = -Infinity;
+      let minY = Infinity, maxY = -Infinity;
+      let durabilityPoints = 0;
+      
+      for (const c of b) {
+        if (c.x < minX) minX = c.x;
+        if (c.x > maxX) maxX = c.x;
+        if (c.y < minY) minY = c.y;
+        if (c.y > maxY) maxY = c.y;
+        
+        const block = getBlock(c.id);
+        if (block) {
+          durabilityPoints += (block.durability || 1) * (block.minTier || 1);
+          if (MASONRY.has(block.name)) durabilityPoints += 2;
+        }
+      }
+      
+      const height = maxY - minY + 1;
+      const width = maxX - minX + 1;
+      const volume = b.length;
+      
+      // Complexity = how hollow/intricate it is vs a solid block
+      const boundsArea = height * width;
+      const complexity = boundsArea > 0 ? (volume / boundsArea) : 1; 
+      
+      const heightBonus = height > 5 ? (height - 5) * 2 : 0;
+      
+      let score = Math.floor((durabilityPoints * 0.5) + heightBonus + ((1.5 - complexity) * 10));
+      totalScore += Math.max(0, score);
+    }
+    
+    return totalScore;
+  }
 }
 
 export function scan(world, origin, radius = 7, builtCells = null) {

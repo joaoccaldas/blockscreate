@@ -83,7 +83,7 @@ export class WorldEventLog {
       this.active.clear();
       return started;
     }
-    this._tickDurations(dt);
+    this._tickDurations(dt, game);
 
     if (game.eraId === 'stone') {
       const cold = game.dayFactor() < 0.22;
@@ -184,12 +184,21 @@ export class WorldEventLog {
     this.durations[id] = seconds;
   }
 
-  _tickDurations(dt) {
+  _tickDurations(dt, game) {
     for (const [id, remaining] of Object.entries(this.durations)) {
       const next = remaining - dt;
       if (next <= 0) {
         delete this.durations[id];
         this.active.delete(id);
+        
+        if (id === 'siege_raid' || id === 'drought' || id === 'cold_night') {
+          if (game && game.civ && game.civ.archScore > 0) {
+            const survivalReward = Math.floor(game.civ.archScore * 0.25);
+            game.civ.addCP(survivalReward * (game.powerups?.multiplier('cpMultiplier') || 1));
+            game.hud?.toast(`🛡️ Structures survived the hazard! (+${survivalReward} CP)`, 3500);
+            game.audio?.play('objective');
+          }
+        }
       } else {
         this.durations[id] = next;
       }

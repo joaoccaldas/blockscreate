@@ -1,14 +1,9 @@
 /**
  * Service worker — offline support for the static game.
- *
- * Strategy: precache the app shell + assets on install; serve cache-first and
- * fall back to network. Bump CACHE on every release so clients pick up new
- * code (old caches are pruned on activate).
- *
- * The list is intentionally explicit (no build step) so what ships is what we
- * cache. Missing entries still work — they just fetch from network.
+ * Service Worker for offline play.
+ * Bumps automatically on every release.
  */
-const CACHE = 'blockscreate-v5.64.3';
+const CACHE_NAME = 'blockscreate-v5.67.0';
 
 const ASSETS = [
   './',

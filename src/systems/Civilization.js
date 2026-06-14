@@ -56,6 +56,7 @@ export class Civilization {
     this.pollution = 0;
     this.highestBuild = Number.MAX_SAFE_INTEGER;
     this.deepestMine = 0;
+    this.archScore = 0;
   }
 
   addCP(amount) {
@@ -174,24 +175,30 @@ export class Civilization {
       builtCells: [...this.builtCells],
       defense: this.defense, storage: this.storage, trade: this.trade, pollution: this.pollution,
       highestBuild: this.highestBuild, deepestMine: this.deepestMine,
+      archScore: this.archScore,
     };
   }
 
-  load(d) {
-    if (d) Object.assign(this, d);
-    this.tokens ??= 0;
-    this.tokensSpent ??= 0;
-    this.cpMult ??= 1;
-    this.housing ??= 0;
-    this.light ??= 0;
-    this.placed ??= {};
-    this.builtCells = new Set(this.builtCells || []);
-    this.defeated ??= {};
-    this.defense ??= 0;
-    this.storage ??= 0;
-    this.trade ??= 0;
-    this.pollution ??= 0;
-    this.highestBuild ??= Number.MAX_SAFE_INTEGER;
-    this.deepestMine ??= 0;
+  load(data) {
+    if (!data) return;
+    this.cp = data.cp || 0;
+    this.tokens = data.tokens || 0;
+    this.cpMult = data.cpMult || 1;
+    this.population = data.population || 1;
+    this.totalMined = data.totalMined || 0;
+    this.totalCrafted = data.totalCrafted || 0;
+    this.totalBuilt = data.totalBuilt || 0;
+    this.housing = data.housing || 0;
+    this.light = data.light || 0;
+    this.placed = data.placed || {};
+    this.builtCells = new Set(data.builtCells || []);
+    this.defeated = data.defeated || {};
+    this.defense = data.defense || 0;
+    this.storage = data.storage || 0;
+    this.trade = data.trade || 0;
+    this.pollution = data.pollution || 0;
+    this.highestBuild = data.highestBuild ?? Number.MAX_SAFE_INTEGER;
+    this.deepestMine = data.deepestMine || 0;
+    this.archScore = data.archScore || 0;
   }
 }

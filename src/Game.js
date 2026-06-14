@@ -1904,6 +1904,20 @@ export class Game {
       this.particles.fountain(this.player.x, this.player.y - 1, ['#f4d24a', '#6fc04e', '#4f86ee'], 18);
       this.hud?.toast(`${s.icon} Structure discovered: ${s.label}${s.reward ? ` (+${s.reward} CP)` : ''}`, 2600);
     }
+    
+    // Evaluate continuous Architectural Score
+    const newArchScore = this.structures.scoreArchitecture(this);
+    if (newArchScore > this.civ.archScore) {
+      const diff = newArchScore - this.civ.archScore;
+      this.civ.addCP(diff * 0.5 * this.powerups.multiplier('cpMultiplier')); // Reward expansion
+      this.civ.archScore = newArchScore;
+      
+      // Every 100 points of architecture provides a passive milestone toast
+      if (Math.floor(newArchScore / 100) > Math.floor((this.civ.archScore - diff) / 100)) {
+        this.audio?.play('objective');
+        this.hud?.toast(`🏛️ Grand Architecture! (Score: ${newArchScore})`, 3000);
+      }
+    }
   }
 
   _evaluateFunSystems(dt) {

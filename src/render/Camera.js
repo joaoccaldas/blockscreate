@@ -15,11 +15,38 @@ export class Camera {
     this.zoom = zoom;
     this.x = world.spawn.x;
     this.y = world.spawn.y;
+
+    // Screen-shake ("trauma") state. Trauma is a 0..1 charge that decays every
+    // frame; the on-screen offset scales with trauma² so small hits barely
+    // wobble while big ones really kick. Offsets are in TILE units and are
+    // applied only to rendering (see Game.render), never to input hit-testing,
+    // so mining/placing stays pixel-accurate while the world shakes.
+    this.trauma = 0;
+    this.shakeX = 0;
+    this.shakeY = 0;
+    this._shakeT = 0;
   }
 
   get tile() { return C.TILE * this.zoom; }
   get tilesX() { return this.canvas.width / this.tile; }
   get tilesY() { return this.canvas.height / this.tile; }
+
+  /** Add screen-shake. amount ~0.15 = a tap, ~0.35 = a solid hit, ~0.7 = big. */
+  addTrauma(amount) {
+    this.trauma = Math.min(1, this.trauma + amount);
+  }
+
+  /** Advance the shake each frame; call once per rendered frame with dt (s). */
+  updateShake(dt) {
+    this._shakeT += dt;
+    const s = this.trauma * this.trauma;   // quadratic — punchier
+    const amp = s * 0.55;                  // max ~0.55 tile of travel
+    const t = this._shakeT;
+    // Layered sines read as smooth pseudo-random jitter without a noise lib.
+    this.shakeX = amp * (Math.sin(t * 47.0) * 0.6 + Math.sin(t * 28.7) * 0.4);
+    this.shakeY = amp * (Math.cos(t * 53.0) * 0.6 + Math.sin(t * 36.3) * 0.4);
+    this.trauma = Math.max(0, this.trauma - dt * 1.9); // ~0.5s to settle
+  }
 
   follow(target, dt) {
     const lerp = Math.min(1, dt * 8);

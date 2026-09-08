@@ -1,62 +1,21 @@
-# BlocksCreate
+# BlocksCreate — Build Across the Ages
 
-A browser-based block-building civilization history sandbox. Mine, build, survive, discover hidden historical clues, and lead a settlement through branching eras.
+The **canonical** BlocksCreate game: a modular civilization sandbox with saving,
+progression, and an automated test suite. Actively maintained.
 
-## Features
+**Play:** https://joaoccaldas.github.io/blockscreate/
 
-- Block placement, mining, crafting, inventory and survival
-- Era-specific progression with mandatory and optional mastery goals
-- First Cell origin era: gather nutrients, collect vent minerals, form a lipid
-  membrane, stabilize a proto-cell, then evolve into the Age of Dinosaurs, with
-  a microscopic view, chemical strands, drifting bubbles and a dedicated cell sprite
-- Age of Dinosaurs survival era: survive among living dinosaurs (stegosaurus,
-  triceratops, raptor, T-Rex), tame fire, build shelter, and endure meteor
-  showers that climax in an asteroid impact (craters terrain + damages)
-- Per-era atmosphere: signature color grade, ambient weather (drifting leaves,
-  dust, ash), and themed wildlife — defined as data in `src/core/eraTheme.js`
-- Enemies that hunt at night: raptors and T-Rex (Age of Dinosaurs), raiders
-  and bandits (Bronze/Iron), and roaming machines (Industrial), with chase AI,
-  contact damage, screen-shake feedback, and material drops
-- Physical historical clue blocks such as fossils, meteor shards, handprints and standing stones
-- Structure recognition for huts, camps, workshops, watchtowers and portal rings
-- Hidden discoveries and timed powerups
-- First-run onboarding coach-marks, a death screen with run stats + respawn,
-  and confirm dialogs guarding destructive actions
-- Themed menus, a labeled inventory, and crafting that shows per-ingredient
-  have/need counts and missing stations
-- Era events and hazards: cold nights and meteor showers in the Age of
-  Dinosaurs create shelter pressure and physical meteor-shard clues
-- RPG-style random era encounters: predator migrations, grazer herds, droughts
-  and raider scouts with timed HUD states and save persistence
-- Primitive weapons, predator mastery, relic-style powerups and Early Cities
-  settlement mastery goals
-- Chunk-indexed worlds with deterministic era biomes and modified-chunk
-  snapshots, preserving current saves while moving toward true infinite worlds
-- Generated pixel-art sprites, terrain textures and a full landing scene
-- Local save/load plus GitHub Pages deployment
+## This is the canonical version
+The following earlier repositories are **deprecated** and kept only for history —
+do not build on them:
 
-## Getting Started
+- [`blockscreate1`](https://github.com/joaoccaldas/blockscreate1) — early art/asset draft
+- [`blockscreate1.1`](https://github.com/joaoccaldas/blockscreate1.1) — earlier inventory/crafting build
+- [`blockscreateworld`](https://github.com/joaoccaldas/blockscreateworld) — earlier world-generation mode
 
-Open `index.html` in a browser, or serve the folder with any static server.
+Useful pieces from those (the animal art in `blockscreate1/assets/`, the world-mode
+generation in `blockscreateworld/game.js`) should be harvested into this repo, not
+maintained separately.
 
-Run checks:
-
-```bash
-node test/fun-systems.mjs
-node test/assets.mjs
-node test/smoke.mjs
-node test/integration.mjs
-node test/enemies.mjs
-```
-
-## Current Engine Note
-
-Worlds are persistent and now expand horizontally near the edges in chunk-sized regions. Saves include generated/modified chunk metadata and modified chunk snapshots; the next engine milestone is replacing the dense-grid fallback with true streaming chunks.
-
-## Author
-
-Joao Caldas
-
-## License
-
-MIT
+## Development
+See `package.json` for scripts. CI runs the test suite on every push.

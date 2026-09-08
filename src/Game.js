@@ -1470,7 +1470,7 @@ export class Game {
 
   _meteorImpact(cx, cy) {
     this.audio?.play('break'); this.haptics?.buzz('break');
-    if (!this.reduceMotion) this.hud?.shake?.();
+    if (!this.reduceMotion) { this.hud?.shake?.(); this.camera?.addTrauma(0.85); } // a meteor really slams
     this.particles.fountain(cx + 0.5, cy - 0.5, ['#ff9b3b', '#ffd27a', '#ff5b3b', '#7a4a2a'], 40);
 
     // Carve a shallow crater and scorch the rim.
@@ -1670,6 +1670,8 @@ export class Game {
   _breakBlock(x, y, block) {
     this.world.set(x, y, AIR);
     if (block.colors) this.particles.burst(x + 0.5, y + 0.5, block.colors.base, 10);
+    // A small world-kick on break — heavier blocks land harder.
+    if (!this.reduceMotion) this.camera?.addTrauma(Math.min(0.34, 0.14 + (block.hardness || 1) * 0.015));
     this.audio?.play('break'); this.haptics?.buzz('break');
     this._discoverClue(block);
     const drops = dropsOf(block.id);
@@ -1837,6 +1839,7 @@ export class Game {
     this._settleFalling(x, y - 1); // a block placed under floating sand re-supports it
     const b = getBlock(id);
     if (b.colors) this.particles.burst(x + 0.5, y + 0.5, b.colors.base, 5, { gravity: 8, life: 0.3 });
+    if (!this.reduceMotion) this.camera?.addTrauma(0.1); // subtle satisfying "thunk"
     this.audio?.play('place'); this.haptics?.buzz('place');
     this.civ.onBuild(sel.id, x, y);
     this._evaluateStructures({ x, y });
@@ -2996,6 +2999,7 @@ export class Game {
     this.audio?.play('hurt');
     this.particles.burst(this.player.x, this.player.y - this.player.h / 2, '#ff5b5b', 8);
     this._floatText(this.player.x, this.player.y - this.player.h, `-${Math.round(amount)}`, { color: '#ff6b6b', size: 0.6 });
+    if (!this.reduceMotion) this.camera?.addTrauma(Math.min(0.6, 0.24 + amount * 0.01)); // a real hit rattles the screen
     this.haptics?.buzz('hurt');
     const lost = this.combo?.breakStreak?.() || 0; // a hit snaps your flow
     if (lost >= 12) this._floatText(this.player.x, this.player.y - this.player.h - 0.5, `Combo broken! ×${lost}`, { color: '#ff8a6b', size: 0.6, life: 1.2 });
@@ -3010,6 +3014,14 @@ export class Game {
   }
 
   draw(dt) {
+    // World-space screen shake: nudge the camera by its shake offset for the
+    // draw only, then restore — so the whole world kicks on impacts while the
+    // HUD stays put and mouse→tile hit-testing (screenToWorld) is unaffected.
+    // Fully disabled under prefers-reduced-motion.
+    const _shake = !this.reduceMotion;
+    if (_shake) this.camera.updateShake(dt);
+    const _ox = this.camera.x, _oy = this.camera.y;
+    if (_shake) { this.camera.x += this.camera.shakeX; this.camera.y += this.camera.shakeY; }
     this.renderer.render({
       world: this.world,
       camera: this.camera,
@@ -3032,5 +3044,7 @@ export class Game {
       selectionEnd: this.selectionEnd,
       dt,
     });
+    this.camera.x = _ox;
+    this.camera.y = _oy;
   }
 }

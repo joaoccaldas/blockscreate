@@ -6,6 +6,7 @@
  * player can move between devices; import reads it back.
  */
 import { C } from '../core/constants.js';
+import { wrapGameSave, unwrapGameSave } from './SaveEnvelope.js';
 
 export const SaveManager = {
   toJSON(game) {
@@ -191,7 +192,7 @@ export const SaveManager = {
 
   /** Trigger a browser download of the current game state. */
   exportFile(game) {
-    const data = JSON.stringify(this.toJSON(game), null, 0);
+    const data = JSON.stringify(wrapGameSave(this.toJSON(game)), null, 0);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -210,7 +211,10 @@ export const SaveManager = {
       const reader = new FileReader();
       reader.onload = () => {
         try {
-          resolve(JSON.parse(reader.result));
+          const parsed = JSON.parse(reader.result);
+          const save = unwrapGameSave(parsed);
+          if (!save) throw new Error('Invalid or unsupported save envelope');
+          resolve(save);
         } catch (e) {
           reject(e);
         }

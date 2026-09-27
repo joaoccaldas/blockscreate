@@ -27,7 +27,7 @@ jobs:
 
       - name: Syntax check all modules
         run: |
-          for f in $(find src test tools -name '*.js' -o -name '*.mjs'); do
+          for f in $(find src test tools whisker-dash/deploy -type f \( -name '*.js' -o -name '*.mjs' \)); do
             node --check "$f"
           done
 
@@ -47,3 +47,20 @@ jobs:
             echo "::warning::Generated art bytes differ here (often just a Node/zlib version difference). Regenerate locally if intentional."
             git --no-pager diff --stat -- assets/generated/sprites assets/generated/textures
           fi
+
+
+  browser-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-package-lock
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Desktop/mobile opening flow
+        run: npm run test:browser

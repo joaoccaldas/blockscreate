@@ -60,3 +60,13 @@ Joao Caldas
 ## License
 
 MIT
+
+## Lineage
+
+BlocksCreate is the current mature project in the Blocks family. Earlier repositories such as `blockscreate1`, `blockscreate1.1`, and `blockscreateworld` are preserved as historical **ITERATIONS** showing earlier mechanics, assets, and world experiments.
+
+## Project context
+
+This is a personal, self-directed learning project by João Caldas. I use game projects like this to learn software engineering, game systems, simulation, history-based world design, browser performance, testing, and AI-assisted development by building playable systems and iterating on them.
+
+AI tools are used extensively during research, design, coding, debugging, testing, asset ideation, and documentation. AI-generated suggestions are treated as inputs to review, not proof of correctness; gameplay mechanics, historical/scientific claims, persistence, and performance should be validated.

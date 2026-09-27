@@ -60,3 +60,14 @@ Joao Caldas
 ## License
 
 MIT
+
+## Project context
+
+This is a personal, self-directed learning project by João Caldas. I learn software engineering, game systems, browser graphics, product design, and AI-assisted development by building and iterating on real projects.
+
+AI tools are used extensively during research, design, coding, debugging, testing, and documentation. AI-generated suggestions are treated as inputs to review, not proof of correctness; important game behavior and regressions should be covered by tests where practical.
+
+
+## Project lineage
+
+`blockscreate` is the current larger project in the BlocksCreate family. Earlier experiments such as `blockscreate1`, `blockscreate1.1`, and `blockscreateworld` are preserved as iterations and learning history rather than silently collapsed into this repository.

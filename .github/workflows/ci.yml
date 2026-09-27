@@ -47,3 +47,21 @@ jobs:
             echo "::warning::Generated art bytes differ here (often just a Node/zlib version difference). Regenerate locally if intentional."
             git --no-pager diff --stat -- assets/generated/sprites assets/generated/textures
           fi
+
+
+  browser-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Desktop/mobile opening flow
+        run: npm run test:browser
